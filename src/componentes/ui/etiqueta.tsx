@@ -11,13 +11,13 @@ export const Etiqueta = React.forwardRef<HTMLLabelElement, PropiedadesEtiqueta>(
       <label
         ref={ref}
         className={cn(
-          'block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5 select-none',
+          'block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5 select-none',
           className
         )}
         {...props}
       >
         {children}
-        {requerido && <span className="text-red-400 ml-1">*</span>}
+        {requerido && <span className="text-red-500 ml-1">*</span>}
       </label>
     )
   }

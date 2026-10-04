@@ -16,7 +16,7 @@ export const DisposicionPrincipal: React.FC<PropiedadesDisposicionPrincipal> = (
   const [subVista, setSubVista] = useState<SubVista>('ninguna')
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#080C14] text-slate-100 overflow-x-hidden selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#F4F7FC] dark:bg-[#070B12] text-slate-900 dark:text-slate-100 overflow-x-hidden selection:bg-blue-600 selection:text-white transition-colors duration-200">
       {/* Encabezado Principal */}
       <Encabezado alIrAInicio={() => setSubVista('ninguna')} />
 

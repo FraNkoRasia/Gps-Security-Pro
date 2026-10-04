@@ -28,7 +28,7 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio }) => 
   }
 
   return (
-    <header className="w-full border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40 px-3 sm:px-6 py-3 select-none">
+    <header className="w-full border-b border-slate-200 dark:border-slate-800/80 bg-white/90 dark:bg-[#070B12]/90 backdrop-blur-md sticky top-0 z-40 px-3 sm:px-6 py-3 select-none transition-colors">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
         {/* Identidad de la Marca con Escudo Oficial */}
         <button
@@ -36,16 +36,16 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio }) => 
           onClick={alIrAInicio}
           className="flex items-center gap-2.5 text-left group cursor-pointer"
         >
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-900 border border-slate-700/60 p-0.5 flex items-center justify-center shadow-md group-hover:border-blue-500 transition-all">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700/60 p-0.5 flex items-center justify-center shadow-xs group-hover:border-blue-500 transition-all">
             <img src="/Escudo.png" alt="GSP Escudo" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="text-base sm:text-lg font-black tracking-tight text-white font-['Outfit'] group-hover:text-blue-400 transition-colors">
+              <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white font-['Outfit'] group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">
                 GSP Security Pro
               </span>
             </div>
-            <p className="text-[10px] sm:text-xs text-slate-400 font-medium tracking-wide hidden xs:block">
+            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium tracking-wide hidden xs:block">
               {t.comun.lemaApp}
             </p>
           </div>
@@ -54,12 +54,12 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio }) => 
         {/* Acciones del encabezado: Usuario, Idioma, Tema */}
         <div className="flex items-center gap-2 sm:gap-3">
           {estaAutenticado && usuario && (
-            <div className="flex items-center gap-2 sm:gap-3 pr-1 sm:pr-2 border-r border-slate-800">
+            <div className="flex items-center gap-2 sm:gap-3 pr-1 sm:pr-2 border-r border-slate-200 dark:border-slate-800">
               <div className="hidden md:flex flex-col items-end">
-                <span className="text-xs font-bold text-slate-200">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                   {usuario.nombre} {usuario.apellido}
                 </span>
-                <span className="text-[10px] text-slate-400">
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">
                   {usuario.empresa_nombre || usuario.email}
                 </span>
               </div>
@@ -73,7 +73,7 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio }) => 
                 type="button"
                 onClick={() => cerrarSesion()}
                 title={t.navegacion.cerrarSesion}
-                className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-900/60 transition-colors cursor-pointer"
+                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-900/60 transition-colors cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
               </button>

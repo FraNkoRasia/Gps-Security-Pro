@@ -35,10 +35,10 @@ export const Casilla: React.FC<PropiedadesCasilla> = ({
         <div
           onClick={() => !deshabilitado && alCambiar(!marcado)}
           className={cn(
-            'w-5 h-5 rounded-md border flex items-center justify-center transition-all cursor-pointer shadow-sm',
+            'w-5 h-5 rounded-md border flex items-center justify-center transition-all cursor-pointer shadow-xs',
             marcado
               ? 'bg-blue-600 border-blue-500 text-white'
-              : 'bg-slate-900 border-slate-700 hover:border-slate-500 text-transparent',
+              : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 text-transparent',
             deshabilitado && 'opacity-50 cursor-not-allowed'
           )}
         >
@@ -49,13 +49,13 @@ export const Casilla: React.FC<PropiedadesCasilla> = ({
         <label
           htmlFor={id}
           className={cn(
-            'cursor-pointer text-sm font-medium text-slate-300 leading-snug',
+            'cursor-pointer text-sm font-medium text-slate-800 dark:text-slate-200 leading-snug',
             deshabilitado && 'cursor-not-allowed opacity-50'
           )}
         >
           {etiqueta}
           {descripcion && (
-            <p className="text-xs text-slate-500 font-normal mt-0.5">{descripcion}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5">{descripcion}</p>
           )}
         </label>
       )}
