@@ -1,0 +1,92 @@
+import type { TipoTraducciones } from './es'
+
+export const traduccionesEn: TipoTraducciones = {
+  comun: {
+    nombreApp: 'GSP Security Pro',
+    lemaApp: 'Professional Security Management',
+    desarrollador: 'FraNko Rasia',
+    desarrolladoPor: 'Developed by FraNko Rasia',
+    derechosReservados: 'All rights reserved',
+    cancelar: 'Cancel',
+    continuar: 'Continue',
+    guardar: 'Save',
+    confirmar: 'Confirm',
+    cerrar: 'Close',
+    volver: 'Back',
+    cargando: 'Loading...',
+    exito: 'Operation completed successfully',
+    error: 'An unexpected error occurred',
+    limpiar: 'Clear',
+    seleccionar: 'Select',
+    modoOscuro: 'Dark mode',
+    modoClaro: 'Light mode',
+    idioma: 'Language'
+  },
+  navegacion: {
+    inicio: 'Home',
+    turnos: 'Shifts',
+    grilla: 'Monthly Grid',
+    novedades: 'Security Logbook',
+    objetivos: 'Objectives',
+    vigiladores: 'Guards',
+    empresas: 'Companies',
+    avisos: 'Notices',
+    solicitudes: 'Requests',
+    estadisticas: 'Statistics',
+    auditoria: 'Audit Log',
+    configuracion: 'Settings',
+    ayuda: 'Help',
+    terminos: 'Terms',
+    privacidad: 'Privacy',
+    acercaDe: 'About',
+    cerrarSesion: 'Sign out'
+  },
+  auth: {
+    iniciarSesion: 'Sign in',
+    ingresar: 'Log in',
+    correoOEmail: 'Email address',
+    ejemploEmail: 'user@company.com',
+    contrasena: 'Password',
+    olvidasteContrasena: 'Forgot password?',
+    recordarme: 'Remember me',
+    sinRegistroPublico: 'Access is restricted to authorized personnel registered by company administrators.',
+    recuperarTitulo: 'Reset password',
+    recuperarDesc: 'Enter your registered email address and we will send you a secure link to reset your credentials.',
+    enviarEnlace: 'Send recovery link',
+    enlaceEnviado: 'Link sent',
+    instruccionesEnlace: 'Check your inbox or spam folder. We have sent your password reset instructions.',
+    errorCredenciales: 'Invalid email or password, or account is disabled.',
+    ingresando: 'Authenticating...',
+    seguridadAlta: 'High-security encrypted connection'
+  },
+  pwa: {
+    tituloInstalar: 'Install GSP Security Pro',
+    subtituloInstalar: 'Install the app on your device for fast access and optimized on-duty performance.',
+    botonInstalar: 'Install app',
+    yaInstalada: 'App already installed on your device',
+    modalPregunta: 'Do you want to install GSP Security Pro on your device?',
+    modalDesc: 'Get direct access from your home screen, faster response times, and a dedicated guard experience.',
+    instruccionesAndroid: 'Press continue to confirm browser installation. If no prompt appears, open the browser menu (⋮) and tap "Install app" or "Add to Home screen".',
+    instruccionesIos: 'To install on iPhone or iPad:',
+    pasoIos1: '1. Open this website in Safari.',
+    pasoIos2: '2. Tap the "Share" icon in the bottom toolbar (box with upward arrow).',
+    pasoIos3: '3. Scroll down and tap "Add to Home Screen".',
+    pasoIos4: '4. Tap "Add" in the top right corner.',
+    alertaSafariIos: 'Note: Apple requires using Safari browser to install web applications to the Home Screen.',
+    instruccionesEscritorio: 'Click "Continue" to install the application on your computer through your browser.',
+    confirmarInstalacion: 'Continue with installation'
+  },
+  roles: {
+    superAdmin: 'Super-Administrator',
+    admin: 'Company Administrator',
+    supervisor: 'Supervisor',
+    vigilador: 'Security Guard'
+  },
+  pie: {
+    terminos: 'Terms',
+    ayuda: 'Help',
+    privacidad: 'Privacy',
+    acercaDe: 'About',
+    copyright: 'GSP Security Pro. Professional Security Management.'
+  }
+}

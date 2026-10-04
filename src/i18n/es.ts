@@ -1,0 +1,92 @@
+export const traduccionesEs = {
+  comun: {
+    nombreApp: 'GSP Security Pro',
+    lemaApp: 'Gestión de Seguridad Profesional',
+    desarrollador: 'FraNko Rasia',
+    desarrolladoPor: 'Desarrollado por FraNko Rasia',
+    derechosReservados: 'Todos los derechos reservados',
+    cancelar: 'Cancelar',
+    continuar: 'Continuar',
+    guardar: 'Guardar',
+    confirmar: 'Confirmar',
+    cerrar: 'Cerrar',
+    volver: 'Volver',
+    cargando: 'Cargando...',
+    exito: 'Operación realizada con éxito',
+    error: 'Ocurrió un error inesperado',
+    limpiar: 'Limpiar',
+    seleccionar: 'Seleccionar',
+    modoOscuro: 'Modo oscuro',
+    modoClaro: 'Modo claro',
+    idioma: 'Idioma'
+  },
+  navegacion: {
+    inicio: 'Inicio',
+    turnos: 'Turnos',
+    grilla: 'Grilla Mensual',
+    novedades: 'Libro de Novedades',
+    objetivos: 'Objetivos',
+    vigiladores: 'Vigiladores',
+    empresas: 'Empresas',
+    avisos: 'Avisos',
+    solicitudes: 'Solicitudes',
+    estadisticas: 'Estadísticas',
+    auditoria: 'Auditoría',
+    configuracion: 'Configuración',
+    ayuda: 'Ayuda',
+    terminos: 'Términos',
+    privacidad: 'Privacidad',
+    acercaDe: 'Acerca de',
+    cerrarSesion: 'Cerrar sesión'
+  },
+  auth: {
+    iniciarSesion: 'Iniciar sesión',
+    ingresar: 'Ingresar',
+    correoOEmail: 'Correo electrónico',
+    ejemploEmail: 'usuario@empresa.com',
+    contrasena: 'Contraseña',
+    olvidasteContrasena: '¿Olvidaste tu contraseña?',
+    recordarme: 'Recordarme',
+    sinRegistroPublico: 'El acceso es exclusivo para personal autorizado por la empresa.',
+    recuperarTitulo: 'Recuperar contraseña',
+    recuperarDesc: 'Ingresá tu correo electrónico registrado y te enviaremos un enlace seguro para restablecer tu acceso.',
+    enviarEnlace: 'Enviar enlace de recuperación',
+    enlaceEnviado: 'Enlace enviado',
+    instruccionesEnlace: 'Revisá tu bandeja de entrada o spam. Hemos enviado las instrucciones de restablecimiento.',
+    errorCredenciales: 'Las credenciales ingresadas son incorrectas o la cuenta está inactiva.',
+    ingresando: 'Ingresando al sistema...',
+    seguridadAlta: 'Conexión cifrada de alta seguridad'
+  },
+  pwa: {
+    tituloInstalar: 'Instalar GSP Security Pro',
+    subtituloInstalar: 'Instalá la aplicación en tu dispositivo para acceder rápidamente y trabajar con mejor rendimiento.',
+    botonInstalar: 'Instalar app',
+    yaInstalada: 'Aplicación ya instalada en tu dispositivo',
+    modalPregunta: '¿Querés instalar GSP Security Pro en tu dispositivo?',
+    modalDesc: 'Tendrás acceso directo desde tu pantalla de inicio, mayor velocidad de respuesta y funcionalidad adaptada a la guardia.',
+    instruccionesAndroid: 'Presioná continuar para confirmar la instalación mediante el navegador. Si no aparece el aviso, abrí el menú de opciones (⋮) y seleccioná "Instalar aplicación" o "Agregar a la pantalla principal".',
+    instruccionesIos: 'Para instalar en iPhone o iPad:',
+    pasoIos1: '1. Abrí esta página en Safari.',
+    pasoIos2: '2. Tocá el botón "Compartir" en la barra inferior (el ícono del cuadrado con flecha hacia arriba).',
+    pasoIos3: '3. Deslizá hacia abajo y seleccioná "Agregar a pantalla de inicio".',
+    pasoIos4: '4. Tocá "Agregar" en la esquina superior derecha.',
+    alertaSafariIos: 'Nota: Apple requiere utilizar el navegador Safari para instalar aplicaciones en la pantalla de inicio.',
+    instruccionesEscritorio: 'Presioná "Continuar" para instalar la aplicación en tu computadora a través de tu navegador.',
+    confirmarInstalacion: 'Continuar con la instalación'
+  },
+  roles: {
+    superAdmin: 'Super-Administrador',
+    admin: 'Administrador de Empresa',
+    supervisor: 'Supervisor',
+    vigilador: 'Vigilador'
+  },
+  pie: {
+    terminos: 'Términos',
+    ayuda: 'Ayuda',
+    privacidad: 'Privacidad',
+    acercaDe: 'Acerca de',
+    copyright: 'GSP Security Pro. Gestión de Seguridad Profesional.'
+  }
+}
+
+export type TipoTraducciones = typeof traduccionesEs

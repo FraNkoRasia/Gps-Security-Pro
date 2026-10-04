@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="shieldGrad" x1="256" y1="20" x2="256" y2="490" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="50%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="borderGrad" x1="50" y1="30" x2="462" y2="490" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="35%" stop-color="#2563EB"/>
+      <stop offset="70%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="150" y1="120" x2="360" y2="380" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FDE047"/>
+      <stop offset="40%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#B45309"/>
+    </linearGradient>
+  </defs>
+  <path d="M256 32 C380 32 448 85 448 200 C448 335 345 440 256 480 C167 440 64 335 64 200 C64 85 132 32 256 32 Z" 
+        fill="url(#shieldGrad)" 
+        stroke="url(#borderGrad)" 
+        stroke-width="14" 
+        stroke-linejoin="round"/>
+  <g transform="translate(0, -10)">
+    <path d="M256 130 L340 180 V280 C340 335 295 385 256 405 C217 385 172 335 172 280 V180 Z" 
+          fill="url(#shieldGrad)" 
+          stroke="url(#goldGrad)" 
+          stroke-width="8"/>
+    <text x="256" y="325" 
+          text-anchor="middle" 
+          fill="#FFFFFF" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="64" 
+          font-weight="900" 
+          letter-spacing="2">GSP</text>
+  </g>
+</svg>

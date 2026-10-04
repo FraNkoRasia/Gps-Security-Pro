@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="shieldGrad" x1="256" y1="20" x2="256" y2="490" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="50%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="borderGrad" x1="50" y1="30" x2="462" y2="490" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="35%" stop-color="#2563EB"/>
+      <stop offset="70%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="150" y1="120" x2="360" y2="380" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FDE047"/>
+      <stop offset="40%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#B45309"/>
+    </linearGradient>
+    <linearGradient id="coreGrad" x1="180" y1="140" x2="330" y2="360" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#60A5FA"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Outer Glow Shield -->
+  <path d="M256 32 C380 32 448 85 448 200 C448 335 345 440 256 480 C167 440 64 335 64 200 C64 85 132 32 256 32 Z" 
+        fill="url(#shieldGrad)" 
+        stroke="url(#borderGrad)" 
+        stroke-width="10" 
+        stroke-linejoin="round"
+        filter="drop-shadow(0 15px 30px rgba(15, 23, 42, 0.8))"/>
+
+  <!-- Inner Security Grid / Pattern -->
+  <path d="M256 60 C355 60 415 105 415 200 C415 315 328 405 256 445 C184 405 97 315 97 200 C97 105 157 60 256 60 Z" 
+        fill="none" 
+        stroke="#334155" 
+        stroke-width="3" 
+        stroke-dasharray="6 6"
+        opacity="0.6"/>
+
+  <!-- Golden Security Star / Compass Emblem -->
+  <g transform="translate(0, -10)">
+    <!-- Central Shield Emblem / GSP Monogram -->
+    <path d="M256 130 L340 180 V280 C340 335 295 385 256 405 C217 385 172 335 172 280 V180 Z" 
+          fill="url(#shieldGrad)" 
+          stroke="url(#goldGrad)" 
+          stroke-width="6"/>
+
+    <!-- Keyhole & Star Motif -->
+    <path d="M256 160 L266 186 L294 188 L272 205 L279 232 L256 218 L233 232 L240 205 L218 188 L246 186 Z" 
+          fill="url(#goldGrad)" />
+    
+    <!-- Bold GSP Stylized Text -->
+    <text x="256" y="320" 
+          text-anchor="middle" 
+          fill="#FFFFFF" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="44" 
+          font-weight="900" 
+          letter-spacing="4">GSP</text>
+    
+    <text x="256" y="352" 
+          text-anchor="middle" 
+          fill="#38BDF8" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="16" 
+          font-weight="800" 
+          letter-spacing="5">SECURITY PRO</text>
+  </g>
+
+  <!-- Golden Wing Accents -->
+  <path d="M125 185 C145 150 180 135 210 130" stroke="url(#goldGrad)" stroke-width="4" stroke-linecap="round"/>
+  <path d="M387 185 C367 150 332 135 302 130" stroke="url(#goldGrad)" stroke-width="4" stroke-linecap="round"/>
+</svg>
