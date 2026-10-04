@@ -30,14 +30,14 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio }) => 
   return (
     <header className="w-full border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40 px-3 sm:px-6 py-3 select-none">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-        {/* Identidad de la Marca */}
+        {/* Identidad de la Marca con Escudo Oficial */}
         <button
           type="button"
           onClick={alIrAInicio}
           className="flex items-center gap-2.5 text-left group cursor-pointer"
         >
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-900/60 to-slate-900 border border-blue-700/50 p-1 flex items-center justify-center shadow-md group-hover:border-blue-500 transition-all">
-            <img src="/logo-gsp.svg" alt="GSP Logo" className="w-full h-full object-contain" />
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-900 border border-slate-700/60 p-0.5 flex items-center justify-center shadow-md group-hover:border-blue-500 transition-all">
+            <img src="/Escudo.png" alt="GSP Escudo" className="w-full h-full object-contain" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">

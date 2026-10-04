@@ -11,28 +11,28 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'logo-gsp.svg'],
+      includeAssets: ['favicon.svg', 'Escudo.png', 'logoAPP.png'],
       manifest: {
         name: 'GSP Security Pro — Gestión de Seguridad Profesional',
         short_name: 'GSP Security Pro',
         description: 'Plataforma profesional para la gestión de empresas de seguridad y servicios de vigilancia.',
-        theme_color: '#0B0F19',
-        background_color: '#0B0F19',
+        theme_color: '#080C14',
+        background_color: '#080C14',
         display: 'standalone',
         orientation: 'portrait-primary',
         icons: [
           {
-            src: '/pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: '/pwa-512x512.png',
+            src: '/Escudo.png',
             sizes: '512x512',
             type: 'image/png'
           },
           {
-            src: '/pwa-512x512.png',
+            src: '/logoAPP.png',
+            sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            src: '/Escudo.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'

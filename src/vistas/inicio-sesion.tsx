@@ -12,18 +12,18 @@ export const VistaInicioSesion: React.FC = () => {
     <div className="w-full flex-1 flex flex-col items-center justify-center py-4 sm:py-8 px-2 sm:px-4">
       {/* Contenedor central con ancho controlado y márgenes móviles */}
       <div className="w-full max-w-md mx-auto space-y-6">
-        {/* Cabecera del Login con Emblema de Seguridad */}
+        {/* Cabecera del Login con Emblema Oficial GSP */}
         <div className="text-center space-y-3">
           <div className="inline-flex relative">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-b from-blue-900/60 to-slate-950 border border-blue-500/40 p-2 shadow-2xl flex items-center justify-center glow-primary mx-auto">
+            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-slate-950/80 border border-slate-800 p-2 shadow-2xl flex items-center justify-center glow-primary mx-auto">
               <img
-                src="/logo-gsp.svg"
-                alt="GSP Security Pro"
-                className="w-full h-full object-contain"
+                src="/logoAPP.png"
+                alt="GSP Security Pro — Gestión de Seguridad Profesional"
+                className="w-full h-full object-contain filter drop-shadow-[0_10px_15px_rgba(0,0,0,0.8)]"
               />
             </div>
-            <div className="absolute -bottom-1 -right-1 bg-amber-500 text-slate-950 p-1 rounded-full shadow-md">
-              <Lock className="w-3.5 h-3.5 stroke-[2.5]" />
+            <div className="absolute -bottom-1 -right-1 bg-blue-600 border-2 border-slate-900 text-white p-1.5 rounded-full shadow-lg">
+              <Lock className="w-4 h-4 stroke-[2.5]" />
             </div>
           </div>
 

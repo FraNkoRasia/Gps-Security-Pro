@@ -14,8 +14,8 @@ const ContenidoAplicacion: React.FC = () => {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4">
         <div className="relative">
-          <div className="w-14 h-14 rounded-2xl bg-blue-900/40 border border-blue-500/40 flex items-center justify-center animate-pulse">
-            <img src="/logo-gsp.svg" alt="GSP Logo" className="w-8 h-8 object-contain" />
+          <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-blue-500/40 flex items-center justify-center p-2 animate-pulse shadow-xl">
+            <img src="/Escudo.png" alt="GSP Logo" className="w-full h-full object-contain" />
           </div>
         </div>
         <p className="text-xs font-semibold text-slate-400 tracking-wider uppercase animate-pulse">

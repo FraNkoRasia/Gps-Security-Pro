@@ -22,8 +22,8 @@ export const VistaAcercaDe: React.FC<PropiedadesVistaAcercaDe> = ({ abierto, alC
       <div className="space-y-5 text-center">
         {/* Emblema Central */}
         <div className="flex flex-col items-center justify-center pt-2">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-900/60 to-slate-950 border-2 border-amber-500/60 p-2 shadow-2xl flex items-center justify-center glow-amber mb-3">
-            <img src="/logo-gsp.svg" alt="GSP Logo" className="w-full h-full object-contain" />
+          <div className="w-28 h-28 rounded-3xl bg-slate-950/90 border-2 border-blue-500/40 p-2 shadow-2xl flex items-center justify-center glow-primary mb-3">
+            <img src="/logoAPP.png" alt="GSP Logo" className="w-full h-full object-contain" />
           </div>
           <h3 className="text-2xl font-black text-white font-['Outfit'] tracking-tight">
             GSP Security Pro
