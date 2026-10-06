@@ -11,7 +11,6 @@ interface ContextoAutenticacionTipo {
   iniciarSesion: (email: string, contrasena: string, recordarme: boolean) => Promise<{ exito: boolean; error?: string }>
   cerrarSesion: () => Promise<void>
   solicitarRecuperacion: (email: string) => Promise<{ exito: boolean; error?: string }>
-  cambiarRolSimulado?: (rol: RolUsuario) => void
 }
 
 const ContextoAutenticacion = createContext<ContextoAutenticacionTipo | undefined>(undefined)
