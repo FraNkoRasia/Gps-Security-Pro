@@ -26,6 +26,7 @@ export const GestionVigiladores: React.FC = () => {
   const [nombre, setNombre] = useState('')
   const [apellido, setApellido] = useState('')
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [telefono, setTelefono] = useState('')
   const [idObjetivoInicial, setIdObjetivoInicial] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -38,6 +39,7 @@ export const GestionVigiladores: React.FC = () => {
     setNombre('')
     setApellido('')
     setEmail('')
+    setPassword('')
     setTelefono('')
     const empresaInicial = usuario?.id_empresa || ''
     setIdObjetivoInicial(objetivos.find((obj) => obj.id_empresa === empresaInicial)?.id || '')
@@ -69,8 +71,8 @@ export const GestionVigiladores: React.FC = () => {
     e.preventDefault()
     setError(null)
 
-    if (!nombre.trim() || !apellido.trim() || !email.trim()) {
-      setError('Nombre, apellido y correo electrónico son obligatorios.')
+    if (!nombre.trim() || !apellido.trim() || !email.trim() || (!vigiladorEditando && !password)) {
+      setError('Nombre, apellido, correo electrónico y contraseña son obligatorios.')
       return
     }
 
@@ -99,6 +101,7 @@ export const GestionVigiladores: React.FC = () => {
       nombre: nombre.trim(),
       apellido: apellido.trim(),
       email: email.trim().toLowerCase(),
+      password,
       telefono: telefono.trim(),
       id_empresa: idEmpresaActiva,
       id_objetivo_inicial: idObjetivoInicial
@@ -306,6 +309,20 @@ export const GestionVigiladores: React.FC = () => {
               placeholder="franco.rasia@empresa.com"
             />
           </div>
+
+          {!vigiladorEditando && (
+            <div>
+              <Etiqueta requerido>Contraseña de Acceso</Etiqueta>
+              <Entrada
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Mínimo 8 caracteres"
+                minLength={8}
+              />
+              <p className="text-[11px] text-slate-500 mt-1">Esta contraseña será la que use el vigilador para iniciar sesión.</p>
+            </div>
+          )}
 
           <div>
             <Etiqueta>Teléfono de Contacto</Etiqueta>
