@@ -23,7 +23,7 @@ import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import { useTraduccion } from '@/i18n'
 
 export const VistaPanelControl: React.FC = () => {
-  const { usuario, cerrarSesion } = useAutenticacion()
+  const { usuario } = useAutenticacion()
   const { t } = useTraduccion()
 
   const [pestanaActiva, setPestanaActiva] = useState<string>('objetivos')
