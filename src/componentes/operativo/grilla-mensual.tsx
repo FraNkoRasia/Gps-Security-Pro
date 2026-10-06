@@ -67,7 +67,7 @@ export const GrillaMensual: React.FC = () => {
     const diaStr = dia < 10 ? `0${dia}` : `${dia}`
     const fecha = `${mesSeleccionado}-${diaStr}`
     const turnoActual = turnos.find(
-      (t) => t.id_vigilador === idVig && t.fecha === fecha
+      (t) => t.id_vigilador === idVig && t.id_objetivo === objetivoSeleccionado && t.fecha === fecha
     )
 
     setCeldaEditando({
@@ -143,7 +143,7 @@ export const GrillaMensual: React.FC = () => {
   // Cálculos por vigilador (Sección 24)
   const calcularTotalesVigilador = (idVig: string) => {
     const turnosVig = turnos.filter(
-      (t) => t.id_vigilador === idVig && t.fecha.startsWith(mesSeleccionado)
+      (t) => t.id_vigilador === idVig && t.id_objetivo === objetivoSeleccionado && t.fecha.startsWith(mesSeleccionado)
     )
 
     const horasTotales = turnosVig.reduce((acc, t) => acc + t.horas_totales, 0)
@@ -182,7 +182,7 @@ export const GrillaMensual: React.FC = () => {
   const calcularTotalDiario = (dia: number) => {
     const diaStr = dia < 10 ? `0${dia}` : `${dia}`
     const fecha = `${mesSeleccionado}-${diaStr}`
-    const turnosDia = turnos.filter((t) => t.fecha === fecha)
+    const turnosDia = turnos.filter((t) => t.id_objetivo === objetivoSeleccionado && t.fecha === fecha)
     return turnosDia.reduce((acc, t) => acc + t.horas_totales, 0)
   }
 
