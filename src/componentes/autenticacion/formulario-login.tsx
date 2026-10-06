@@ -9,7 +9,6 @@ import { ModalRecuperarContrasena } from './modal-recuperar-contrasena'
 import { useTraduccion } from '@/i18n'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import { esquemaLogin, type DatosLogin } from '@/esquemas/autenticacion'
-import { superAdminInicial } from '@/servicios/supabase'
 
 export const FormularioLogin: React.FC = () => {
   const { t } = useTraduccion()
@@ -45,13 +44,6 @@ export const FormularioLogin: React.FC = () => {
     }
 
     await iniciarSesion(email, contrasena, recordarme)
-  }
-
-  // Cuentas predefinidas para verificación rápida en desarrollo
-  const seleccionarCuentaDemo = (emailDemo: string) => {
-    setEmail(emailDemo)
-    setContrasena('seguridad2026')
-    setErrores({})
   }
 
   return (
@@ -157,41 +149,6 @@ export const FormularioLogin: React.FC = () => {
           </p>
         </div>
 
-        {/* Selector de Acceso Rápido / Demostración para desarrollo */}
-        <div className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2 text-xs">
-          <div className="flex items-center justify-between text-slate-400 font-semibold text-[11px] uppercase tracking-wider">
-            <span className="flex items-center gap-1.5 text-amber-400">
-              <Sparkles className="w-3.5 h-3.5" />
-              Acceso rápido para evaluación
-            </span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 pt-1">
-            <button
-              type="button"
-              onClick={() => seleccionarCuentaDemo(superAdminInicial)}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-left transition-colors cursor-pointer"
-            >
-              <div className="text-[11px] font-bold text-amber-400">Super-Admin</div>
-              <div className="text-[10px] text-slate-400 truncate">FraNko Rasia</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => seleccionarCuentaDemo('admin@wallsecurity.com')}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-left transition-colors cursor-pointer"
-            >
-              <div className="text-[11px] font-bold text-blue-400">Administrador</div>
-              <div className="text-[10px] text-slate-400 truncate">Wall Security</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => seleccionarCuentaDemo('franco.rasia@wallsecurity.com')}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-left transition-colors cursor-pointer"
-            >
-              <div className="text-[11px] font-bold text-emerald-400">Vigilador</div>
-              <div className="text-[10px] text-slate-400 truncate">Franco Rasia</div>
-            </button>
-          </div>
-        </div>
       </form>
 
       <ModalRecuperarContrasena
