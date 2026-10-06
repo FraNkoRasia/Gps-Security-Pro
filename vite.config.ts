@@ -11,6 +11,11 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+      },
       includeAssets: ['favicon.svg', 'Escudo.png', 'logoAPP.png'],
       manifest: {
         name: 'GSP Security Pro — Gestión de Seguridad Profesional',
