@@ -15,7 +15,8 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import type { Turno } from '@/tipos'
 
 export const GrillaMensual: React.FC<{ objetivoInicial?: string; onVolver?: () => void }> = ({ objetivoInicial = '', onVolver }) => {
-  const { vigiladores, objetivos, turnos, asignarTurnoGrilla } = useOperativo()
+  const { vigiladores, objetivos, asignaciones, turnos, asignarTurnoGrilla } = useOperativo()
+  const [objetivoSeleccionado] = useState(objetivoInicial)
 
   const mesSeleccionado = '2026-10'
   const totalDiasMes = 31
@@ -61,7 +62,9 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; onVolver?: () =
       : Array.from({ length: totalDiasMes }, (_, i) => i + 1)
 
   // Filtrado de vigiladores
-  const vigiladoresMostrados = vigiladores
+  const vigiladoresMostrados = objetivoSeleccionado
+    ? vigiladores.filter((v) => asignaciones.some((a) => a.id_vigilador === v.id && a.id_objetivo === objetivoSeleccionado && a.activa))
+    : []
 
   const abrirEditarCelda = (idVig: string, nombreVig: string, dia: number) => {
     const diaStr = dia < 10 ? `0${dia}` : `${dia}`
@@ -143,7 +146,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; onVolver?: () =
   // Cálculos por vigilador (Sección 24)
   const calcularTotalesVigilador = (idVig: string) => {
     const turnosVig = turnos.filter(
-      (t) => t.id_vigilador === idVig && t.id_objetivo === objetivoSeleccionado && t.fecha.startsWith(mesSeleccionado)
+      (t) => t.id_vigilador === idVig && t.id_objetivo === objetivoSeleccionado && t.id_objetivo === objetivoSeleccionado && t.fecha.startsWith(mesSeleccionado)
     )
 
     const horasTotales = turnosVig.reduce((acc, t) => acc + t.horas_totales, 0)
@@ -375,7 +378,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; onVolver?: () =
                       const diaStr = dia < 10 ? `0${dia}` : `${dia}`
                       const fecha = `${mesSeleccionado}-${diaStr}`
                       const turno = turnos.find(
-                        (t) => t.id_vigilador === vig.id && t.fecha === fecha
+                        (t) => t.id_vigilador === vig.id && t.id_objetivo === objetivoSeleccionado && t.fecha === fecha
                       )
 
                       return (
