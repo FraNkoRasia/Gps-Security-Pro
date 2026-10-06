@@ -12,7 +12,7 @@ import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { Usuario } from '@/tipos'
 
 export const GestionVigiladores: React.FC = () => {
-  const { empresas, vigiladores, asignaciones, objetivos, crearVigilador, editarVigilador } = useOperativo()
+  const { vigiladores, asignaciones, objetivos, crearVigilador, editarVigilador } = useOperativo()
   const { usuario } = useAutenticacion()
 
   const [modalNuevoAbierto, setModalNuevoAbierto] = useState(false)
@@ -31,8 +31,7 @@ export const GestionVigiladores: React.FC = () => {
   const [idObjetivoInicial, setIdObjetivoInicial] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  const esSuperAdministrador = usuario?.rol === 'super_administrador'
-  const idEmpresaActiva = esSuperAdministrador ? idEmpresaSeleccionada : (usuario?.id_empresa || '')
+  const idEmpresaActiva = usuario?.id_empresa || ''
   const objetivosDeEmpresa = objetivos.filter((obj) => obj.id_empresa === idEmpresaActiva)
 
   const abrirAlta = () => {
@@ -41,7 +40,7 @@ export const GestionVigiladores: React.FC = () => {
     setApellido('')
     setEmail('')
     setTelefono('')
-    const empresaInicial = esSuperAdministrador ? (idEmpresaSeleccionada || empresas[0]?.id || '') : (usuario?.id_empresa || '')
+    const empresaInicial = usuario?.id_empresa || ''
     setIdEmpresaSeleccionada(empresaInicial)
     setIdObjetivoInicial(objetivos.find((obj) => obj.id_empresa === empresaInicial)?.id || '')
     setError(null)
@@ -318,26 +317,6 @@ export const GestionVigiladores: React.FC = () => {
               placeholder="+54 9 358 1234567"
             />
           </div>
-
-          {!vigiladorEditando && esSuperAdministrador && (
-            <div>
-              <Etiqueta requerido>Empresa</Etiqueta>
-              <select
-                value={idEmpresaSeleccionada}
-                onChange={(e) => {
-                  const empresaId = e.target.value
-                  setIdEmpresaSeleccionada(empresaId)
-                  setIdObjetivoInicial(objetivos.find((obj) => obj.id_empresa === empresaId)?.id || '')
-                }}
-                className="w-full min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700/80 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
-              >
-                <option value="">Seleccionar empresa...</option>
-                {empresas.filter((empresa) => empresa.activa).map((empresa) => (
-                  <option key={empresa.id} value={empresa.id}>{empresa.nombre}</option>
-                ))}
-              </select>
-            </div>
-          )}
 
           {!vigiladorEditando && (
             <div>
