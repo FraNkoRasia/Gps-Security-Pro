@@ -136,10 +136,10 @@ export const VistaPanelControl: React.FC = () => {
                   <div className="flex items-center justify-between gap-3 pt-2">
                     <div>
                       <h3 className="text-lg font-black text-slate-900 dark:text-white font-['Outfit']">
-                        Vigiladores del objetivo
+                        Plantel de Vigiladores
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Personal actualmente asignado a este objetivo.
+                        Control de personal de guardia, asignaciones vigentes e historial de traslados operativos.
                       </p>
                     </div>
                     <Boton
