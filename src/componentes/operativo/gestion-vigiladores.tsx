@@ -11,7 +11,7 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { Usuario } from '@/tipos'
 
-export const GestionVigiladores: React.FC = () => {
+export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; modoConsulta?: boolean }> = ({ idEmpresaSeleccionada, modoConsulta = false }) => {
   const { vigiladores, asignaciones, objetivos, crearVigilador, editarVigilador } = useOperativo()
   const { usuario } = useAutenticacion()
 
@@ -31,7 +31,7 @@ export const GestionVigiladores: React.FC = () => {
   const [idObjetivoInicial, setIdObjetivoInicial] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  const idEmpresaActiva = usuario?.id_empresa || ''
+  const idEmpresaActiva = idEmpresaSeleccionada || usuario?.id_empresa || ''
   const objetivosDeEmpresa = objetivos.filter((obj) => obj.id_empresa === idEmpresaActiva)
 
   const abrirAlta = () => {
@@ -121,6 +121,8 @@ export const GestionVigiladores: React.FC = () => {
     (a) => a.id_vigilador === vigiladorSeleccionado?.id
   )
 
+  const vigiladoresMostrados = vigiladores.filter((v) => v.id_empresa === idEmpresaActiva && v.activo)
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -132,17 +134,17 @@ export const GestionVigiladores: React.FC = () => {
             Control de personal de guardia, asignaciones vigentes e historial de traslados operativos.
           </p>
         </div>
-        <Boton
+        {!modoConsulta && <Boton
           variante="primario"
           onClick={abrirAlta}
           icono={<UserPlus className="w-4 h-4" />}
         >
           Nuevo Vigilador
-        </Boton>
+        </Boton>}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {vigiladores.map((vig) => {
+        {vigiladoresMostrados.map((vig) => {
           const asignacionActiva = asignaciones.find(
             (a) => a.id_vigilador === vig.id && a.activa
           )
@@ -166,13 +168,13 @@ export const GestionVigiladores: React.FC = () => {
                     </div>
                   </div>
 
-                  <button
+                  {!modoConsulta && <button
                     type="button"
                     onClick={() => abrirEditar(vig)}
                     className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
                     <Edit2 className="w-4 h-4" />
-                  </button>
+                  </button>}
                 </div>
 
                 {vig.telefono && (
@@ -197,7 +199,7 @@ export const GestionVigiladores: React.FC = () => {
                 </div>
 
                 {/* Acciones de Traslado e Historial (Sección 20 y 21) */}
-                <div className="pt-2 flex items-center justify-between gap-2 border-t border-slate-200 dark:border-slate-800">
+                {!modoConsulta && <div className="pt-2 flex items-center justify-between gap-2 border-t border-slate-200 dark:border-slate-800">
                   <button
                     type="button"
                     onClick={() => abrirHistorial(vig)}
@@ -215,7 +217,7 @@ export const GestionVigiladores: React.FC = () => {
                   >
                     Trasladar
                   </Boton>
-                </div>
+                </div>}
               </TarjetaContenido>
             </Tarjeta>
           )
