@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Building2,
   Users,
@@ -59,6 +59,13 @@ export const VistaPanelControl: React.FC = () => {
         { id: 'avisos', label: 'Avisos', icono: <Bell className="w-4 h-4" /> }
       ]
     : []
+
+  useEffect(() => {
+    const idsPermitidos = pestanas.map((p) => p.id)
+    if (!idsPermitidos.includes(pestanaActiva)) {
+      setPestanaActiva(idsPermitidos[0] || 'empresas')
+    }
+  }, [usuario.rol, pestanaActiva, pestanas])
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -137,14 +144,14 @@ export const VistaPanelControl: React.FC = () => {
       {/* Renderizado de Módulos Operativos */}
       <div className="pt-1">
         {pestanaActiva === 'empresas' && esSuperAdmin && <GestionEmpresas />}
-        {pestanaActiva === 'grilla' && <GrillaMensual />}
-        {pestanaActiva === 'objetivos' && <GestionObjetivos />}
-        {pestanaActiva === 'vigiladores' && <GestionVigiladores />}
-        {pestanaActiva === 'novedades' && <LibroNovedades />}
-        {pestanaActiva === 'cambios' && <CambiosTurnos />}
-        {pestanaActiva === 'avisos' && <AvisosComunicacion />}
-        {pestanaActiva === 'miTurno' && <MiTurno />}
-        {pestanaActiva === 'miMes' && <MiMes />}
+        {pestanaActiva === 'grilla' && (esAdmin || esVigilador) && <GrillaMensual />}
+        {pestanaActiva === 'objetivos' && esAdmin && <GestionObjetivos />}
+        {pestanaActiva === 'vigiladores' && esAdmin && <GestionVigiladores />}
+        {pestanaActiva === 'novedades' && (esAdmin || esVigilador) && <LibroNovedades />}
+        {pestanaActiva === 'cambios' && (esAdmin || esVigilador) && <CambiosTurnos />}
+        {pestanaActiva === 'avisos' && (esAdmin || esVigilador) && <AvisosComunicacion />}
+        {pestanaActiva === 'miTurno' && esVigilador && <MiTurno />}
+        {pestanaActiva === 'miMes' && esVigilador && <MiMes />}
       </div>
     </div>
   )
