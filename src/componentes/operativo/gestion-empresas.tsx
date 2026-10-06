@@ -119,16 +119,9 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
         {empresas.map((emp) => {
           const objetivosEmpresa = objetivos.filter((o) => o.id_empresa === emp.id)
           const cantidadObjetivos = objetivosEmpresa.length
-          const idsVigiladoresActivos = new Set(
-            vigiladores
-              .filter((v) => v.id_empresa === emp.id && v.activo)
-              .map((v) => v.id)
-          )
-          const cantidadVigiladores = new Set(
-            asignaciones
-              .filter((a) => a.activa && idsVigiladoresActivos.has(a.id_vigilador))
-              .map((a) => a.id_vigilador)
-          ).size
+          const cantidadVigiladores = vigiladores.filter(
+            (v) => v.id_empresa === emp.id && v.activo
+          ).length
 
           return (
             <Tarjeta key={emp.id} className="relative group hover:border-blue-500/50 transition-all">
