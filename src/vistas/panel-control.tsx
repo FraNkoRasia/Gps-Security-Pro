@@ -30,6 +30,7 @@ export const VistaPanelControl: React.FC = () => {
 
   const [pestanaActiva, setPestanaActiva] = useState<string>('objetivos')
   const [objetivoGrillaId, setObjetivoGrillaId] = useState<string | null>(null)
+  const [empresaSeleccionadaId, setEmpresaSeleccionadaId] = useState<string | null>(null)
 
   if (!usuario) return null
 
@@ -47,9 +48,7 @@ export const VistaPanelControl: React.FC = () => {
         { id: 'avisos', label: 'Avisos', icono: <Bell className="w-4 h-4" /> }
       ]
     : esSuperAdmin
-    ? [
-        { id: 'empresas', label: 'Empresas', icono: <Building2 className="w-4 h-4" /> }
-      ]
+    ? []
     : esAdmin
     ? [
         { id: 'objetivos', label: 'Objetivos', icono: <MapPin className="w-4 h-4" /> },
@@ -118,40 +117,62 @@ export const VistaPanelControl: React.FC = () => {
         </div>
       </div>
 
-      {/* Pestañas de Navegación Operativa */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200 dark:border-slate-800/80">
-        {pestanas.map((p) => {
-          const estaActiva = pestanaRenderizada === p.id
-          return (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => setPestanaActiva(p.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all cursor-pointer select-none ${
-                estaActiva
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                  : 'bg-white dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800/80'
-              }`}
-            >
-              {p.icono}
-              <span>{p.label}</span>
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Renderizado de Módulos Operativos */}
-      <div className="pt-1">
-        {pestanaRenderizada === 'empresas' && esSuperAdmin && <GestionEmpresas />}
-        {pestanaRenderizada === 'objetivos' && esAdmin && <GestionObjetivos onSeleccionarObjetivo={(id) => { setObjetivoGrillaId(id); setPestanaActiva('grillaObjetivo') }} />}
-        {pestanaRenderizada === 'grillaObjetivo' && esAdmin && objetivoGrillaId && <GrillaMensual objetivoInicial={objetivoGrillaId} />}
-        {pestanaRenderizada === 'vigiladores' && esAdmin && <GestionVigiladores />}
-        {pestanaRenderizada === 'novedades' && (esAdmin || esVigilador) && <LibroNovedades />}
-        {pestanaRenderizada === 'cambios' && (esAdmin || esVigilador) && <CambiosTurnos />}
-        {pestanaRenderizada === 'avisos' && (esAdmin || esVigilador) && <AvisosComunicacion />}
-        {pestanaRenderizada === 'miTurno' && esVigilador && <MiTurno />}
-        {pestanaRenderizada === 'miMes' && esVigilador && <MiMes />}
-      </div>
+      {/* Navegación y contenido operativo */}
+      {esSuperAdmin ? (
+        <div className="pt-1">
+          {!empresaSeleccionadaId ? (
+            <GestionEmpresas onSeleccionarEmpresa={setEmpresaSeleccionadaId} />
+          ) : (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between gap-3">
+                <Boton
+                  variante="secundario"
+                  tamano="chico"
+                  onClick={() => setEmpresaSeleccionadaId(null)}
+                >
+                  ← Volver a Empresas
+                </Boton>
+                <Insignia variante="azul">Vista de Empresa</Insignia>
+              </div>
+              <GestionObjetivos idEmpresaSeleccionada={empresaSeleccionadaId} modoConsulta />
+              <GestionVigiladores idEmpresaSeleccionada={empresaSeleccionadaId} modoConsulta />
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200 dark:border-slate-800/80">
+            {pestanas.map((p) => {
+              const estaActiva = pestanaRenderizada === p.id
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setPestanaActiva(p.id)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all cursor-pointer select-none ${
+                    estaActiva
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                      : 'bg-white dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800/80'
+                  }`}
+                >
+                  {p.icono}
+                  <span>{p.label}</span>
+                </button>
+              )
+            })}
+          </div>
+          <div className="pt-1">
+            {pestanaRenderizada === 'objetivos' && esAdmin && <GestionObjetivos onSeleccionarObjetivo={(id) => { setObjetivoGrillaId(id); setPestanaActiva('grillaObjetivo') }} />}
+            {pestanaRenderizada === 'grillaObjetivo' && esAdmin && objetivoGrillaId && <GrillaMensual objetivoInicial={objetivoGrillaId} />}
+            {pestanaRenderizada === 'vigiladores' && esAdmin && <GestionVigiladores />}
+            {pestanaRenderizada === 'novedades' && (esAdmin || esVigilador) && <LibroNovedades />}
+            {pestanaRenderizada === 'cambios' && (esAdmin || esVigilador) && <CambiosTurnos />}
+            {pestanaRenderizada === 'avisos' && (esAdmin || esVigilador) && <AvisosComunicacion />}
+            {pestanaRenderizada === 'miTurno' && esVigilador && <MiTurno />}
+            {pestanaRenderizada === 'miMes' && esVigilador && <MiMes />}
+          </div>
+        </>
+      )
     </div>
   )
 }
