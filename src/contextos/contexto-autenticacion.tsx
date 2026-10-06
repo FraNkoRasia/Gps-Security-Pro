@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 import type { Usuario, RolUsuario } from '@/tipos'
-import { supabase, hayConexionSupabase, superAdminInicial } from '@/servicios/supabase'
+import { supabase, hayConexionSupabase } from '@/servicios/supabase'
 
 interface ContextoAutenticacionTipo {
   usuario: Usuario | null
@@ -34,24 +34,7 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
 
     if (errorPerfil) throw errorPerfil
 
-    // El superadministrador inicial puede existir antes de que se cree su perfil.
-    // Para cualquier otra cuenta exigimos un perfil real en la base.
     if (!perfil) {
-      if (email.toLowerCase() === superAdminInicial.toLowerCase()) {
-        return {
-          id: authUser.id,
-          email,
-          nombre: (authUser.user_metadata?.nombre as string) || 'FraNko',
-          apellido: (authUser.user_metadata?.apellido as string) || 'Rasia',
-          rol: 'super_administrador' as RolUsuario,
-          id_empresa: null,
-          empresa_nombre: 'GSP Plataforma Global',
-          telefono: null,
-          activo: true,
-          debe_cambiar_contrasena: false,
-          creado_en: authUser.created_at
-        }
-      }
       throw new Error('Tu usuario está autenticado, pero todavía no tiene un perfil habilitado en GSP Security Pro.')
     }
 
