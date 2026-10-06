@@ -12,14 +12,20 @@ type Body = {
   admin_telefono?: string
 }
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+}
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...corsHeaders },
   })
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { status: 200, headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" } })
+  if (req.method === "OPTIONS") return new Response("ok", { status: 200, headers: corsHeaders })
   if (req.method !== "POST") return json({ error: "Método no permitido." }, 405)
 
   const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "")
@@ -93,7 +99,8 @@ Deno.serve(async (req) => {
 
   const { error: perfilError } = await admin
     .from("perfiles")
-    .update({
+    .insert({
+      id: nuevoUsuario.user.id,
       id_empresa: empresa.id,
       nombre: adminNombre,
       apellido: adminApellido,
