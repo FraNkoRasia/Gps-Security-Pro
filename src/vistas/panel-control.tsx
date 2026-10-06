@@ -6,8 +6,7 @@ import {
   BookOpen,
   ArrowRightLeft,
   Bell,
-  Clock,
-  LogOut
+  Clock
 } from 'lucide-react'
 import { Insignia } from '@/componentes/ui/insignia'
 import { Boton } from '@/componentes/ui/boton'
@@ -103,17 +102,6 @@ export const VistaPanelControl: React.FC = () => {
           </div>
         </div>
 
-        {/* Botón Cerrar Sesión */}
-        <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-          <Boton
-            variante="secundario"
-            tamano="chico"
-            onClick={() => cerrarSesion()}
-            icono={<LogOut className="w-3.5 h-3.5" />}
-          >
-            {t.navegacion.cerrarSesion}
-          </Boton>
-        </div>
       </div>
 
       {/* Navegación y contenido operativo */}
