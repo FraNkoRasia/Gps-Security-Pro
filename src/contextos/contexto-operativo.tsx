@@ -352,7 +352,7 @@ interface ContextoOperativoTipo {
   }) => void
 
   // Libro de Novedades (Sección 32)
-  crearNovedad: (datos: {
+  const crearNovedad = (datos: {
     id_objetivo: string
     id_vigilador: string
     nombre_vigilante: string
@@ -362,8 +362,62 @@ interface ContextoOperativoTipo {
     turno: string
     elementos_a_cargo: string
     informe_novedades: string
-  }) => void
-  editarNovedad: (id: string, datos: { informe_novedades: string; motivo_correccion: string }) => void
+  }) => {
+    if (!supabase) return
+    const vig = vigiladores.find((v) => v.id === datos.id_vigilador)
+    const dbVigilador = vig ? vigiladorPorUsuario.get(vig.id) : undefined
+    if (!vig || !dbVigilador || !usuario) return
+
+    void (async () => {
+      const { data, error } = await supabase.from('novedades_libro').insert({
+        id_empresa: vig.id_empresa,
+        id_objetivo: datos.id_objetivo,
+        id_vigilador: dbVigilador.id,
+        nombre_vigilante: datos.nombre_vigilante,
+        nombre_supervisor: datos.nombre_supervisor || null,
+        fecha: datos.fecha,
+        hora: datos.hora,
+        turno: datos.turno || null,
+        elementos_a_cargo: datos.elementos_a_cargo || null,
+        informe_novedades: datos.informe_novedades,
+        creado_por: usuario.id
+      }).select('*').single()
+
+      if (error) { console.error('Error creando novedad:', error); return }
+
+      setNovedades((prev) => [{
+        id: data.id, id_empresa: data.id_empresa, id_objetivo: data.id_objetivo,
+        id_vigilador: datos.id_vigilador, nombre_vigilante: data.nombre_vigilante,
+        nombre_supervisor: data.nombre_supervisor || '', fecha: data.fecha, hora: data.hora,
+        turno: data.turno || '', elementos_a_cargo: data.elementos_a_cargo || '',
+        informe_novedades: data.informe_novedades, creado_en: data.creado_en
+      }, ...prev])
+    })()
+  }
+
+  const editarNovedad = (id: string, datos: { informe_novedades: string; motivo_correccion: string }) => {
+    if (!supabase || !usuario) return
+
+    void (async () => {
+      const original = novedades.find((n) => n.id === id)
+      if (!original) return
+
+      const { data, error } = await supabase.from('novedades_correcciones').insert({
+        id_novedad: id,
+        id_empresa: original.id_empresa,
+        correccion: datos.informe_novedades,
+        motivo: datos.motivo_correccion || null,
+        corregido_por: usuario.id
+      }).select('*').single()
+
+      if (error) { console.error('Error guardando corrección:', error); return }
+
+      // El original permanece intacto. La corrección queda como historial inmutable.
+      setNovedades((prev) => prev.map((n) =>
+        n.id === id ? { ...n, informe_novedades: data.correccion } : n
+      ))
+    })()
+  }
 
   // Cambios de Turno (Sección 29)
   solicitarCambioTurno: (datos: {
