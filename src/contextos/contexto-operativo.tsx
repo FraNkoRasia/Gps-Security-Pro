@@ -3637,24 +3637,53 @@ export const ProveedorOperativo: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Avisos (Sección 31)
   const crearAviso = (datos: { titulo: string; contenido: string; prioridad: Aviso['prioridad'] }) => {
-    const nuevo: Aviso = {
-      id: `av-${Date.now()}`,
-      id_empresa: 'emp-wall-01',
-      autor_nombre: usuario ? `${usuario.nombre} ${usuario.apellido}` : 'Administración',
-      titulo: datos.titulo,
-      contenido: datos.contenido,
-      prioridad: datos.prioridad,
-      leido: false,
-      creado_en: new Date().toISOString()
-    }
-    setAvisos((prev) => [nuevo, ...prev])
-    registrarAuditoria('CREAR_AVISO', 'Aviso', `Publicó aviso: ${datos.titulo}`)
+    if (!supabase || !usuario?.id_empresa) return
+
+    void (async () => {
+      const { data, error } = await supabase.from('avisos').insert({
+        id_empresa: usuario.id_empresa,
+        autor_id: usuario.id,
+        titulo: datos.titulo,
+        contenido: datos.contenido,
+        prioridad: datos.prioridad
+      }).select('*').single()
+
+      if (error) {
+        console.error('Error creando aviso:', error)
+        return
+      }
+
+      const nuevo: Aviso = {
+        id: data.id,
+        id_empresa: data.id_empresa,
+        autor_nombre: `${usuario.nombre} ${usuario.apellido}`,
+        titulo: data.titulo,
+        contenido: data.contenido,
+        prioridad: data.prioridad,
+        leido: false,
+        creado_en: data.creado_en
+      }
+      setAvisos((prev) => [nuevo, ...prev])
+      await registrarAuditoria('CREAR_AVISO', 'Aviso', `Publicó aviso: ${datos.titulo}`, data.id)
+    })()
   }
 
   const marcarAvisoLeido = (id: string) => {
-    setAvisos((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, leido: true } : a))
-    )
+    if (!supabase || !usuario) return
+
+    void (async () => {
+      const { error } = await supabase.from('avisos_lecturas').upsert({
+        id_aviso: id,
+        id_usuario: usuario.id
+      }, { onConflict: 'id_aviso,id_usuario' })
+
+      if (error) {
+        console.error('Error marcando aviso como leído:', error)
+        return
+      }
+
+      setAvisos((prev) => prev.map((a) => a.id === id ? { ...a, leido: true } : a))
+    })()
   }
 
   return (
