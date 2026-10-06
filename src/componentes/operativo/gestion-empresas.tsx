@@ -152,7 +152,7 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
-                    {emp.activa && (
+                    {emp.activa ? (
                       <button
                         type="button"
                         onClick={() => {
@@ -162,6 +162,19 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
                         }}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
                         title="Dar de baja empresa"
+                      >
+                        <Power className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm('¿Dar de alta nuevamente la empresa "' + emp.nombre + '"?')) {
+                            editarEmpresa(emp.id, { activa: true })
+                          }
+                        }}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/30 transition-colors"
+                        title="Dar de alta empresa"
                       >
                         <Power className="w-4 h-4" />
                       </button>
