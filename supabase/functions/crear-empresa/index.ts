@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
 
   const { error: perfilError } = await admin
     .from("perfiles")
-    .insert({
+    .upsert({
       id: nuevoUsuario.user.id,
       id_empresa: empresa.id,
       nombre: adminNombre,
@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
       rol: "administrador",
       activo: true,
       debe_cambiar_contrasena: true,
-    })
+    }, { onConflict: "id" })
 
   if (perfilError) {
     await admin.auth.admin.deleteUser(nuevoUsuario.user.id)
