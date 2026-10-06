@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { UserPlus, ArrowRightLeft, History, Edit2, Phone, Mail, MapPin } from 'lucide-react'
+import { UserPlus, ArrowRightLeft, History, Edit2, Phone, Mail, MapPin, UserCheck, UserX } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -12,12 +12,14 @@ import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { Usuario } from '@/tipos'
 
 export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; modoConsulta?: boolean }> = ({ idEmpresaSeleccionada, modoConsulta = false }) => {
-  const { vigiladores, asignaciones, objetivos, crearVigilador, editarVigilador } = useOperativo()
+  const { vigiladores, asignaciones, objetivos, crearVigilador, editarVigilador, cambiarEstadoVigilador } = useOperativo()
   const { usuario } = useAutenticacion()
 
   const [modalNuevoAbierto, setModalNuevoAbierto] = useState(false)
   const [modalHistorialAbierto, setModalHistorialAbierto] = useState(false)
   const [modalTrasladoAbierto, setModalTrasladoAbierto] = useState(false)
+  const [modalEstadoAbierto, setModalEstadoAbierto] = useState(false)
+  const [vigiladorEstado, setVigiladorEstado] = useState<Usuario | null>(null)
 
   const [vigiladorSeleccionado, setVigiladorSeleccionado] = useState<Usuario | null>(null)
   const [vigiladorEditando, setVigiladorEditando] = useState<Usuario | null>(null)
@@ -61,6 +63,19 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; modo
   const abrirHistorial = (vig: Usuario) => {
     setVigiladorSeleccionado(vig)
     setModalHistorialAbierto(true)
+  }
+
+  const abrirEstado = (vig: Usuario) => {
+    setVigiladorEstado(vig)
+    setModalEstadoAbierto(true)
+  }
+
+  const confirmarEstado = async () => {
+    if (!vigiladorEstado) return
+    const errorEstado = await cambiarEstadoVigilador(vigiladorEstado.id, !vigiladorEstado.activo)
+    if (errorEstado) { setError(errorEstado); return }
+    setModalEstadoAbierto(false)
+    setVigiladorEstado(null)
   }
 
   const abrirTraslado = (vig: Usuario) => {
@@ -123,7 +138,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; modo
     (a) => a.id_vigilador === vigiladorSeleccionado?.id
   )
 
-  const vigiladoresMostrados = vigiladores.filter((v) => v.id_empresa === idEmpresaActiva && v.activo)
+  const vigiladoresMostrados = vigiladores.filter((v) => v.id_empresa === idEmpresaActiva)
 
   return (
     <div className="space-y-6">
@@ -170,13 +185,24 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; modo
                     </div>
                   </div>
 
-                  {!modoConsulta && <button
-                    type="button"
-                    onClick={() => abrirEditar(vig)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>}
+                  {!modoConsulta && <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => abrirEditar(vig)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                      title="Editar vigilador"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => abrirEstado(vig)}
+                      className={`p-1.5 rounded-lg transition-colors ${vig.activo ? 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30' : 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'}`}
+                      title={vig.activo ? 'Dar de baja' : 'Dar de alta'}
+                    >
+                      {vig.activo ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                    </button>
+                  </div>}
                 </div>
 
                 {vig.telefono && (
@@ -193,11 +219,11 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; modo
                     <div>
                       <span className="text-slate-500 dark:text-slate-400 block text-[10px]">Puesto Activo:</span>
                       <span className="font-bold text-slate-900 dark:text-white">
-                        {asignacionActiva?.objetivo_nombre || 'Sin puesto asignado'}
+                        {vig.activo ? (asignacionActiva?.objetivo_nombre || 'Sin puesto asignado') : 'Sin servicio activo'}
                       </span>
                     </div>
                   </div>
-                  <Insignia variante="verde">En servicio</Insignia>
+                  <Insignia variante={vig.activo ? "verde" : "roja"}>{vig.activo ? "En servicio" : "Dado de baja"}</Insignia>
                 </div>
 
                 {/* Acciones de Traslado e Historial (Sección 20 y 21) */}
@@ -275,6 +301,28 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; modo
         </div>
       </Dialogo>
 
+
+      <Dialogo
+        abierto={modalEstadoAbierto}
+        alCerrar={() => { setModalEstadoAbierto(false); setVigiladorEstado(null) }}
+        titulo={vigiladorEstado?.activo ? 'Dar de baja vigilador' : 'Dar de alta vigilador'}
+        subtitulo={vigiladorEstado?.activo
+          ? 'El vigilador quedará inactivo y no tendrá servicio operativo activo.'
+          : 'El vigilador volverá a estar activo para la operación.'}
+        icono={vigiladorEstado?.activo ? <UserX className="w-5 h-5 text-red-500" /> : <UserCheck className="w-5 h-5 text-emerald-500" />}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-slate-700 dark:text-slate-300">
+            ¿Deseas {vigiladorEstado?.activo ? 'dar de baja' : 'dar de alta'} a <strong>{vigiladorEstado?.nombre} {vigiladorEstado?.apellido}</strong>?
+          </p>
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+            <Boton variante="secundario" onClick={() => { setModalEstadoAbierto(false); setVigiladorEstado(null) }}>Cancelar</Boton>
+            <Boton variante={vigiladorEstado?.activo ? "peligro" : "primario"} onClick={() => void confirmarEstado()}>
+              {vigiladorEstado?.activo ? 'Confirmar baja' : 'Confirmar alta'}
+            </Boton>
+          </div>
+        </div>
+      </Dialogo>
       {/* Modal Nuevo / Editar Vigilador */}
       <Dialogo
         abierto={modalNuevoAbierto}
