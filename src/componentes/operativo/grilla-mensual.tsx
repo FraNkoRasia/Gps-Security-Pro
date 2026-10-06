@@ -14,7 +14,7 @@ import { Etiqueta } from '@/componentes/ui/etiqueta'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import type { Turno } from '@/tipos'
 
-export const GrillaMensual: React.FC = () => {
+export const GrillaMensual: React.FC<{ objetivoInicial?: string; onVolver?: () => void }> = ({ objetivoInicial = '', onVolver }) => {
   const { vigiladores, objetivos, turnos, asignarTurnoGrilla } = useOperativo()
 
   const mesSeleccionado = '2026-10'
