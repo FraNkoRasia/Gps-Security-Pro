@@ -28,6 +28,7 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
   const [adminTelefono, setAdminTelefono] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [confirmacionGuardado, setConfirmacionGuardado] = useState(false)
+  const [confirmacionCreacion, setConfirmacionCreacion] = useState(false)
   const [procesandoGuardado, setProcesandoGuardado] = useState(false)
 
   const abrirCrear = () => {
@@ -77,23 +78,10 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
       return
     }
 
-    const resultado = await crearEmpresaConAdministrador({
-      nombre: nombre.trim(),
-      cuit: cuit.trim(),
-      direccion: direccion.trim(),
-      admin_nombre: adminNombre.trim(),
-      admin_apellido: adminApellido.trim(),
-      admin_email: adminEmail.trim().toLowerCase(),
-      admin_password: adminPassword,
-      admin_telefono: adminTelefono.trim()
-    })
+    setConfirmacionCreacion(true)
+    return
 
-    if (resultado) {
-      setError(resultado)
-      return
-    }
 
-    setModalAbierto(false)
   }
 
   return (
@@ -228,6 +216,49 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
           )
         })}
       </div>
+
+      <Dialogo
+        abierto={confirmacionCreacion}
+        alCerrar={() => !procesandoGuardado && setConfirmacionCreacion(false)}
+        titulo="Confirmar alta de empresa"
+        subtitulo="Se creará la empresa y la cuenta de su administrador."
+        icono={<Building2 className="w-5 h-5 text-blue-500" />}
+        tamano="chico"
+      >
+        <div className="space-y-5">
+          <div className="rounded-xl border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-950/20 p-4">
+            <p className="text-sm text-slate-600 dark:text-slate-300">¿Deseas crear la empresa:</p>
+            <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{nombre}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">También se creará la cuenta del administrador con los datos ingresados.</p>
+          </div>
+          {error && <p className="text-xs font-medium text-red-600 dark:text-red-400">{error}</p>}
+          <div className="flex justify-end gap-2">
+            <Boton variante="secundario" tamano="chico" disabled={procesandoGuardado} onClick={() => setConfirmacionCreacion(false)}>Cancelar</Boton>
+            <Boton variante="primario" tamano="chico" disabled={procesandoGuardado} onClick={async () => {
+              setProcesandoGuardado(true)
+              const resultado = await crearEmpresaConAdministrador({
+                nombre: nombre.trim(),
+                cuit: cuit.trim(),
+                direccion: direccion.trim(),
+                admin_nombre: adminNombre.trim(),
+                admin_apellido: adminApellido.trim(),
+                admin_email: adminEmail.trim().toLowerCase(),
+                admin_password: adminPassword,
+                admin_telefono: adminTelefono.trim()
+              })
+              setProcesandoGuardado(false)
+              if (resultado) {
+                setError(resultado)
+                return
+              }
+              setConfirmacionCreacion(false)
+              setModalAbierto(false)
+            }}>
+              {procesandoGuardado ? 'Creando...' : 'Confirmar alta'}
+            </Boton>
+          </div>
+        </div>
+      </Dialogo>
 
       <Dialogo
         abierto={confirmacionGuardado}
