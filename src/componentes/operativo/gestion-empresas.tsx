@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Building2, Plus, Edit2, MapPin, UserPlus, ArrowRight } from 'lucide-react'
+import { Building2, Plus, Edit2, MapPin, UserPlus, ArrowRight, Power } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -10,7 +10,7 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import type { Empresa } from '@/tipos'
 
 export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => void }> = ({ onSeleccionarEmpresa }) => {
-  const { empresas, objetivos, vigiladores, crearEmpresaConAdministrador, editarEmpresa } = useOperativo()
+  const { empresas, objetivos, vigiladores, crearEmpresaConAdministrador, editarEmpresa, eliminarEmpresa } = useOperativo()
 
   const [modalAbierto, setModalAbierto] = useState(false)
   const [empresaEditando, setEmpresaEditando] = useState<Empresa | null>(null)
@@ -120,7 +120,7 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {empresas.map((emp) => {
           const cantidadObjetivos = objetivos.filter((o) => o.id_empresa === emp.id).length
-          const cantidadVigiladores = vigiladores.filter((v) => v.id_empresa === emp.id).length
+          const cantidadVigiladores = vigiladores.filter((v) => v.id_empresa === emp.id && v.activo).length
 
           return (
             <Tarjeta key={emp.id} className="relative group hover:border-blue-500/50 transition-all">
@@ -152,6 +152,20 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
+                    {emp.activa && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm('¿Dar de baja la empresa "' + emp.nombre + '"? La empresa no se eliminará de la base de datos.')) {
+                            eliminarEmpresa(emp.id)
+                          }
+                        }}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                        title="Dar de baja empresa"
+                      >
+                        <Power className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
