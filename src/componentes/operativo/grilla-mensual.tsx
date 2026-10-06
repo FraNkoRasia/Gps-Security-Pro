@@ -326,7 +326,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
           <table className="w-full text-xs text-left border-collapse">
             <thead>
               <tr className="bg-slate-100 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px] select-none">
-                <th className="p-3 sticky left-0 z-20 bg-slate-100 dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-200 w-36 sm:w-44 min-w-[140px]">
+                <th className="p-3 sticky left-0 z-20 bg-slate-100 dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-200 w-28 sm:w-32 min-w-[118px]">
                   Vigilador
                 </th>
                 {diasVisibles.map((dia) => {
@@ -337,7 +337,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
                     <th
                       key={dia}
                       className={`p-2 text-center border-r border-slate-200 dark:border-slate-800/60 font-semibold ${
-                        modoVista === 'semana' ? 'min-w-[48px]' : 'min-w-[34px]'
+                        modoVista === 'semana' ? 'min-w-[40px] max-w-[40px]' : 'min-w-[32px] max-w-[32px]'
                       } ${
                         esFeriado
                           ? 'bg-amber-100/70 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300'
@@ -356,8 +356,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
                     </th>
                   )
                 })}
-                <th className="p-2 sm:p-3 text-center sticky right-0 z-20 bg-slate-100 dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-200 min-w-[100px] sm:min-w-[130px]">
-                  {modoVista === 'semana' ? 'Sem / Mes' : 'Total hs / Meta'}
+                <th className="p-1.5 sm:p-2 text-center sticky right-0 z-20 bg-slate-100 dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-200 min-w-[78px] sm:min-w-[88px]">
+                  {modoVista === 'semana' ? 'Sem / Mes' : 'Total hs'}
                 </th>
               </tr>
             </thead>
@@ -372,11 +372,11 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
                     className="hover:bg-blue-50/40 dark:hover:bg-blue-950/20 transition-colors"
                   >
                     {/* Columna Vigilador Sticky */}
-                    <td className="p-2.5 sm:p-3 sticky left-0 z-10 bg-white dark:bg-[#0C121E] border-r border-slate-200 dark:border-slate-800 shadow-xs">
+                    <td className="p-2 sm:p-2.5 sticky left-0 z-10 bg-white dark:bg-[#0C121E] border-r border-slate-200 dark:border-slate-800 shadow-xs">
                       <div className="font-bold text-slate-900 dark:text-white leading-tight truncate">
                         {vig.apellido}, {vig.nombre.charAt(0)}.
                       </div>
-                      <div className="text-[10px] text-slate-400 truncate max-w-[130px]">
+                      <div className="text-[10px] text-slate-400 truncate max-w-[105px]">
                         {vig.email.split('@')[0]}
                       </div>
                     </td>
@@ -393,10 +393,10 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
                         <td
                           key={dia}
                           onClick={() => abrirEditarCelda(vig.id, `${vig.nombre} ${vig.apellido}`, dia)}
-                          className="p-1 text-center border-r border-slate-200 dark:border-slate-800/40 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors select-none group"
+                          className="p-0.5 text-center border-r border-slate-200 dark:border-slate-800/40 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors select-none group"
                           title="Clic para modificar turno"
                         >
-                          <div className="h-8 flex items-center justify-center rounded-lg group-hover:scale-105 transition-transform text-xs">
+                          <div className="h-7 flex items-center justify-center rounded-md group-hover:scale-105 transition-transform text-xs">
                             {obtenerEtiquetaTurno(turno)}
                           </div>
                         </td>
@@ -404,7 +404,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
                     })}
 
                     {/* Columna Totales y Meta Sticky */}
-                    <td className="p-2 text-center sticky right-0 z-10 bg-white dark:bg-[#0C121E] border-l border-slate-200 dark:border-slate-800 shadow-xs">
+                    <td className="p-1.5 text-center sticky right-0 z-10 bg-white dark:bg-[#0C121E] border-l border-slate-200 dark:border-slate-800 shadow-xs">
                       <div className="flex flex-col items-center justify-center gap-0.5">
                         {modoVista === 'semana' ? (
                           <>
@@ -441,7 +441,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
 
               {/* Fila Total Diario del Servicio */}
               <tr className="bg-slate-100/90 dark:bg-slate-950/90 font-bold border-t-2 border-slate-300 dark:border-slate-700 text-[11px]">
-                <td className="p-2.5 sm:p-3 sticky left-0 z-10 bg-slate-100 dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
+                <td className="p-2 sm:p-2.5 sticky left-0 z-10 bg-slate-100 dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
                   Total Día
                 </td>
                 {diasVisibles.map((dia) => {
@@ -449,7 +449,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
                   return (
                     <td
                       key={dia}
-                      className="p-1 text-center border-r border-slate-200 dark:border-slate-800/40 text-blue-600 dark:text-blue-400 font-mono"
+                      className="p-0.5 text-center border-r border-slate-200 dark:border-slate-800/40 text-blue-600 dark:text-blue-400 font-mono"
                     >
                       {total}h
                     </td>
