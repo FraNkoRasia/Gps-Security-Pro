@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { LogOut, Menu, X, Shield, Lock, Globe, Sun, Moon } from 'lucide-react'
+import { LogOut, Menu, X, Lock, Globe, Sun, Moon } from 'lucide-react'
 import { SelectorIdioma } from '@/componentes/ui/selector-idioma'
 import { SelectorTema } from '@/componentes/ui/selector-tema'
 import { Insignia } from '@/componentes/ui/insignia'
