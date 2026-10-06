@@ -228,49 +228,6 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
       </div>
 
       <Dialogo
-        abierto={confirmacionCreacion}
-        alCerrar={() => !procesandoGuardado && setConfirmacionCreacion(false)}
-        titulo="Confirmar alta de empresa"
-        subtitulo="Se creará la empresa y la cuenta de su administrador."
-        icono={<Building2 className="w-5 h-5 text-blue-500" />}
-        tamano="chico"
-      >
-        <div className="space-y-5">
-          <div className="rounded-xl border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-950/20 p-4">
-            <p className="text-sm text-slate-600 dark:text-slate-300">¿Deseas crear la empresa:</p>
-            <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{nombre}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">También se creará la cuenta del administrador con los datos ingresados.</p>
-          </div>
-          {error && <p className="text-xs font-medium text-red-600 dark:text-red-400">{error}</p>}
-          <div className="flex justify-end gap-2">
-            <Boton variante="secundario" tamano="chico" disabled={procesandoGuardado} onClick={() => setConfirmacionCreacion(false)}>Cancelar</Boton>
-            <Boton variante="primario" tamano="chico" disabled={procesandoGuardado} onClick={async () => {
-              setProcesandoGuardado(true)
-              const resultado = await crearEmpresaConAdministrador({
-                nombre: nombre.trim(),
-                cuit: cuit.trim(),
-                direccion: direccion.trim(),
-                admin_nombre: adminNombre.trim(),
-                admin_apellido: adminApellido.trim(),
-                admin_email: adminEmail.trim().toLowerCase(),
-                admin_password: adminPassword,
-                admin_telefono: adminTelefono.trim()
-              })
-              setProcesandoGuardado(false)
-              if (resultado) {
-                setError(resultado)
-                return
-              }
-              setConfirmacionCreacion(false)
-              setModalAbierto(false)
-            }}>
-              {procesandoGuardado ? 'Creando...' : 'Confirmar alta'}
-            </Boton>
-          </div>
-        </div>
-      </Dialogo>
-
-      <Dialogo
         abierto={!!empresaConfirmacion}
         alCerrar={() => !procesandoEmpresa && setEmpresaConfirmacion(null)}
         titulo="Dar de baja empresa"
@@ -309,89 +266,92 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
       {/* Modal Crear / Editar Empresa */}
       <Dialogo
         abierto={modalAbierto}
-        alCerrar={() => setModalAbierto(false)}
-        titulo={empresaEditando ? 'Editar Empresa' : 'Nueva Empresa'}
-        subtitulo="Gestión de organizaciones para aislamiento de grillas y personal."
+        alCerrar={() => {
+          if (procesandoGuardado) return
+          setConfirmacionCreacion(false)
+          setModalAbierto(false)
+        }}
+        titulo={empresaEditando ? 'Editar Empresa' : confirmacionCreacion ? 'Confirmar alta de empresa' : 'Nueva Empresa'}
+        subtitulo={empresaEditando ? 'Gestión de organizaciones para aislamiento de grillas y personal.' : confirmacionCreacion ? 'Se creará la empresa y la cuenta de su administrador.' : 'Gestión de organizaciones para aislamiento de grillas y personal.'}
         icono={<Building2 className="w-5 h-5 text-blue-500" />}
       >
-        <form onSubmit={manejarGuardar} className="space-y-4">
-          <div>
-            <Etiqueta requerido>Nombre de la Empresa</Etiqueta>
-            <Entrada
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              placeholder="Ej: Wall Security"
-              autoFocus
-            />
-          </div>
-
-          <div>
-            <Etiqueta>CUIT / Identificación Tributaria</Etiqueta>
-            <Entrada
-              value={cuit}
-              onChange={(e) => setCuit(e.target.value)}
-              placeholder="30-71458921-9"
-            />
-          </div>
-
-          <div>
-            <Etiqueta>Dirección / Sede Central</Etiqueta>
-            <Entrada
-              value={direccion}
-              onChange={(e) => setDireccion(e.target.value)}
-              placeholder="Av. Marcelo T. de Alvear 1040, Río Cuarto"
-            />
-          </div>
-
-          {!empresaEditando && (
-            <div className="space-y-4 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/50 dark:bg-blue-950/20 p-4">
-              <div className="flex items-center gap-2">
-                <UserPlus className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <div>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">Cuenta del Administrador</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Será la cuenta con la que el responsable de la empresa iniciará sesión.</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Etiqueta requerido>Nombre</Etiqueta>
-                  <Entrada value={adminNombre} onChange={(e) => setAdminNombre(e.target.value)} placeholder="Juan" />
-                </div>
-                <div>
-                  <Etiqueta requerido>Apellido</Etiqueta>
-                  <Entrada value={adminApellido} onChange={(e) => setAdminApellido(e.target.value)} placeholder="Pérez" />
-                </div>
-              </div>
-
-              <div>
-                <Etiqueta requerido>Email de acceso</Etiqueta>
-                <Entrada type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} placeholder="admin@empresa.com" />
-              </div>
-
-              <div>
-                <Etiqueta requerido>Contraseña temporal</Etiqueta>
-                <Entrada type="password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} placeholder="Mínimo 8 caracteres" minLength={8} />
-              </div>
-
-              <div>
-                <Etiqueta>Teléfono</Etiqueta>
-                <Entrada type="tel" value={adminTelefono} onChange={(e) => setAdminTelefono(e.target.value)} placeholder="351..." />
-              </div>
+        {confirmacionCreacion ? (
+          <div className="space-y-5">
+            <div className="rounded-xl border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-950/20 p-4">
+              <p className="text-sm text-slate-600 dark:text-slate-300">¿Deseas crear la empresa:</p>
+              <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{nombre}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">También se creará la cuenta del administrador con los datos ingresados.</p>
             </div>
-          )}
-
-          {error && <p className="text-xs text-red-500 font-semibold">{error}</p>}
-
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
-            <Boton type="button" variante="secundario" onClick={() => !procesandoGuardado && setModalAbierto(false)}>
-              Cancelar
-            </Boton>
-            <Boton type="submit" variante="primario">
-              {empresaEditando ? (procesandoGuardado ? 'Guardando...' : 'Guardar Cambios') : 'Crear Empresa y Administrador'}
-            </Boton>
+            {error && <p className="text-xs font-medium text-red-600 dark:text-red-400">{error}</p>}
+            <div className="flex justify-end gap-2">
+              <Boton variante="secundario" tamano="chico" disabled={procesandoGuardado} onClick={() => setConfirmacionCreacion(false)}>Cancelar</Boton>
+              <Boton variante="primario" tamano="chico" disabled={procesandoGuardado} onClick={async () => {
+                setProcesandoGuardado(true)
+                const resultado = await crearEmpresaConAdministrador({
+                  nombre: nombre.trim(),
+                  cuit: cuit.trim(),
+                  direccion: direccion.trim(),
+                  admin_nombre: adminNombre.trim(),
+                  admin_apellido: adminApellido.trim(),
+                  admin_email: adminEmail.trim().toLowerCase(),
+                  admin_password: adminPassword,
+                  admin_telefono: adminTelefono.trim()
+                })
+                setProcesandoGuardado(false)
+                if (resultado) {
+                  setError(resultado)
+                  return
+                }
+                setConfirmacionCreacion(false)
+                setModalAbierto(false)
+              }}>
+                {procesandoGuardado ? 'Creando...' : 'Confirmar alta'}
+              </Boton>
+            </div>
           </div>
-        </form>
+        ) : (
+          <form onSubmit={manejarGuardar} className="space-y-4">
+            <div>
+              <Etiqueta requerido>Nombre de la Empresa</Etiqueta>
+              <Entrada value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej: Wall Security" autoFocus />
+            </div>
+            <div>
+              <Etiqueta>CUIT / Identificación Tributaria</Etiqueta>
+              <Entrada value={cuit} onChange={(e) => setCuit(e.target.value)} placeholder="30-71458921-9" />
+            </div>
+            <div>
+              <Etiqueta>Dirección / Sede Central</Etiqueta>
+              <Entrada value={direccion} onChange={(e) => setDireccion(e.target.value)} placeholder="Av. Marcelo T. de Alvear 1040, Río Cuarto" />
+            </div>
+
+            {!empresaEditando && (
+              <div className="space-y-4 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/50 dark:bg-blue-950/20 p-4">
+                <div className="flex items-center gap-2">
+                  <UserPlus className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <div>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">Cuenta del Administrador</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Será la cuenta con la que el responsable de la empresa iniciará sesión.</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div><Etiqueta requerido>Nombre</Etiqueta><Entrada value={adminNombre} onChange={(e) => setAdminNombre(e.target.value)} placeholder="Juan" /></div>
+                  <div><Etiqueta requerido>Apellido</Etiqueta><Entrada value={adminApellido} onChange={(e) => setAdminApellido(e.target.value)} placeholder="Pérez" /></div>
+                </div>
+                <div><Etiqueta requerido>Email de acceso</Etiqueta><Entrada type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} placeholder="admin@empresa.com" /></div>
+                <div><Etiqueta requerido>Contraseña temporal</Etiqueta><Entrada type="password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} placeholder="Mínimo 8 caracteres" minLength={8} /></div>
+                <div><Etiqueta>Teléfono</Etiqueta><Entrada type="tel" value={adminTelefono} onChange={(e) => setAdminTelefono(e.target.value)} placeholder="351..." /></div>
+              </div>
+            )}
+
+            {error && <p className="text-xs text-red-500 font-semibold">{error}</p>}
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+              <Boton type="button" variante="secundario" onClick={() => !procesandoGuardado && setModalAbierto(false)}>Cancelar</Boton>
+              <Boton type="submit" variante="primario">
+                {empresaEditando ? (procesandoGuardado ? 'Guardando...' : 'Guardar Cambios') : 'Crear Empresa y Administrador'}
+              </Boton>
+            </div>
+          </form>
+        )}
       </Dialogo>
     </div>
   )
