@@ -146,7 +146,7 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
                   </p>
                 )}
 
-                <div className="pt-2 flex items-center justify-between border-t border-slate-200 dark:border-slate-800 text-xs">
+                <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 dark:border-slate-800 text-xs">
                   <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300 font-medium">
                     <Users className="w-4 h-4 text-blue-500" />
                     <span>Personal: {vigiladoresAsignados} vig.</span>
@@ -154,17 +154,18 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
                   <Insignia variante={obj.activo ? 'verde' : 'gris'}>
                     {obj.activo ? 'Operativo' : 'Inactivo'}
                   </Insignia>
+                </div>
+
                 {onSeleccionarObjetivo && (
                   <Boton
                     variante="primario"
                     tamano="chico"
-                    className="w-full mt-3"
+                    className="w-fit mt-1 px-3"
                     onClick={() => onSeleccionarObjetivo(obj.id)}
                   >
                     Editar Grilla
                   </Boton>
                 )}
-                </div>
               </TarjetaContenido>
             </Tarjeta>
           )
