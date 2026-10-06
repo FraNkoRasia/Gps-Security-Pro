@@ -95,7 +95,8 @@ Deno.serve(async (req) => {
 
     const userId = created.user.id
 
-    const { error: profileError } = await admin.from("perfiles").update({
+    const { error: profileError } = await admin.from("perfiles").insert({
+      id: userId,
       id_empresa: idEmpresa,
       nombre,
       apellido,
@@ -103,7 +104,7 @@ Deno.serve(async (req) => {
       rol: "vigilador",
       activo: true,
       debe_cambiar_contrasena: true,
-    }).eq("id", userId)
+    })
 
     if (profileError) {
       await admin.auth.admin.deleteUser(userId)
