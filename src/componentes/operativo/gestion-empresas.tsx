@@ -177,10 +177,7 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
                         type="button"
                         onClick={async () => {
                           setErrorOperacion(null)
-                          setProcesandoEmpresa(true)
-                          const resultado = await cambiarEstadoEmpresa(emp.id, true)
-                          setProcesandoEmpresa(false)
-                          if (resultado) setErrorOperacion(resultado)
+                          setEmpresaConfirmacion(emp)
                         }}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/30 transition-colors"
                         title="Dar de alta empresa"
@@ -230,17 +227,17 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
       <Dialogo
         abierto={!!empresaConfirmacion}
         alCerrar={() => !procesandoEmpresa && setEmpresaConfirmacion(null)}
-        titulo="Dar de baja empresa"
-        subtitulo="La cuenta de sus usuarios quedará suspendida hasta que la empresa vuelva a estar activa."
+        titulo={empresaConfirmacion?.activa ? "Dar de baja empresa" : "Dar de alta empresa"}
+        subtitulo={empresaConfirmacion?.activa ? "La cuenta de sus usuarios quedará suspendida hasta que la empresa vuelva a estar activa." : "La cuenta de sus usuarios podrá volver a ingresar al sistema."}
         icono={<Power className="w-5 h-5 text-red-500" />}
         tamano="chico"
       >
         {empresaConfirmacion && (
           <div className="space-y-5">
             <div className="rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/20 p-4">
-              <p className="text-sm text-slate-600 dark:text-slate-300">¿Estás seguro de dar de baja a:</p>
+              <p className="text-sm text-slate-600 dark:text-slate-300">¿Estás seguro de dar de {empresaConfirmacion?.activa ? 'baja' : 'alta'} a:</p>
               <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{empresaConfirmacion.nombre}?</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Los usuarios de esta empresa no podrán ingresar mientras esté suspendida.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Los usuarios de esta empresa podrán ingresar nuevamente cuando vuelva a estar activa.</p>
             </div>
             {errorOperacion && <p className="text-xs font-medium text-red-600 dark:text-red-400">{errorOperacion}</p>}
             <div className="flex justify-end gap-2">
@@ -248,7 +245,9 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
               <Boton variante="peligro" tamano="chico" disabled={procesandoEmpresa} onClick={async () => {
                 if (!empresaConfirmacion) return
                 setProcesandoEmpresa(true)
-                const resultado = await eliminarEmpresa(empresaConfirmacion.id)
+                const resultado = empresaConfirmacion.activa
+                  ? await eliminarEmpresa(empresaConfirmacion.id)
+                  : await cambiarEstadoEmpresa(empresaConfirmacion.id, true)
                 setProcesandoEmpresa(false)
                 if (resultado) {
                   setErrorOperacion(resultado)
@@ -256,7 +255,7 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
                 }
                 setEmpresaConfirmacion(null)
               }}>
-                {procesandoEmpresa ? 'Procesando...' : 'Confirmar baja'}
+                {procesandoEmpresa ? 'Procesando...' : (empresaConfirmacion?.activa ? 'Confirmar baja' : 'Confirmar alta')}
               </Boton>
             </div>
           </div>
