@@ -77,10 +77,11 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
     }
 
     let activo = true
+    const clienteSupabase = supabase
 
     const inicializarSesion = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession()
+        const { data, error } = await clienteSupabase.auth.getSession()
         if (error) throw error
 
         if (data.session?.user && activo) {
@@ -100,7 +101,7 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
 
     inicializarSesion()
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_evento, session) => {
+    const { data: listener } = clienteSupabase.auth.onAuthStateChange(async (_evento, session) => {
       if (!activo) return
 
       try {
@@ -129,6 +130,7 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
   const iniciarSesion = async (email: string, contrasena: string, recordarme: boolean) => {
     setCargando(true)
     setErrorAuth(null)
+    void recordarme
 
     try {
       const emailLimpio = email.trim().toLowerCase()
