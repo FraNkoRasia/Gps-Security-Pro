@@ -10,7 +10,7 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import type { Empresa } from '@/tipos'
 
 export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => void }> = ({ onSeleccionarEmpresa }) => {
-  const { empresas, objetivos, vigiladores, crearEmpresaConAdministrador, editarEmpresa, eliminarEmpresa } = useOperativo()
+  const { empresas, objetivos, vigiladores, crearEmpresaConAdministrador, editarEmpresa, cambiarEstadoEmpresa, eliminarEmpresa } = useOperativo()
 
   const [modalAbierto, setModalAbierto] = useState(false)
   const [empresaEditando, setEmpresaEditando] = useState<Empresa | null>(null)
@@ -173,10 +173,7 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
                         onClick={async () => {
                           setErrorOperacion(null)
                           setProcesandoEmpresa(true)
-                          const resultado = await new Promise<string | null>((resolve) => {
-                            editarEmpresa(emp.id, { activa: true })
-                            resolve(null)
-                          })
+                          const resultado = await cambiarEstadoEmpresa(emp.id, true)
                           setProcesandoEmpresa(false)
                           if (resultado) setErrorOperacion(resultado)
                         }}
