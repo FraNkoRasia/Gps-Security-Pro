@@ -125,20 +125,21 @@ export const VistaPanelControl: React.FC = () => {
                 </Boton>
                 <Insignia variante="azul">Vista de Empresa</Insignia>
               </div>
-              <GestionObjetivos
-                idEmpresaSeleccionada={empresaSeleccionadaId}
-                modoConsulta
-                onSeleccionarObjetivo={setObjetivoSeleccionadoId}
-              />
-              {objetivoSeleccionadoId && (
+              {!objetivoSeleccionadoId ? (
+                <GestionObjetivos
+                  idEmpresaSeleccionada={empresaSeleccionadaId}
+                  modoConsulta
+                  onSeleccionarObjetivo={setObjetivoSeleccionadoId}
+                />
+              ) : (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between gap-3 pt-2">
                     <div>
                       <h3 className="text-lg font-black text-slate-900 dark:text-white font-['Outfit']">
-                        Plantel del objetivo
+                        Vigiladores del objetivo
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Vigiladores actualmente asignados a este puesto.
+                        Personal actualmente asignado a este objetivo.
                       </p>
                     </div>
                     <Boton
@@ -146,7 +147,7 @@ export const VistaPanelControl: React.FC = () => {
                       tamano="chico"
                       onClick={() => setObjetivoSeleccionadoId(null)}
                     >
-                      ← Ver objetivos
+                      ← Volver a Objetivos
                     </Boton>
                   </div>
                   <GestionVigiladores
