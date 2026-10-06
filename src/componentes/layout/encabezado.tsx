@@ -263,9 +263,9 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbr
             {estaAutenticado && (
               <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
                 <Boton
-                  variante="peligro"
+                  variante="fantasma"
                   tamano="medio"
-                  className="w-full"
+                  className="w-full border border-red-500/20 text-red-500/80 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 dark:text-red-400/80 dark:hover:bg-red-500/10 dark:hover:text-red-300 dark:hover:border-red-400/30"
                   onClick={() => {
                     setMenuMovilAbierto(false)
                     cerrarSesion()
