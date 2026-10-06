@@ -68,7 +68,7 @@ export const GestionVigiladores: React.FC = () => {
     setModalTrasladoAbierto(true)
   }
 
-  const manejarGuardar = (e: React.FormEvent) => {
+  const manejarGuardar = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
 
@@ -94,15 +94,22 @@ export const GestionVigiladores: React.FC = () => {
         email: email.trim().toLowerCase(),
         telefono: telefono.trim()
       })
-    } else {
-      crearVigilador({
-        nombre: nombre.trim(),
-        apellido: apellido.trim(),
-        email: email.trim().toLowerCase(),
-        telefono: telefono.trim(),
-        id_empresa: idEmpresaActiva,
-        id_objetivo_inicial: idObjetivoInicial
-      })
+      setModalNuevoAbierto(false)
+      return
+    }
+
+    const errorCreacion = await crearVigilador({
+      nombre: nombre.trim(),
+      apellido: apellido.trim(),
+      email: email.trim().toLowerCase(),
+      telefono: telefono.trim(),
+      id_empresa: idEmpresaActiva,
+      id_objetivo_inicial: idObjetivoInicial
+    })
+
+    if (errorCreacion) {
+      setError(errorCreacion)
+      return
     }
 
     setModalNuevoAbierto(false)
