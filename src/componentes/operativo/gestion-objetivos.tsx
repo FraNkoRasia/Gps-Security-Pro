@@ -161,7 +161,7 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
                     className="w-full mt-3"
                     onClick={() => onSeleccionarObjetivo(obj.id)}
                   >
-                    Crear / ver grilla de turnos
+                    Editar Grilla
                   </Boton>
                 )}
                 </div>
