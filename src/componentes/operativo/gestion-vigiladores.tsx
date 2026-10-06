@@ -53,6 +53,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; modo
     setApellido(vig.apellido)
     setEmail(vig.email)
     setTelefono(vig.telefono || '')
+    setPassword('')
     setError(null)
     setModalNuevoAbierto(true)
   }
@@ -91,7 +92,8 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; modo
         nombre: nombre.trim(),
         apellido: apellido.trim(),
         email: email.trim().toLowerCase(),
-        telefono: telefono.trim()
+        telefono: telefono.trim(),
+        ...(password.trim() ? { password: password.trim() } : {})
       })
       setModalNuevoAbierto(false)
       return
@@ -303,7 +305,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; modo
           </div>
 
           <div>
-            <Etiqueta requerido>Correo Electrónico (Acceso Auth)</Etiqueta>
+            <Etiqueta requerido={!vigiladorEditando}>Correo Electrónico (Acceso Auth)</Etiqueta>
             <Entrada
               type="email"
               value={email}
@@ -312,19 +314,21 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; modo
             />
           </div>
 
-          {!vigiladorEditando && (
-            <div>
-              <Etiqueta requerido>Contraseña de Acceso</Etiqueta>
-              <Entrada
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mínimo 8 caracteres"
-                minLength={8}
-              />
-              <p className="text-[11px] text-slate-500 mt-1">Esta contraseña será la que use el vigilador para iniciar sesión.</p>
-            </div>
-          )}
+          <div>
+            <Etiqueta requerido={!vigiladorEditando}>
+              {vigiladorEditando ? 'Nueva Contraseña (opcional)' : 'Contraseña de Acceso'}
+            </Etiqueta>
+            <Entrada
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder={vigiladorEditando ? 'Dejar vacío para conservar la actual' : 'Mínimo 8 caracteres'}
+              minLength={vigiladorEditando ? undefined : 8}
+            />
+            <p className="text-[11px] text-slate-500 mt-1">
+              {vigiladorEditando ? 'Solo completala si querés cambiar la contraseña.' : 'Esta contraseña será la que use el vigilador para iniciar sesión.'}
+            </p>
+          </div>
 
           <div>
             <Etiqueta>Teléfono de Contacto</Etiqueta>
