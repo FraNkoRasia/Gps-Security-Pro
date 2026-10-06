@@ -47,7 +47,10 @@ export const VistaPanelControl: React.FC = () => {
       ]
     : esSuperAdmin
     ? [
-        { id: 'empresas', label: 'Empresas', icono: <Building2 className="w-4 h-4" /> },
+        { id: 'empresas', label: 'Empresas', icono: <Building2 className="w-4 h-4" /> }
+      ]
+    : esAdmin
+    ? [
         { id: 'grilla', label: 'Grilla Mensual', icono: <Calendar className="w-4 h-4" /> },
         { id: 'objetivos', label: 'Objetivos', icono: <MapPin className="w-4 h-4" /> },
         { id: 'vigiladores', label: 'Vigiladores', icono: <Users className="w-4 h-4" /> },
@@ -55,14 +58,7 @@ export const VistaPanelControl: React.FC = () => {
         { id: 'cambios', label: 'Cambios y Reemplazos', icono: <ArrowRightLeft className="w-4 h-4" /> },
         { id: 'avisos', label: 'Avisos', icono: <Bell className="w-4 h-4" /> }
       ]
-    : [
-        { id: 'grilla', label: 'Grilla Mensual', icono: <Calendar className="w-4 h-4" /> },
-        { id: 'objetivos', label: 'Objetivos', icono: <MapPin className="w-4 h-4" /> },
-        { id: 'vigiladores', label: 'Vigiladores', icono: <Users className="w-4 h-4" /> },
-        { id: 'novedades', label: 'Libro de Novedades', icono: <BookOpen className="w-4 h-4" /> },
-        { id: 'cambios', label: 'Cambios y Reemplazos', icono: <ArrowRightLeft className="w-4 h-4" /> },
-        { id: 'avisos', label: 'Avisos', icono: <Bell className="w-4 h-4" /> }
-      ]
+    : []
 
   return (
     <div className="space-y-6 animate-fadeIn">
