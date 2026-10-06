@@ -11,16 +11,16 @@
     --color-cyan-electrico: #00D2FF;
     --color-plata: #CBD5E1;
 
-    /* Tema Oscuro por defecto (Deep Cyber Slate / Carbon) */
-    --app-bg: #0F172A;
-    --app-card-bg: #172033;
-    --app-card-hover: #1E293B;
-    --app-border: #334155;
-    --app-border-highlight: rgba(0, 112, 243, 0.3);
+    /* Tema Oscuro profesional inspirado en MisGastos */
+    --app-bg: #0F1115;
+    --app-card-bg: #171A21;
+    --app-card-hover: #1E222C;
+    --app-border: #2A303B;
+    --app-border-highlight: rgba(59, 130, 246, 0.25);
     --app-text: #F8FAFC;
     --app-text-muted: #94A3B8;
-    --app-input-bg: #111827;
-    --app-header-bg: rgba(15, 23, 42, 0.94);
+    --app-input-bg: #20242D;
+    --app-header-bg: rgba(15, 17, 21, 0.94);
   }
 
   html.light {
@@ -51,11 +51,11 @@ html, body {
 
 /* Efectos visuales de logoAPP.png */
 .glow-cyan {
-  box-shadow: 0 0 18px -6px rgba(0, 163, 255, 0.22);
+  box-shadow: 0 0 18px -8px rgba(59, 130, 246, 0.18);
 }
 
 .glow-blue {
-  box-shadow: 0 0 22px -7px rgba(0, 112, 243, 0.25);
+  box-shadow: 0 0 20px -10px rgba(59, 130, 246, 0.20);
 }
 
 .borde-cromo {
@@ -78,10 +78,10 @@ html, body {
   height: 6px;
 }
 html.dark ::-webkit-scrollbar-track {
-  background: #0B1220;
+  background: #0F1115;
 }
 html.dark ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #2A303B;
   border-radius: 9999px;
 }
 html.dark ::-webkit-scrollbar-thumb:hover {
