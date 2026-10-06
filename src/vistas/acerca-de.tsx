@@ -2,7 +2,6 @@ import React from 'react'
 import { Shield, Award, Cpu, CheckCircle2 } from 'lucide-react'
 import { Dialogo } from '@/componentes/ui/dialogo'
 import { Insignia } from '@/componentes/ui/insignia'
-import { superAdminInicial } from '@/servicios/supabase'
 
 interface PropiedadesVistaAcercaDe {
   abierto: boolean
@@ -45,10 +44,6 @@ export const VistaAcercaDe: React.FC<PropiedadesVistaAcercaDe> = ({ abierto, alC
           </div>
           <p className="text-sm font-semibold text-slate-100">
             Desarrollado por <span className="text-amber-400 font-bold">FraNko Rasia</span>
-          </p>
-          <p className="text-xs text-slate-400">
-            Super-Administrador inicial:{' '}
-            <span className="font-mono text-blue-300">{superAdminInicial}</span>
           </p>
         </div>
 
