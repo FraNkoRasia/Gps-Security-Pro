@@ -16,9 +16,6 @@ interface ContextoAutenticacionTipo {
 
 const ContextoAutenticacion = createContext<ContextoAutenticacionTipo | undefined>(undefined)
 
-const CLAVE_SESION_LOCAL = 'gsp_sesion_activa'
-const CLAVE_RECORDAR_EMAIL = 'gsp_email_recordado'
-
 export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [cargando, setCargando] = useState<boolean>(true)
@@ -174,14 +171,6 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
         const usuarioAutenticado = await cargarPerfil(data.user)
         setUsuario(usuarioAutenticado)
 
-        if (recordarme) {
-          localStorage.setItem(CLAVE_SESION_LOCAL, JSON.stringify(usuarioAutenticado))
-          localStorage.setItem(CLAVE_RECORDAR_EMAIL, emailLimpio)
-        } else {
-          sessionStorage.setItem(CLAVE_SESION_LOCAL, JSON.stringify(usuarioAutenticado))
-          localStorage.removeItem(CLAVE_RECORDAR_EMAIL)
-        }
-
         return { exito: true }
       }
 
@@ -203,8 +192,6 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
       if (hayConexionSupabase && supabase) {
         await supabase.auth.signOut()
       }
-      localStorage.removeItem(CLAVE_SESION_LOCAL)
-      sessionStorage.removeItem(CLAVE_SESION_LOCAL)
       setUsuario(null)
     } catch (err) {
       console.error('Error cerrando sesión:', err)
