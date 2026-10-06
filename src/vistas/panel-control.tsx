@@ -128,7 +128,7 @@ export const VistaPanelControl: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200 dark:border-slate-800/80">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 pb-2 border-b border-slate-200 dark:border-slate-800/80">
             {pestanas.map((p) => {
               const estaActiva = pestanaRenderizada === p.id
               return (
@@ -136,14 +136,14 @@ export const VistaPanelControl: React.FC = () => {
                   key={p.id}
                   type="button"
                   onClick={() => setPestanaActiva(p.id)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all cursor-pointer select-none ${
+                  className={`flex items-center justify-center gap-1.5 px-2 sm:px-3 py-2.5 rounded-xl font-bold text-[11px] sm:text-xs text-center transition-all cursor-pointer select-none min-w-0 ${
                     estaActiva
                       ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
                       : 'bg-white dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800/80'
                   }`}
                 >
                   {p.icono}
-                  <span>{p.label}</span>
+                  <span className="truncate">{p.label}</span>
                 </button>
               )
             })}
