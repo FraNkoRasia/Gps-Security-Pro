@@ -156,17 +156,38 @@ export const ProveedorOperativo: React.FC<{ children: React.ReactNode }> = ({ ch
     return () => { cancelado = true }
   }, [usuario])
 
-  const registrarAuditoria = (accion: string, entidad: string, detalle: string) => {
-    const nuevo: RegistroAuditoria = {
-      id: `aud-${Date.now()}`,
-      id_usuario: usuario?.id || 'sistema',
-      usuario_nombre: usuario ? `${usuario.nombre} ${usuario.apellido}` : 'Sistema',
+  const registrarAuditoria = async (
+    accion: string,
+    entidad: string,
+    detalle: string,
+    entidadId?: string,
+    idEmpresa?: string | null
+  ) => {
+    if (!supabase || !usuario) return
+
+    const { data, error } = await supabase.from('auditoria').insert({
+      id_empresa: idEmpresa ?? usuario.id_empresa ?? null,
+      id_usuario: usuario.id,
       accion,
       entidad,
-      detalle,
-      fecha_hora: new Date().toISOString()
+      entidad_id: entidadId || null,
+      detalle: { texto: detalle }
+    }).select('*').single()
+
+    if (error) {
+      console.error('Error registrando auditoría:', error)
+      return
     }
-    setAuditorias((prev) => [nuevo, ...prev])
+
+    setAuditorias((prev) => [{
+      id: data.id,
+      id_usuario: usuario.id,
+      usuario_nombre: `${usuario.nombre} ${usuario.apellido}`,
+      accion: data.accion,
+      entidad: data.entidad,
+      detalle: detalle,
+      fecha_hora: data.fecha_hora
+    }, ...prev])
   }
 
   // Empresas
