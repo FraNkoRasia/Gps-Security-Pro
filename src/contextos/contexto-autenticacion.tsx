@@ -51,7 +51,23 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
         .maybeSingle()
 
       if (errorEmpresa) throw errorEmpresa
-      empresaNombre = empresa?.nombre || null
+      if (!empresa) {
+        throw new Error('Cuenta suspendida. La empresa asociada no está disponible.')
+      }
+
+      const { data: empresaCompleta, error: errorEstadoEmpresa } = await supabase
+        .from('empresas')
+        .select('activa')
+        .eq('id', perfil.id_empresa)
+        .maybeSingle()
+
+      if (errorEstadoEmpresa) throw errorEstadoEmpresa
+
+      if (!empresaCompleta?.activa) {
+        throw new Error('Cuenta suspendida. La empresa asociada está dada de baja.')
+      }
+
+      empresaNombre = empresa.nombre || null
     }
 
     return {
