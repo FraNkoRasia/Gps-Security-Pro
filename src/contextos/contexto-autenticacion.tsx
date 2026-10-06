@@ -63,43 +63,134 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
   const [cargando, setCargando] = useState<boolean>(true)
   const [errorAuth, setErrorAuth] = useState<string | null>(null)
 
+  const cargarPerfil = async (authUser: NonNullable<Awaited<ReturnType<typeof supabase.auth.getUser>>['data']['user']>) => {
+    if (!supabase) return null
+
+    const email = authUser.email || ''
+
+    const { data: perfil, error: errorPerfil } = await supabase
+      .from('perfiles')
+      .select('id, id_empresa, nombre, apellido, telefono, rol, activo, debe_cambiar_contrasena, creado_en')
+      .eq('id', authUser.id)
+      .maybeSingle()
+
+    if (errorPerfil) throw errorPerfil
+
+    // El superadministrador inicial puede existir antes de que se cree su perfil.
+    // Para cualquier otra cuenta exigimos un perfil real en la base.
+    if (!perfil) {
+      if (email.toLowerCase() === superAdminInicial.toLowerCase()) {
+        return {
+          id: authUser.id,
+          email,
+          nombre: (authUser.user_metadata?.nombre as string) || 'FraNko',
+          apellido: (authUser.user_metadata?.apellido as string) || 'Rasia',
+          rol: 'super_administrador' as RolUsuario,
+          id_empresa: null,
+          empresa_nombre: 'GSP Plataforma Global',
+          telefono: null,
+          activo: true,
+          debe_cambiar_contrasena: false,
+          creado_en: authUser.created_at
+        }
+      }
+      throw new Error('Tu usuario está autenticado, pero todavía no tiene un perfil habilitado en GSP Security Pro.')
+    }
+
+    if (!perfil.activo) {
+      throw new Error('Tu usuario está desactivado. Contactá a la administración.')
+    }
+
+    let empresaNombre: string | null = null
+
+    if (perfil.id_empresa) {
+      const { data: empresa, error: errorEmpresa } = await supabase
+        .from('empresas')
+        .select('nombre')
+        .eq('id', perfil.id_empresa)
+        .maybeSingle()
+
+      if (errorEmpresa) throw errorEmpresa
+      empresaNombre = empresa?.nombre || null
+    }
+
+    return {
+      id: perfil.id,
+      email,
+      nombre: perfil.nombre,
+      apellido: perfil.apellido,
+      rol: perfil.rol as RolUsuario,
+      id_empresa: perfil.id_empresa,
+      empresa_nombre: empresaNombre,
+      telefono: perfil.telefono,
+      activo: perfil.activo,
+      debe_cambiar_contrasena: perfil.debe_cambiar_contrasena,
+      creado_en: perfil.creado_en
+    } satisfies Usuario
+  }
+
   useEffect(() => {
+    if (!hayConexionSupabase || !supabase) {
+      const sesionGuardada = localStorage.getItem(CLAVE_SESION_LOCAL)
+      if (sesionGuardada) {
+        try {
+          setUsuario(JSON.parse(sesionGuardada) as Usuario)
+        } catch {
+          localStorage.removeItem(CLAVE_SESION_LOCAL)
+        }
+      }
+      setCargando(false)
+      return
+    }
+
+    let activo = true
+
     const inicializarSesion = async () => {
       try {
-        if (hayConexionSupabase && supabase) {
-          const { data } = await supabase.auth.getSession()
-          if (data.session?.user) {
-            const email = data.session.user.email || ''
-            const esSuper = email.toLowerCase() === superAdminInicial.toLowerCase()
-            setUsuario({
-              id: data.session.user.id,
-              email: email,
-              nombre: (data.session.user.user_metadata?.nombre as string) || 'Operador',
-              apellido: (data.session.user.user_metadata?.apellido as string) || 'GSP',
-              rol: esSuper ? 'super_administrador' : (data.session.user.user_metadata?.rol as RolUsuario) || 'vigilador',
-              id_empresa: data.session.user.user_metadata?.id_empresa || null,
-              empresa_nombre: data.session.user.user_metadata?.empresa_nombre || null,
-              activo: true,
-              debe_cambiar_contrasena: false,
-              creado_en: data.session.user.created_at
-            })
-          }
-        } else {
-          // Recuperar sesión persistida localmente si recordarme estaba activo
-          const sesionGuardada = localStorage.getItem(CLAVE_SESION_LOCAL)
-          if (sesionGuardada) {
-            const parsed = JSON.parse(sesionGuardada) as Usuario
-            setUsuario(parsed)
-          }
+        const { data, error } = await supabase.auth.getSession()
+        if (error) throw error
+
+        if (data.session?.user && activo) {
+          const perfil = await cargarPerfil(data.session.user)
+          if (activo) setUsuario(perfil)
         }
       } catch (err) {
         console.error('Error al inicializar sesión:', err)
+        if (activo) {
+          setUsuario(null)
+          setErrorAuth(err instanceof Error ? err.message : 'No se pudo cargar el perfil.')
+        }
       } finally {
-        setCargando(false)
+        if (activo) setCargando(false)
       }
     }
 
     inicializarSesion()
+
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_evento, session) => {
+      if (!activo) return
+
+      try {
+        if (!session?.user) {
+          setUsuario(null)
+          return
+        }
+
+        const perfil = await cargarPerfil(session.user)
+        if (activo) setUsuario(perfil)
+      } catch (err) {
+        console.error('Error al actualizar sesión:', err)
+        if (activo) {
+          setUsuario(null)
+          setErrorAuth(err instanceof Error ? err.message : 'No se pudo cargar el perfil.')
+        }
+      }
+    })
+
+    return () => {
+      activo = false
+      listener.subscription.unsubscribe()
+    }
   }, [])
 
   const iniciarSesion = async (email: string, contrasena: string, recordarme: boolean) => {
@@ -120,62 +211,51 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
           return { exito: false, error: error.message }
         }
 
-        if (data.user) {
-          const esSuper = emailLimpio === superAdminInicial.toLowerCase()
-          const usuarioAutenticado: Usuario = {
-            id: data.user.id,
-            email: emailLimpio,
-            nombre: (data.user.user_metadata?.nombre as string) || 'Operador',
-            apellido: (data.user.user_metadata?.apellido as string) || 'GSP',
-            rol: esSuper ? 'super_administrador' : (data.user.user_metadata?.rol as RolUsuario) || 'vigilador',
-            id_empresa: data.user.user_metadata?.id_empresa || null,
-            empresa_nombre: data.user.user_metadata?.empresa_nombre || null,
-            activo: true,
-            debe_cambiar_contrasena: false,
-            creado_en: data.user.created_at
-          }
-
-          setUsuario(usuarioAutenticado)
-          if (recordarme) {
-            localStorage.setItem(CLAVE_SESION_LOCAL, JSON.stringify(usuarioAutenticado))
-            localStorage.setItem(CLAVE_RECORDAR_EMAIL, emailLimpio)
-          } else {
-            sessionStorage.setItem(CLAVE_SESION_LOCAL, JSON.stringify(usuarioAutenticado))
-            localStorage.removeItem(CLAVE_RECORDAR_EMAIL)
-          }
-
-          return { exito: true }
-        }
-      } else {
-        // Simulación de autenticación local segura para desarrollo
-        await new Promise((resolver) => setTimeout(resolver, 600))
-
-        const usuarioEncontrado = USUARIOS_DEMO[emailLimpio]
-        if (!usuarioEncontrado) {
-          const err = 'Usuario no registrado. La creación de cuentas es realizada exclusivamente por la administración.'
+        if (!data.user) {
+          const err = 'No se pudo obtener el usuario autenticado.'
           setErrorAuth(err)
           return { exito: false, error: err }
         }
 
-        if (contrasena.length < 6) {
-          const err = 'Contraseña incorrecta.'
-          setErrorAuth(err)
-          return { exito: false, error: err }
-        }
+        const usuarioAutenticado = await cargarPerfil(data.user)
+        setUsuario(usuarioAutenticado)
 
-        setUsuario(usuarioEncontrado)
         if (recordarme) {
-          localStorage.setItem(CLAVE_SESION_LOCAL, JSON.stringify(usuarioEncontrado))
+          localStorage.setItem(CLAVE_SESION_LOCAL, JSON.stringify(usuarioAutenticado))
           localStorage.setItem(CLAVE_RECORDAR_EMAIL, emailLimpio)
         } else {
-          sessionStorage.setItem(CLAVE_SESION_LOCAL, JSON.stringify(usuarioEncontrado))
+          sessionStorage.setItem(CLAVE_SESION_LOCAL, JSON.stringify(usuarioAutenticado))
           localStorage.removeItem(CLAVE_RECORDAR_EMAIL)
         }
 
         return { exito: true }
       }
 
-      return { exito: false, error: 'No se pudo iniciar sesión.' }
+      await new Promise((resolver) => setTimeout(resolver, 600))
+
+      const usuarioEncontrado = USUARIOS_DEMO[emailLimpio]
+      if (!usuarioEncontrado) {
+        const err = 'Usuario no registrado. La creación de cuentas es realizada exclusivamente por la administración.'
+        setErrorAuth(err)
+        return { exito: false, error: err }
+      }
+
+      if (contrasena.length < 6) {
+        const err = 'Contraseña incorrecta.'
+        setErrorAuth(err)
+        return { exito: false, error: err }
+      }
+
+      setUsuario(usuarioEncontrado)
+      if (recordarme) {
+        localStorage.setItem(CLAVE_SESION_LOCAL, JSON.stringify(usuarioEncontrado))
+        localStorage.setItem(CLAVE_RECORDAR_EMAIL, emailLimpio)
+      } else {
+        sessionStorage.setItem(CLAVE_SESION_LOCAL, JSON.stringify(usuarioEncontrado))
+        localStorage.removeItem(CLAVE_RECORDAR_EMAIL)
+      }
+
+      return { exito: true }
     } catch (err: unknown) {
       const mensaje = err instanceof Error ? err.message : 'Error inesperado al conectar con el servicio'
       setErrorAuth(mensaje)
@@ -210,20 +290,12 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
         })
         if (error) return { exito: false, error: error.message }
       } else {
-        // Simulación de envío
         await new Promise((res) => setTimeout(res, 500))
       }
       return { exito: true }
     } catch (err: unknown) {
       return { exito: false, error: err instanceof Error ? err.message : 'Error al enviar recuperación' }
     }
-  }
-
-  const cambiarRolSimulado = (nuevoRol: RolUsuario) => {
-    if (!usuario) return
-    const actualizado: Usuario = { ...usuario, rol: nuevoRol }
-    setUsuario(actualizado)
-    localStorage.setItem(CLAVE_SESION_LOCAL, JSON.stringify(actualizado))
   }
 
   return (
@@ -235,8 +307,7 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
         errorAuth,
         iniciarSesion,
         cerrarSesion,
-        solicitarRecuperacion,
-        cambiarRolSimulado
+        solicitarRecuperacion
       }}
     >
       {children}
