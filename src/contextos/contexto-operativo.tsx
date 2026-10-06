@@ -11,6 +11,7 @@ import type {
   RegistroAuditoria
 } from '@/tipos'
 import { useAutenticacion } from './contexto-autenticacion'
+import { supabase } from '@/servicios/supabase'
 
 // Datos iniciales de demostración basados en las especificaciones del cliente
 const EMPRESAS_INICIALES: Empresa[] = [
@@ -387,79 +388,143 @@ const CLAVE_STORE = 'gsp_seguridad_pro_db_v1'
 export const ProveedorOperativo: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { usuario } = useAutenticacion()
 
-  const [empresas, setEmpresas] = useState<Empresa[]>(() => {
-    const g = localStorage.getItem(`${CLAVE_STORE}_empresas`)
-    return g ? JSON.parse(g) : EMPRESAS_INICIALES
-  })
+  const [empresas, setEmpresas] = useState<Empresa[]>([])
+  const [objetivos, setObjetivos] = useState<Objetivo[]>([])
+  const [vigiladores, setVigiladores] = useState<Usuario[]>([])
+  const [asignaciones, setAsignaciones] = useState<Asignacion[]>([])
+  const [turnos, setTurnos] = useState<Turno[]>([])
+  const [novedades, setNovedades] = useState<NovedadLibro[]>([])
+  const [solicitudesCambio, setSolicitudesCambio] = useState<SolicitudCambio[]>([])
+  const [avisos, setAvisos] = useState<Aviso[]>([])
+  const [auditorias, setAuditorias] = useState<RegistroAuditoria[]>([])
 
-  const [objetivos, setObjetivos] = useState<Objetivo[]>(() => {
-    const g = localStorage.getItem(`${CLAVE_STORE}_objetivos`)
-    return g ? JSON.parse(g) : OBJETIVOS_INICIALES
-  })
+  useEffect(() => {
+    if (!usuario || !supabase) return
 
-  const [vigiladores, setVigiladores] = useState<Usuario[]>(() => {
-    const g = localStorage.getItem(`${CLAVE_STORE}_vigiladores`)
-    return g ? JSON.parse(g) : VIGILADORES_INICIALES
-  })
+    let cancelado = false
 
-  const [asignaciones, setAsignaciones] = useState<Asignacion[]>(() => {
-    const g = localStorage.getItem(`${CLAVE_STORE}_asignaciones`)
-    return g ? JSON.parse(g) : ASIGNACIONES_INICIALES
-  })
+    const cargarDatosOperativos = async () => {
+      try {
+        const empresaId = usuario.id_empresa
 
-  const [turnos, setTurnos] = useState<Turno[]>(() => {
-    const g = localStorage.getItem(`${CLAVE_STORE}_turnos`)
-    return g ? JSON.parse(g) : generarTurnosOctubre()
-  })
+        const [
+          empresasResult,
+          objetivosResult,
+          perfilesResult,
+          vigiladoresResult,
+          asignacionesResult,
+          turnosResult,
+          novedadesResult,
+          solicitudesResult,
+          avisosResult,
+          auditoriaResult,
+          lecturasResult
+        ] = await Promise.all([
+          usuario.rol === 'super_administrador'
+            ? supabase.from('empresas').select('*').order('nombre')
+            : supabase.from('empresas').select('*').eq('id', empresaId).order('nombre'),
+          supabase.from('objetivos').select('*').order('nombre'),
+          supabase.from('perfiles').select('id,id_empresa,nombre,apellido,telefono,rol,activo,debe_cambiar_contrasena,creado_en'),
+          supabase.from('vigiladores').select('*').order('apellido'),
+          supabase.from('asignaciones').select('*').order('fecha_inicio', { ascending: false }),
+          supabase.from('turnos').select('*').order('fecha', { ascending: true }),
+          supabase.from('novedades_libro').select('*').order('fecha', { ascending: false }).order('hora', { ascending: false }),
+          supabase.from('solicitudes_cambio').select('*').order('creado_en', { ascending: false }),
+          supabase.from('avisos').select('*').order('creado_en', { ascending: false }),
+          supabase.from('auditoria').select('*').order('fecha_hora', { ascending: false }),
+          supabase.from('avisos_lecturas').select('id_aviso,id_usuario').eq('id_usuario', usuario.id)
+        ])
 
-  const [novedades, setNovedades] = useState<NovedadLibro[]>(() => {
-    const g = localStorage.getItem(`${CLAVE_STORE}_novedades`)
-    return g ? JSON.parse(g) : NOVEDADES_INICIALES
-  })
+        const resultados = [
+          empresasResult, objetivosResult, perfilesResult, vigiladoresResult,
+          asignacionesResult, turnosResult, novedadesResult, solicitudesResult,
+          avisosResult, auditoriaResult, lecturasResult
+        ]
 
-  const [solicitudesCambio, setSolicitudesCambio] = useState<SolicitudCambio[]>(() => {
-    const g = localStorage.getItem(`${CLAVE_STORE}_solicitudes`)
-    return g ? JSON.parse(g) : []
-  })
+        const error = resultados.find((r) => r.error)?.error
+        if (error) throw error
+        if (cancelado) return
 
-  const [avisos, setAvisos] = useState<Aviso[]>(() => {
-    const g = localStorage.getItem(`${CLAVE_STORE}_avisos`)
-    return g ? JSON.parse(g) : AVISOS_INICIALES
-  })
+        const empresasDb = empresasResult.data || []
+        const objetivosDb = objetivosResult.data || []
+        const perfilesDb = perfilesResult.data || []
+        const vigiladoresDb = vigiladoresResult.data || []
+        const lecturas = new Set((lecturasResult.data || []).map((l) => l.id_aviso))
 
-  const [auditorias, setAuditorias] = useState<RegistroAuditoria[]>(() => {
-    const g = localStorage.getItem(`${CLAVE_STORE}_auditorias`)
-    return g ? JSON.parse(g) : []
-  })
+        const empresaMap = new Map(empresasDb.map((e) => [e.id, e.nombre]))
+        const objetivoMap = new Map(objetivosDb.map((o) => [o.id, o.nombre]))
+        const perfilMap = new Map(perfilesDb.map((p) => [p.id, p]))
 
-  // Sincronizar en localStorage
-  useEffect(() => {
-    localStorage.setItem(`${CLAVE_STORE}_empresas`, JSON.stringify(empresas))
-  }, [empresas])
-  useEffect(() => {
-    localStorage.setItem(`${CLAVE_STORE}_objetivos`, JSON.stringify(objetivos))
-  }, [objetivos])
-  useEffect(() => {
-    localStorage.setItem(`${CLAVE_STORE}_vigiladores`, JSON.stringify(vigiladores))
-  }, [vigiladores])
-  useEffect(() => {
-    localStorage.setItem(`${CLAVE_STORE}_asignaciones`, JSON.stringify(asignaciones))
-  }, [asignaciones])
-  useEffect(() => {
-    localStorage.setItem(`${CLAVE_STORE}_turnos`, JSON.stringify(turnos))
-  }, [turnos])
-  useEffect(() => {
-    localStorage.setItem(`${CLAVE_STORE}_novedades`, JSON.stringify(novedades))
-  }, [novedades])
-  useEffect(() => {
-    localStorage.setItem(`${CLAVE_STORE}_solicitudes`, JSON.stringify(solicitudesCambio))
-  }, [solicitudesCambio])
-  useEffect(() => {
-    localStorage.setItem(`${CLAVE_STORE}_avisos`, JSON.stringify(avisos))
-  }, [avisos])
-  useEffect(() => {
-    localStorage.setItem(`${CLAVE_STORE}_auditorias`, JSON.stringify(auditorias))
-  }, [auditorias])
+        const perfilesVigiladores = vigiladoresDb
+          .map((v) => {
+            const perfil = v.id_usuario ? perfilMap.get(v.id_usuario) : null
+            if (!perfil) return null
+            return {
+              id: v.id_usuario,
+              email: '',
+              nombre: perfil.nombre,
+              apellido: perfil.apellido,
+              rol: perfil.rol,
+              id_empresa: perfil.id_empresa,
+              empresa_nombre: perfil.id_empresa ? empresaMap.get(perfil.id_empresa) || null : null,
+              telefono: perfil.telefono,
+              activo: perfil.activo && v.activo,
+              debe_cambiar_contrasena: perfil.debe_cambiar_contrasena,
+              creado_en: perfil.creado_en
+            } satisfies Usuario
+          })
+          .filter((v): v is Usuario => Boolean(v))
+
+        setEmpresas(empresasDb.map((e) => ({
+          id: e.id, nombre: e.nombre, cuit: e.cuit || '', direccion: e.direccion || '',
+          activa: e.activa, creada_en: e.creada_en
+        })))
+        setObjetivos(objetivosDb.map((o) => ({
+          id: o.id, id_empresa: o.id_empresa, nombre: o.nombre, descripcion: o.descripcion || '',
+          direccion: o.direccion || '', localidad: o.localidad || '', provincia: o.provincia || '',
+          activo: o.activo, creado_en: o.creado_en
+        })).filter((o) => usuario.rol === 'super_administrador' || o.id_empresa === empresaId))
+        setVigiladores(perfilesVigiladores.filter((v) => usuario.rol === 'super_administrador' || v.id_empresa === empresaId))
+        setAsignaciones((asignacionesResult.data || []).map((a) => ({
+          id: a.id, id_vigilador: a.id_vigilador, id_objetivo: a.id_objetivo,
+          objetivo_nombre: objetivoMap.get(a.id_objetivo), fecha_inicio: a.fecha_inicio,
+          fecha_fin: a.fecha_fin, activa: a.activa, motivo_traslado: a.motivo_traslado,
+          creado_por: a.creado_por || '', creado_en: a.creado_en
+        })).filter((a) => usuario.rol === 'super_administrador' || a.id_empresa === empresaId))
+        setTurnos((turnosResult.data || []).map((t) => ({
+          id: t.id, id_empresa: t.id_empresa, id_objetivo: t.id_objetivo, id_vigilador: t.id_vigilador,
+          fecha: t.fecha, hora_inicio: t.hora_inicio || '00:00', hora_fin: t.hora_fin || '00:00',
+          horas_totales: Number(t.horas_totales || 0), tipo: t.tipo, horas_diurnas: Number(t.horas_diurnas || 0),
+          horas_nocturnas: Number(t.horas_nocturnas || 0), es_feriado: t.es_feriado, es_domingo: t.es_domingo,
+          horas_extra: Number(t.horas_extra || 0), estado: t.estado
+        })).filter((t) => usuario.rol === 'super_administrador' || t.id_empresa === empresaId))
+        setNovedades((novedadesResult.data || []).map((n) => ({
+          id: n.id, id_empresa: n.id_empresa, id_objetivo: n.id_objetivo, id_vigilador: n.id_vigilador || '',
+          nombre_vigilante: n.nombre_vigilante, nombre_supervisor: n.nombre_supervisor || '',
+          fecha: n.fecha, hora: n.hora, turno: n.turno || '', elementos_a_cargo: n.elementos_a_cargo || '',
+          informe_novedades: n.informe_novedades
+        })).filter((n) => usuario.rol === 'super_administrador' || n.id_empresa === empresaId))
+        setSolicitudesCambio((solicitudesResult.data || []).map((s) => ({
+          id: s.id, id_empresa: s.id_empresa, id_solicitante: s.id_solicitante, id_destinatario: s.id_destinatario || '',
+          id_turno_origen: s.id_turno_origen, fecha_turno: s.fecha_turno, estado: s.estado,
+          motivo: s.motivo || '', creado_en: s.creado_en
+        })).filter((s) => usuario.rol === 'super_administrador' || s.id_empresa === empresaId))
+        setAvisos((avisosResult.data || []).map((a) => ({
+          id: a.id, id_empresa: a.id_empresa, autor_nombre: a.autor_id ? (perfilMap.get(a.autor_id) ? `${perfilMap.get(a.autor_id)!.nombre} ${perfilMap.get(a.autor_id)!.apellido}` : 'Administración') : 'Administración',
+          titulo: a.titulo, contenido: a.contenido, prioridad: a.prioridad, leido: lecturas.has(a.id), creado_en: a.creado_en
+        })).filter((a) => usuario.rol === 'super_administrador' || a.id_empresa === empresaId))
+        setAuditorias((auditoriaResult.data || []).map((a) => ({
+          id: a.id, id_usuario: a.id_usuario || '', usuario_nombre: a.id_usuario && perfilMap.get(a.id_usuario) ? `${perfilMap.get(a.id_usuario)!.nombre} ${perfilMap.get(a.id_usuario)!.apellido}` : 'Sistema',
+          accion: a.accion, entidad: a.entidad, detalle: JSON.stringify(a.detalle || {}), fecha_hora: a.fecha_hora
+        })).filter((a) => usuario.rol === 'super_administrador' || a.id_empresa === empresaId))
+      } catch (error) {
+        console.error('Error cargando datos operativos desde Supabase:', error)
+      }
+    }
+
+    cargarDatosOperativos()
+    return () => { cancelado = true }
+  }, [usuario])
 
   const registrarAuditoria = (accion: string, entidad: string, detalle: string) => {
     const nuevo: RegistroAuditoria = {
