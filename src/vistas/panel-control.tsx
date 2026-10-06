@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import {
   Building2,
   Users,
@@ -60,12 +60,9 @@ export const VistaPanelControl: React.FC = () => {
       ]
     : []
 
-  useEffect(() => {
-    const idsPermitidos = pestanas.map((p) => p.id)
-    if (!idsPermitidos.includes(pestanaActiva)) {
-      setPestanaActiva(idsPermitidos[0] || 'empresas')
-    }
-  }, [usuario.rol, pestanaActiva, pestanas])
+  const pestanaRenderizada = pestanas.some((p) => p.id === pestanaActiva)
+    ? pestanaActiva
+    : pestanas[0]?.id || ''
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -122,7 +119,7 @@ export const VistaPanelControl: React.FC = () => {
       {/* Pestañas de Navegación Operativa */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200 dark:border-slate-800/80">
         {pestanas.map((p) => {
-          const estaActiva = pestanaActiva === p.id
+          const estaActiva = pestanaRenderizada === p.id
           return (
             <button
               key={p.id}
@@ -143,15 +140,15 @@ export const VistaPanelControl: React.FC = () => {
 
       {/* Renderizado de Módulos Operativos */}
       <div className="pt-1">
-        {pestanaActiva === 'empresas' && esSuperAdmin && <GestionEmpresas />}
-        {pestanaActiva === 'grilla' && (esAdmin || esVigilador) && <GrillaMensual />}
-        {pestanaActiva === 'objetivos' && esAdmin && <GestionObjetivos />}
-        {pestanaActiva === 'vigiladores' && esAdmin && <GestionVigiladores />}
-        {pestanaActiva === 'novedades' && (esAdmin || esVigilador) && <LibroNovedades />}
-        {pestanaActiva === 'cambios' && (esAdmin || esVigilador) && <CambiosTurnos />}
-        {pestanaActiva === 'avisos' && (esAdmin || esVigilador) && <AvisosComunicacion />}
-        {pestanaActiva === 'miTurno' && esVigilador && <MiTurno />}
-        {pestanaActiva === 'miMes' && esVigilador && <MiMes />}
+        {pestanaRenderizada === 'empresas' && esSuperAdmin && <GestionEmpresas />}
+        {pestanaRenderizada === 'grilla' && (esAdmin || esVigilador) && <GrillaMensual />}
+        {pestanaRenderizada === 'objetivos' && esAdmin && <GestionObjetivos />}
+        {pestanaRenderizada === 'vigiladores' && esAdmin && <GestionVigiladores />}
+        {pestanaRenderizada === 'novedades' && (esAdmin || esVigilador) && <LibroNovedades />}
+        {pestanaRenderizada === 'cambios' && (esAdmin || esVigilador) && <CambiosTurnos />}
+        {pestanaRenderizada === 'avisos' && (esAdmin || esVigilador) && <AvisosComunicacion />}
+        {pestanaRenderizada === 'miTurno' && esVigilador && <MiTurno />}
+        {pestanaRenderizada === 'miMes' && esVigilador && <MiMes />}
       </div>
     </div>
   )
