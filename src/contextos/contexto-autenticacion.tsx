@@ -192,7 +192,8 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
         })
         if (error) return { exito: false, error: error.message }
       } else {
-        await new Promise((res) => setTimeout(res, 500))
+        const err = 'Supabase no está configurado.'
+        return { exito: false, error: err }
       }
       return { exito: true }
     } catch (err: unknown) {
