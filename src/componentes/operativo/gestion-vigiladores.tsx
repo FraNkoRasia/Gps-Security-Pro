@@ -11,7 +11,7 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { Usuario } from '@/tipos'
 
-export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; modoConsulta?: boolean }> = ({ idEmpresaSeleccionada, modoConsulta = false }) => {
+export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idObjetivoSeleccionado?: string; modoConsulta?: boolean }> = ({ idEmpresaSeleccionada, idObjetivoSeleccionado, modoConsulta = false }) => {
   const { vigiladores, asignaciones, objetivos, crearVigilador, editarVigilador, cambiarEstadoVigilador } = useOperativo()
   const { usuario } = useAutenticacion()
 
@@ -138,7 +138,11 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; modo
     (a) => a.id_vigilador === vigiladorSeleccionado?.id
   )
 
-  const vigiladoresMostrados = vigiladores.filter((v) => v.id_empresa === idEmpresaActiva)
+  const vigiladoresMostrados = vigiladores.filter((v) => {
+    if (v.id_empresa !== idEmpresaActiva) return false
+    if (!idObjetivoSeleccionado) return true
+    return asignaciones.some((a) => a.id_vigilador === v.id && a.id_objetivo === idObjetivoSeleccionado && a.activa)
+  })
 
   return (
     <div className="space-y-6">
