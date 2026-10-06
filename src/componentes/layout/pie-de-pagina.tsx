@@ -21,19 +21,14 @@ export const PieDePagina: React.FC<PropiedadesPieDePagina> = ({ alNavegar }) => 
   return (
     <footer className="w-full mt-auto border-t border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-[#070B12]/80 backdrop-blur-md py-6 px-4 text-xs text-slate-500 dark:text-slate-400 select-none transition-colors">
       <div className="max-w-5xl mx-auto flex flex-col items-center justify-between gap-4 sm:flex-row text-center sm:text-left">
-        {/* Identidad y Desarrollador (Sección 16) */}
+        {/* Identidad de la aplicación */}
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-md bg-blue-100 dark:bg-blue-950 border border-blue-300 dark:border-blue-800 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
             <Shield className="w-3.5 h-3.5" />
           </div>
-          <div>
-            <p className="font-semibold text-slate-800 dark:text-slate-200">
-              GSP Security Pro <span className="font-normal text-slate-400 dark:text-slate-500">— {t.comun.lemaApp}</span>
-            </p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Desarrollado por <span className="text-blue-600 dark:text-blue-400 font-bold">FraNko Rasia</span>
-            </p>
-          </div>
+          <p className="font-semibold text-slate-800 dark:text-slate-200">
+            GSP Security Pro <span className="font-normal text-slate-400 dark:text-slate-500">— {t.comun.lemaApp}</span>
+          </p>
         </div>
 
         {/* Enlaces de pie de página: Términos, Ayuda, Privacidad, Acerca de */}
