@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { MapPin, Plus, Edit2, Shield, Users } from 'lucide-react'
+import { MapPin, Plus, Edit2, Shield, Users, CalendarDays } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -10,7 +10,7 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { Objetivo } from '@/tipos'
 
-export const GestionObjetivos: React.FC = () => {
+export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) => void }> = ({ onSeleccionarObjetivo }) => {
   const { objetivos, asignaciones, empresas, crearObjetivo, editarObjetivo } = useOperativo()
   const { usuario } = useAutenticacion()
 
