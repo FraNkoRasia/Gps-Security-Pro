@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { MapPin, Plus, Edit2, Shield, Users } from 'lucide-react'
+import { MapPin, Plus, Edit2, Shield, Users, CheckCircle2, XCircle } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -11,11 +11,13 @@ import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { Objetivo } from '@/tipos'
 
 export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) => void; idEmpresaSeleccionada?: string; modoConsulta?: boolean }> = ({ onSeleccionarObjetivo, idEmpresaSeleccionada, modoConsulta = false }) => {
-  const { objetivos, asignaciones, empresas, crearObjetivo, editarObjetivo } = useOperativo()
+  const { objetivos, asignaciones, empresas, crearObjetivo, editarObjetivo, cambiarEstadoObjetivo } = useOperativo()
   const { usuario } = useAutenticacion()
 
   const [modalAbierto, setModalAbierto] = useState(false)
   const [objetivoEditando, setObjetivoEditando] = useState<Objetivo | null>(null)
+  const [modalEstadoAbierto, setModalEstadoAbierto] = useState(false)
+  const [objetivoEstado, setObjetivoEstado] = useState<Objetivo | null>(null)
 
   const [nombre, setNombre] = useState('')
   const [descripcion, setDescripcion] = useState('')
@@ -39,6 +41,19 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
     setProvincia('Córdoba')
     setError(null)
     setModalAbierto(true)
+  }
+
+  const abrirEstado = (obj: Objetivo) => {
+    setObjetivoEstado(obj)
+    setModalEstadoAbierto(true)
+  }
+
+  const confirmarEstado = async () => {
+    if (!objetivoEstado) return
+    const errorEstado = await cambiarEstadoObjetivo(objetivoEstado.id, !objetivoEstado.activo)
+    if (errorEstado) { setError(errorEstado); return }
+    setModalEstadoAbierto(false)
+    setObjetivoEstado(null)
   }
 
   const abrirEditar = (obj: Objetivo) => {
@@ -129,13 +144,14 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
                     </div>
                   </div>
                   {!modoConsulta && (
-                    <button
-                      type="button"
-                      onClick={() => abrirEditar(obj)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button type="button" onClick={() => abrirEditar(obj)} title="Editar objetivo" className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button type="button" onClick={() => abrirEstado(obj)} title={obj.activo ? 'Dar de baja' : 'Dar de alta'} className={`p-1.5 rounded-lg transition-colors ${obj.activo ? 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30' : 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'}`}>
+                        {obj.activo ? <XCircle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+                      </button>
+                    </div>
                   )}
                 </div>
 
@@ -175,6 +191,26 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
           )
         })}
       </div>
+
+      <Dialogo
+        abierto={modalEstadoAbierto}
+        alCerrar={() => { setModalEstadoAbierto(false); setObjetivoEstado(null) }}
+        titulo={objetivoEstado?.activo ? 'Dar de baja objetivo' : 'Dar de alta objetivo'}
+        subtitulo={objetivoEstado?.activo ? 'El objetivo quedará inactivo para la operación.' : 'El objetivo volverá a estar disponible para la operación.'}
+        icono={objetivoEstado?.activo ? <XCircle className="w-5 h-5 text-red-500" /> : <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-slate-700 dark:text-slate-300">
+            ¿Deseas {objetivoEstado?.activo ? 'dar de baja' : 'dar de alta'} el objetivo <strong>{objetivoEstado?.nombre}</strong>?
+          </p>
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+            <Boton variante="secundario" onClick={() => { setModalEstadoAbierto(false); setObjetivoEstado(null) }}>Cancelar</Boton>
+            <Boton variante={objetivoEstado?.activo ? "peligro" : "primario"} onClick={() => void confirmarEstado()}>
+              {objetivoEstado?.activo ? 'Confirmar baja' : 'Confirmar alta'}
+            </Boton>
+          </div>
+        </div>
+      </Dialogo>
 
       {/* Modal Crear / Editar Objetivo */}
       <Dialogo
