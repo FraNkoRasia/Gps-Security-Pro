@@ -15,7 +15,7 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import type { Turno } from '@/tipos'
 
 export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivoInicial = '' }) => {
-  const { vigiladores, objetivos, asignaciones, turnos, asignarTurnoGrilla } = useOperativo()
+  const { vigiladores, asignaciones, turnos, asignarTurnoGrilla } = useOperativo()
   const [objetivoSeleccionado] = useState(objetivoInicial)
 
   const mesSeleccionado = '2026-10'
@@ -39,11 +39,6 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
   const [modalGeneradorAbierto, setModalGeneradorAbierto] = useState(false)
   const [vigiladorDiagrama, setVigiladorDiagrama] = useState('')
 
-  useEffect(() => {
-    if (!vigiladorDiagrama && vigiladoresMostrados.length > 0) {
-      setVigiladorDiagrama(vigiladoresMostrados[0].id)
-    }
-  }, [vigiladoresMostrados, vigiladorDiagrama])
   const [patronDiagrama, setPatronDiagrama] = useState<'4x3' | '4x2' | '2x2' | '6x1'>('4x3')
   const [tipoGuardiaDiagrama, setTipoGuardiaDiagrama] = useState<'diurno' | 'nocturno'>('nocturno')
 
@@ -71,6 +66,11 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
   const vigiladoresMostrados = objetivoSeleccionado
     ? vigiladores.filter((v) => asignaciones.some((a) => a.id_vigilador === v.id && a.id_objetivo === objetivoSeleccionado && a.activa))
     : []
+  useEffect(() => {
+    if (!vigiladorDiagrama && vigiladoresMostrados.length > 0) {
+      setVigiladorDiagrama(vigiladoresMostrados[0].id)
+    }
+  }, [vigiladoresMostrados, vigiladorDiagrama])
 
   const abrirEditarCelda = (idVig: string, nombreVig: string, dia: number) => {
     const diaStr = dia < 10 ? `0${dia}` : `${dia}`
