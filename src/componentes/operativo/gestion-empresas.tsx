@@ -229,12 +229,14 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
         alCerrar={() => !procesandoEmpresa && setEmpresaConfirmacion(null)}
         titulo={empresaConfirmacion?.activa ? "Dar de baja empresa" : "Dar de alta empresa"}
         subtitulo={empresaConfirmacion?.activa ? "La cuenta de sus usuarios quedará suspendida hasta que la empresa vuelva a estar activa." : "La cuenta de sus usuarios podrá volver a ingresar al sistema."}
-        icono={<Power className="w-5 h-5 text-red-500" />}
+        icono={<Power className={empresaConfirmacion?.activa ? "w-5 h-5 text-red-500" : "w-5 h-5 text-emerald-500"} />}
         tamano="chico"
       >
         {empresaConfirmacion && (
           <div className="space-y-5">
-            <div className="rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/20 p-4">
+            <div className={empresaConfirmacion.activa
+              ? "rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/20 p-4"
+              : "rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/20 p-4"}>
               <p className="text-sm text-slate-600 dark:text-slate-300">¿Estás seguro de dar de {empresaConfirmacion?.activa ? 'baja' : 'alta'} a:</p>
               <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{empresaConfirmacion.nombre}?</p>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Los usuarios de esta empresa podrán ingresar nuevamente cuando vuelva a estar activa.</p>
@@ -242,7 +244,7 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
             {errorOperacion && <p className="text-xs font-medium text-red-600 dark:text-red-400">{errorOperacion}</p>}
             <div className="flex justify-end gap-2">
               <Boton variante="secundario" tamano="chico" disabled={procesandoEmpresa} onClick={() => setEmpresaConfirmacion(null)}>Cancelar</Boton>
-              <Boton variante="peligro" tamano="chico" disabled={procesandoEmpresa} onClick={async () => {
+              <Boton variante={empresaConfirmacion?.activa ? "peligro" : "primario"} tamano="chico" disabled={procesandoEmpresa} onClick={async () => {
                 if (!empresaConfirmacion) return
                 setProcesandoEmpresa(true)
                 const resultado = empresaConfirmacion.activa
