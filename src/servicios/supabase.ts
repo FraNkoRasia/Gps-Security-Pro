@@ -31,4 +31,3 @@ export const supabase = hayConexionSupabase
     })
   : null
 
-export const superAdminInicial = 'cjsfranko@gmail.com'
