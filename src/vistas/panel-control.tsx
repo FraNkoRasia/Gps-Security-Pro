@@ -172,7 +172,7 @@ export const VistaPanelControl: React.FC = () => {
             {pestanaRenderizada === 'miMes' && esVigilador && <MiMes />}
           </div>
         </>
-      )
+      )}
     </div>
   )
 }
