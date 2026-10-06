@@ -28,7 +28,7 @@ export const VistaPanelControl: React.FC = () => {
   const { usuario, cerrarSesion } = useAutenticacion()
   const { t } = useTraduccion()
 
-  const [pestanaActiva, setPestanaActiva] = useState<string>(esAdmin ? 'objetivos' : 'grilla')
+  const [pestanaActiva, setPestanaActiva] = useState<string>('objetivos')
   const [objetivoGrillaId, setObjetivoGrillaId] = useState<string | null>(null)
 
   if (!usuario) return null
