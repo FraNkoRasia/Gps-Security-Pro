@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Building2, Plus, Edit2, MapPin } from 'lucide-react'
+import { Building2, Plus, Edit2, MapPin, UserPlus } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -10,7 +10,7 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import type { Empresa } from '@/tipos'
 
 export const GestionEmpresas: React.FC = () => {
-  const { empresas, objetivos, vigiladores, crearEmpresa, editarEmpresa } = useOperativo()
+  const { empresas, objetivos, vigiladores, crearEmpresaConAdministrador, editarEmpresa } = useOperativo()
 
   const [modalAbierto, setModalAbierto] = useState(false)
   const [empresaEditando, setEmpresaEditando] = useState<Empresa | null>(null)
@@ -18,6 +18,11 @@ export const GestionEmpresas: React.FC = () => {
   const [nombre, setNombre] = useState('')
   const [cuit, setCuit] = useState('')
   const [direccion, setDireccion] = useState('')
+  const [adminNombre, setAdminNombre] = useState('')
+  const [adminApellido, setAdminApellido] = useState('')
+  const [adminEmail, setAdminEmail] = useState('')
+  const [adminPassword, setAdminPassword] = useState('')
+  const [adminTelefono, setAdminTelefono] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   const abrirCrear = () => {
@@ -25,6 +30,11 @@ export const GestionEmpresas: React.FC = () => {
     setNombre('')
     setCuit('')
     setDireccion('')
+    setAdminNombre('')
+    setAdminApellido('')
+    setAdminEmail('')
+    setAdminPassword('')
+    setAdminTelefono('')
     setError(null)
     setModalAbierto(true)
   }
@@ -38,7 +48,7 @@ export const GestionEmpresas: React.FC = () => {
     setModalAbierto(true)
   }
 
-  const manejarGuardar = (e: React.FormEvent) => {
+  const manejarGuardar = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
 
@@ -53,12 +63,34 @@ export const GestionEmpresas: React.FC = () => {
         cuit: cuit.trim(),
         direccion: direccion.trim()
       })
-    } else {
-      crearEmpresa({
-        nombre: nombre.trim(),
-        cuit: cuit.trim(),
-        direccion: direccion.trim()
-      })
+      setModalAbierto(false)
+      return
+    }
+
+    if (!adminNombre.trim() || !adminApellido.trim() || !adminEmail.trim() || !adminPassword) {
+      setError('Para crear una empresa también debes indicar los datos de su administrador.')
+      return
+    }
+
+    if (adminPassword.length < 8) {
+      setError('La contraseña temporal debe tener al menos 8 caracteres.')
+      return
+    }
+
+    const resultado = await crearEmpresaConAdministrador({
+      nombre: nombre.trim(),
+      cuit: cuit.trim(),
+      direccion: direccion.trim(),
+      admin_nombre: adminNombre.trim(),
+      admin_apellido: adminApellido.trim(),
+      admin_email: adminEmail.trim().toLowerCase(),
+      admin_password: adminPassword,
+      admin_telefono: adminTelefono.trim()
+    })
+
+    if (resultado) {
+      setError(resultado)
+      return
     }
 
     setModalAbierto(false)
@@ -183,6 +215,44 @@ export const GestionEmpresas: React.FC = () => {
             />
           </div>
 
+          {!empresaEditando && (
+            <div className="space-y-4 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/50 dark:bg-blue-950/20 p-4">
+              <div className="flex items-center gap-2">
+                <UserPlus className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <div>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">Cuenta del Administrador</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Será la cuenta con la que el responsable de la empresa iniciará sesión.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Etiqueta requerido>Nombre</Etiqueta>
+                  <Entrada value={adminNombre} onChange={(e) => setAdminNombre(e.target.value)} placeholder="Juan" />
+                </div>
+                <div>
+                  <Etiqueta requerido>Apellido</Etiqueta>
+                  <Entrada value={adminApellido} onChange={(e) => setAdminApellido(e.target.value)} placeholder="Pérez" />
+                </div>
+              </div>
+
+              <div>
+                <Etiqueta requerido>Email de acceso</Etiqueta>
+                <Entrada type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} placeholder="admin@empresa.com" />
+              </div>
+
+              <div>
+                <Etiqueta requerido>Contraseña temporal</Etiqueta>
+                <Entrada type="password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} placeholder="Mínimo 8 caracteres" minLength={8} />
+              </div>
+
+              <div>
+                <Etiqueta>Teléfono</Etiqueta>
+                <Entrada type="tel" value={adminTelefono} onChange={(e) => setAdminTelefono(e.target.value)} placeholder="351..." />
+              </div>
+            </div>
+          )}
+
           {error && <p className="text-xs text-red-500 font-semibold">{error}</p>}
 
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
@@ -190,7 +260,7 @@ export const GestionEmpresas: React.FC = () => {
               Cancelar
             </Boton>
             <Boton type="submit" variante="primario">
-              {empresaEditando ? 'Guardar Cambios' : 'Crear Empresa'}
+              {empresaEditando ? 'Guardar Cambios' : 'Crear Empresa y Administrador'}
             </Boton>
           </div>
         </form>
