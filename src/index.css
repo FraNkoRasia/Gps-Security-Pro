@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tailwind v4: hacer que dark: responda a la clase .dark gestionada por el contexto de tema. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
     /* Paleta inspirada en logoAPP.png: Azul Cibernético / Zafiro Eléctrico & Plata Cromada */
