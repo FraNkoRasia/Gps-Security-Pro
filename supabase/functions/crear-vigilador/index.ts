@@ -42,6 +42,7 @@ Deno.serve(async (req) => {
       nombre?: string
       apellido?: string
       email?: string
+      password?: string
       telefono?: string
       id_empresa?: string
       id_objetivo_inicial?: string | null
@@ -59,10 +60,15 @@ Deno.serve(async (req) => {
     const email = body.email?.trim().toLowerCase()
     const idEmpresa = caller.id_empresa
     const idObjetivo = body.id_objetivo_inicial || null
+    const password = body.password || ""
     const legajo = body.legajo?.trim() || null
 
-    if (!nombre || !apellido || !email || !idEmpresa) {
+    if (!nombre || !apellido || !email || !password || !idEmpresa) {
       return json({ error: "Nombre, apellido y email son obligatorios." }, 400)
+    }
+
+    if (password.length < 8) {
+      return json({ error: "La contraseña debe tener al menos 8 caracteres." }, 400)
     }
 
     if (body.id_empresa && body.id_empresa !== idEmpresa) {
@@ -81,11 +87,11 @@ Deno.serve(async (req) => {
       if (!objetivo) return json({ error: "El objetivo seleccionado no pertenece a su empresa o está inactivo." }, 400)
     }
 
-    const temporaryPassword = crypto.randomUUID().replaceAll("-", "").slice(0, 12) + "Aa1!"
+
 
     const { data: created, error: createError } = await admin.auth.admin.createUser({
       email,
-      password: temporaryPassword,
+      password,
       email_confirm: true,
     })
 
@@ -168,7 +174,7 @@ Deno.serve(async (req) => {
     return json({
       vigilador,
       asignacion,
-      temporary_password: temporaryPassword,
+      password: true,
       email,
     })
   } catch (error) {
