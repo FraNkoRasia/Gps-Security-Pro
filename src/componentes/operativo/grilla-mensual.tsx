@@ -204,15 +204,17 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
     }
     if (t.tipo === 'nocturno') {
       return (
-        <span className="text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center gap-0.5">
-          12🌙
+        <span className="text-blue-600 dark:text-blue-400 font-bold flex flex-col items-center justify-center leading-none gap-0.5">
+          <span className="text-[11px]">{t.horas_totales}</span>
+          <Moon className="w-3 h-3" aria-label="Nocturno" />
         </span>
       )
     }
     if (t.tipo === 'diurno') {
       return (
-        <span className="text-amber-500 font-bold flex items-center justify-center gap-0.5">
-          {t.horas_totales}☀️
+        <span className="text-amber-500 font-bold flex flex-col items-center justify-center leading-none gap-0.5">
+          <span className="text-[11px]">{t.horas_totales}</span>
+          <Sun className="w-3 h-3" aria-label="Diurno" />
         </span>
       )
     }
@@ -337,7 +339,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
                     <th
                       key={dia}
                       className={`p-2 text-center border-r border-slate-200 dark:border-slate-800/60 font-semibold ${
-                        modoVista === 'semana' ? 'min-w-[40px] max-w-[40px]' : 'min-w-[32px] max-w-[32px]'
+                        modoVista === 'semana' ? 'min-w-[36px] max-w-[36px]' : 'min-w-[30px] max-w-[30px]'
                       } ${
                         esFeriado
                           ? 'bg-amber-100/70 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300'
