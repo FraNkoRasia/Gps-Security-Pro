@@ -15,6 +15,7 @@ import { Boton } from '@/componentes/ui/boton'
 import { GestionEmpresas } from '@/componentes/operativo/gestion-empresas'
 import { GestionObjetivos } from '@/componentes/operativo/gestion-objetivos'
 import { GestionVigiladores } from '@/componentes/operativo/gestion-vigiladores'
+import { GrillaMensual } from '@/componentes/operativo/grilla-mensual'
 import { LibroNovedades } from '@/componentes/operativo/libro-novedades'
 import { CambiosTurnos } from '@/componentes/operativo/cambios-turnos'
 import { AvisosComunicacion } from '@/componentes/operativo/avisos-comunicacion'
@@ -28,6 +29,7 @@ export const VistaPanelControl: React.FC = () => {
   const { t } = useTraduccion()
 
   const [pestanaActiva, setPestanaActiva] = useState<string>(esAdmin ? 'objetivos' : 'grilla')
+  const [objetivoGrillaId, setObjetivoGrillaId] = useState<string | null>(null)
 
   if (!usuario) return null
 
@@ -139,7 +141,8 @@ export const VistaPanelControl: React.FC = () => {
       {/* Renderizado de Módulos Operativos */}
       <div className="pt-1">
         {pestanaRenderizada === 'empresas' && esSuperAdmin && <GestionEmpresas />}
-        {pestanaRenderizada === 'objetivos' && esAdmin && <GestionObjetivos />}
+        {pestanaRenderizada === 'objetivos' && esAdmin && <GestionObjetivos onSeleccionarObjetivo={(id) => { setObjetivoGrillaId(id); setPestanaActiva('grillaObjetivo') }} />}
+        {pestanaRenderizada === 'grillaObjetivo' && esAdmin && objetivoGrillaId && <GrillaMensual objetivoInicial={objetivoGrillaId} onVolver={() => setPestanaActiva('objetivos')} />}
         {pestanaRenderizada === 'vigiladores' && esAdmin && <GestionVigiladores />}
         {pestanaRenderizada === 'novedades' && (esAdmin || esVigilador) && <LibroNovedades />}
         {pestanaRenderizada === 'cambios' && (esAdmin || esVigilador) && <CambiosTurnos />}
