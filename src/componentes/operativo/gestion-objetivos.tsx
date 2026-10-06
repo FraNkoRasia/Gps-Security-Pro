@@ -10,8 +10,8 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { Objetivo } from '@/tipos'
 
-export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) => void }> = ({ onSeleccionarObjetivo }) => {
-  const { objetivos, asignaciones, empresas, crearObjetivo, editarObjetivo } = useOperativo()
+export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) => void; idEmpresaSeleccionada?: string; modoConsulta?: boolean }> = ({ onSeleccionarObjetivo, idEmpresaSeleccionada, modoConsulta = false }) => {
+  const { objetivos, asignaciones, vigiladores, empresas, crearObjetivo, editarObjetivo } = useOperativo()
   const { usuario } = useAutenticacion()
 
   const [modalAbierto, setModalAbierto] = useState(false)
@@ -25,8 +25,8 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
   const [error, setError] = useState<string | null>(null)
 
   // Filtrar objetivos si es admin de empresa
-  const idEmpresaActiva = usuario?.id_empresa || empresas[0]?.id || 'emp-wall-01'
-  const objetivosMostrados = usuario?.rol === 'super_administrador'
+  const idEmpresaActiva = idEmpresaSeleccionada || usuario?.id_empresa || empresas[0]?.id || 'emp-wall-01'
+  const objetivosMostrados = usuario?.rol === 'super_administrador' && !idEmpresaSeleccionada
     ? objetivos
     : objetivos.filter((o) => o.id_empresa === idEmpresaActiva)
 
@@ -94,19 +94,21 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
             Gestión de servicios contratados, ubicaciones físicas y asignación de puestos.
           </p>
         </div>
-        <Boton
+        {!modoConsulta && <Boton
           variante="primario"
           onClick={abrirCrear}
           icono={<Plus className="w-4 h-4" />}
         >
           Nuevo Objetivo
-        </Boton>
+        </Boton>}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {objetivosMostrados.map((obj) => {
-          const vigiladoresAsignados = asignaciones.filter(
-            (a) => a.id_objetivo === obj.id && a.activa
+          const vigiladoresAsignados = asignaciones.filter((a) =>
+            a.id_objetivo === obj.id &&
+            a.activa &&
+            vigiladores.some((v) => v.id === a.id_vigilador && v.id_empresa === obj.id_empresa && v.activo)
           ).length
 
           return (
