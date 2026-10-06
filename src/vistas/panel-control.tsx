@@ -29,6 +29,7 @@ export const VistaPanelControl: React.FC = () => {
   const [pestanaActiva, setPestanaActiva] = useState<string>('objetivos')
   const [objetivoGrillaId, setObjetivoGrillaId] = useState<string | null>(null)
   const [empresaSeleccionadaId, setEmpresaSeleccionadaId] = useState<string | null>(null)
+  const [objetivoSeleccionadoId, setObjetivoSeleccionadoId] = useState<string | null>(null)
 
   if (!usuario) return null
 
@@ -115,14 +116,46 @@ export const VistaPanelControl: React.FC = () => {
                 <Boton
                   variante="secundario"
                   tamano="chico"
-                  onClick={() => setEmpresaSeleccionadaId(null)}
+                  onClick={() => {
+                    setObjetivoSeleccionadoId(null)
+                    setEmpresaSeleccionadaId(null)
+                  }}
                 >
                   ← Volver a Empresas
                 </Boton>
                 <Insignia variante="azul">Vista de Empresa</Insignia>
               </div>
-              <GestionObjetivos idEmpresaSeleccionada={empresaSeleccionadaId} modoConsulta />
-              <GestionVigiladores idEmpresaSeleccionada={empresaSeleccionadaId} modoConsulta />
+              <GestionObjetivos
+                idEmpresaSeleccionada={empresaSeleccionadaId}
+                modoConsulta
+                onSeleccionarObjetivo={setObjetivoSeleccionadoId}
+              />
+              {objetivoSeleccionadoId && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-3 pt-2">
+                    <div>
+                      <h3 className="text-lg font-black text-slate-900 dark:text-white font-['Outfit']">
+                        Plantel del objetivo
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Vigiladores actualmente asignados a este puesto.
+                      </p>
+                    </div>
+                    <Boton
+                      variante="secundario"
+                      tamano="chico"
+                      onClick={() => setObjetivoSeleccionadoId(null)}
+                    >
+                      ← Ver objetivos
+                    </Boton>
+                  </div>
+                  <GestionVigiladores
+                    idEmpresaSeleccionada={empresaSeleccionadaId}
+                    idObjetivoSeleccionado={objetivoSeleccionadoId}
+                    modoConsulta
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
