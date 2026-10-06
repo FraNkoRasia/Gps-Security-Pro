@@ -60,7 +60,9 @@ export const VistaPanelControl: React.FC = () => {
       ]
     : []
 
-  const pestanaRenderizada = pestanas.some((p) => p.id === pestanaActiva)
+  const pestanaRenderizada = pestanaActiva === 'grillaObjetivo' && esAdmin
+    ? 'grillaObjetivo'
+    : pestanas.some((p) => p.id === pestanaActiva)
     ? pestanaActiva
     : pestanas[0]?.id || ''
 
