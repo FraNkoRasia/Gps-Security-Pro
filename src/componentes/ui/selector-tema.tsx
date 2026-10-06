@@ -15,7 +15,7 @@ export const SelectorTema: React.FC<{ className?: string }> = ({ className }) =>
       type="button"
       onClick={alternar}
       className={cn(
-        'p-2 rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-300 hover:text-white hover:border-slate-500 transition-all cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center shadow-sm',
+        'p-2 rounded-xl bg-slate-100 border border-slate-300 text-slate-600 hover:text-slate-900 hover:border-slate-400 dark:bg-slate-900/90 dark:border-slate-700/80 dark:text-slate-300 dark:hover:text-white dark:hover:border-slate-500 transition-all cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center shadow-sm',
         className
       )}
       aria-label={temaActual === 'dark' ? 'Activar tema claro' : 'Activar tema oscuro'}
