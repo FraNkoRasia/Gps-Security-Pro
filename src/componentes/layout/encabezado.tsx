@@ -88,7 +88,7 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbr
                   type="button"
                   onClick={() => cerrarSesion()}
                   title={t.navegacion.cerrarSesion}
-                  className="p-2 rounded-xl bg-red-500/10 dark:bg-red-500/10 border border-red-500/20 dark:border-red-400/20 text-red-500/80 dark:text-red-400/80 hover:bg-red-500/15 dark:hover:bg-red-500/15 hover:text-red-500 dark:hover:text-red-300 hover:border-red-500/30 dark:hover:border-red-400/30 transition-colors cursor-pointer"
+                  className="p-2 rounded-xl bg-transparent dark:bg-transparent border border-red-500/20 dark:border-red-400/20 text-red-500/80 dark:text-red-400/80 hover:bg-red-500/10 dark:hover:bg-red-500/10 hover:text-red-500 dark:hover:text-red-300 hover:border-red-500/30 dark:hover:border-red-400/30 transition-colors cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
