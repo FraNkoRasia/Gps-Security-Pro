@@ -265,7 +265,7 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbr
                 <Boton
                   variante="fantasma"
                   tamano="medio"
-                  className="w-full border border-red-500/20 text-red-500/80 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 dark:text-red-400/80 dark:hover:bg-red-500/10 dark:hover:text-red-300 dark:hover:border-red-400/30"
+                  className="w-full bg-red-500/50 dark:bg-red-500/50 border border-red-500/30 dark:border-red-400/30 text-white hover:bg-red-500/60 dark:hover:bg-red-500/60 hover:border-red-500/50 transition-colors"
                   onClick={() => {
                     setMenuMovilAbierto(false)
                     cerrarSesion()
