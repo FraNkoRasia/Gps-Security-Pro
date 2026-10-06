@@ -18,7 +18,6 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; onVolver?: () =
   const { vigiladores, objetivos, asignaciones, turnos, asignarTurnoGrilla } = useOperativo()
   const [objetivoSeleccionado] = useState(objetivoInicial)
 
-  const volverAObjetivos = onVolver
   const mesSeleccionado = '2026-10'
   const totalDiasMes = 31
 
