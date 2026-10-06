@@ -15,7 +15,6 @@ import { Boton } from '@/componentes/ui/boton'
 import { GestionEmpresas } from '@/componentes/operativo/gestion-empresas'
 import { GestionObjetivos } from '@/componentes/operativo/gestion-objetivos'
 import { GestionVigiladores } from '@/componentes/operativo/gestion-vigiladores'
-import { GrillaMensual } from '@/componentes/operativo/grilla-mensual'
 import { LibroNovedades } from '@/componentes/operativo/libro-novedades'
 import { CambiosTurnos } from '@/componentes/operativo/cambios-turnos'
 import { AvisosComunicacion } from '@/componentes/operativo/avisos-comunicacion'
@@ -28,7 +27,7 @@ export const VistaPanelControl: React.FC = () => {
   const { usuario, cerrarSesion } = useAutenticacion()
   const { t } = useTraduccion()
 
-  const [pestanaActiva, setPestanaActiva] = useState<string>('grilla')
+  const [pestanaActiva, setPestanaActiva] = useState<string>(esAdmin ? 'objetivos' : 'grilla')
 
   if (!usuario) return null
 
@@ -51,7 +50,6 @@ export const VistaPanelControl: React.FC = () => {
       ]
     : esAdmin
     ? [
-        { id: 'grilla', label: 'Grilla Mensual', icono: <Calendar className="w-4 h-4" /> },
         { id: 'objetivos', label: 'Objetivos', icono: <MapPin className="w-4 h-4" /> },
         { id: 'vigiladores', label: 'Vigiladores', icono: <Users className="w-4 h-4" /> },
         { id: 'novedades', label: 'Libro de Novedades', icono: <BookOpen className="w-4 h-4" /> },
@@ -141,7 +139,6 @@ export const VistaPanelControl: React.FC = () => {
       {/* Renderizado de Módulos Operativos */}
       <div className="pt-1">
         {pestanaRenderizada === 'empresas' && esSuperAdmin && <GestionEmpresas />}
-        {pestanaRenderizada === 'grilla' && (esAdmin || esVigilador) && <GrillaMensual />}
         {pestanaRenderizada === 'objetivos' && esAdmin && <GestionObjetivos />}
         {pestanaRenderizada === 'vigiladores' && esAdmin && <GestionVigiladores />}
         {pestanaRenderizada === 'novedades' && (esAdmin || esVigilador) && <LibroNovedades />}
