@@ -218,7 +218,7 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
                           a.activa &&
                           vigiladores.some((v) =>
                             v.id === a.id_vigilador &&
-                            v.id_empresa === emp.id &&
+                            v.id_empresa === objetivo.id_empresa &&
                             v.activo
                           )
                         ).length
