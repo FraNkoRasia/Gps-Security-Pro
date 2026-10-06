@@ -109,7 +109,6 @@ Deno.serve(async (req) => {
       activo: true,
       debe_cambiar_contrasena: true,
     })
-    .eq("id", nuevoUsuario.user.id)
 
   if (perfilError) {
     await admin.auth.admin.deleteUser(nuevoUsuario.user.id)
