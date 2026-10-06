@@ -128,13 +128,15 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
                       </span>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => abrirEditar(obj)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
+                  {!modoConsulta && (
+                    <button
+                      type="button"
+                      onClick={() => abrirEditar(obj)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
 
                 <p className="text-xs text-slate-600 dark:text-slate-400 flex items-start gap-1.5">
