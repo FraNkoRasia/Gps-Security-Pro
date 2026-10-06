@@ -27,6 +27,8 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
   const [adminPassword, setAdminPassword] = useState('')
   const [adminTelefono, setAdminTelefono] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [confirmacionGuardado, setConfirmacionGuardado] = useState(false)
+  const [procesandoGuardado, setProcesandoGuardado] = useState(false)
 
   const abrirCrear = () => {
     setEmpresaEditando(null)
@@ -61,12 +63,7 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
     }
 
     if (empresaEditando) {
-      editarEmpresa(empresaEditando.id, {
-        nombre: nombre.trim(),
-        cuit: cuit.trim(),
-        direccion: direccion.trim()
-      })
-      setModalAbierto(false)
+      setConfirmacionGuardado(true)
       return
     }
 
@@ -231,6 +228,44 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
           )
         })}
       </div>
+
+      <Dialogo
+        abierto={confirmacionGuardado}
+        alCerrar={() => !procesandoGuardado && setConfirmacionGuardado(false)}
+        titulo="Confirmar cambios"
+        subtitulo="Se actualizarán los datos de la empresa."
+        icono={<Edit2 className="w-5 h-5 text-blue-500" />}
+        tamano="chico"
+      >
+        <div className="space-y-5">
+          <div className="rounded-xl border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-950/20 p-4">
+            <p className="text-sm text-slate-600 dark:text-slate-300">¿Deseas guardar los cambios realizados en:</p>
+            <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{empresaEditando?.nombre}</p>
+          </div>
+          {error && <p className="text-xs font-medium text-red-600 dark:text-red-400">{error}</p>}
+          <div className="flex justify-end gap-2">
+            <Boton variante="secundario" tamano="chico" disabled={procesandoGuardado} onClick={() => setConfirmacionGuardado(false)}>Cancelar</Boton>
+            <Boton variante="primario" tamano="chico" disabled={procesandoGuardado} onClick={async () => {
+              if (!empresaEditando) return
+              setProcesandoGuardado(true)
+              const resultado = await editarEmpresa(empresaEditando.id, {
+                nombre: nombre.trim(),
+                cuit: cuit.trim(),
+                direccion: direccion.trim()
+              })
+              setProcesandoGuardado(false)
+              if (resultado) {
+                setError(resultado)
+                return
+              }
+              setConfirmacionGuardado(false)
+              setModalAbierto(false)
+            }}>
+              {procesandoGuardado ? 'Guardando...' : 'Confirmar cambios'}
+            </Boton>
+          </div>
+        </div>
+      </Dialogo>
 
       <Dialogo
         abierto={!!empresaConfirmacion}
