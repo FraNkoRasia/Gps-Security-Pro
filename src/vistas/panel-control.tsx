@@ -8,7 +8,6 @@ import {
   ArrowRightLeft,
   Bell,
   Clock,
-  Sparkles,
   LogOut
 } from 'lucide-react'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -24,10 +23,9 @@ import { MiTurno } from '@/componentes/operativo/mi-turno'
 import { MiMes } from '@/componentes/operativo/mi-mes'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import { useTraduccion } from '@/i18n'
-import type { RolUsuario } from '@/tipos'
 
 export const VistaPanelControl: React.FC = () => {
-  const { usuario, cerrarSesion, cambiarRolSimulado } = useAutenticacion()
+  const { usuario, cerrarSesion } = useAutenticacion()
   const { t } = useTraduccion()
 
   const [pestanaActiva, setPestanaActiva] = useState<string>('grilla')
@@ -37,18 +35,6 @@ export const VistaPanelControl: React.FC = () => {
   const esSuperAdmin = usuario.rol === 'super_administrador'
   const esAdmin = usuario.rol === 'administrador'
   const esVigilador = usuario.rol === 'vigilador'
-
-  // Ajustar pestaña por defecto si cambia el rol
-  const cambiarRolYDefinirPestana = (rol: RolUsuario) => {
-    cambiarRolSimulado?.(rol)
-    if (rol === 'vigilador') {
-      setPestanaActiva('miTurno')
-    } else if (rol === 'super_administrador') {
-      setPestanaActiva('empresas')
-    } else {
-      setPestanaActiva('grilla')
-    }
-  }
 
   // Lista de pestañas según rol
   const pestanas = esVigilador
@@ -127,49 +113,6 @@ export const VistaPanelControl: React.FC = () => {
           >
             {t.navegacion.cerrarSesion}
           </Boton>
-        </div>
-      </div>
-
-      {/* Switcher de Roles para Evaluación Rápida */}
-      <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-        <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5 font-medium">
-          <Sparkles className="w-4 h-4 text-blue-500" />
-          Alternar rol para verificar la vista y permisos:
-        </span>
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={() => cambiarRolYDefinirPestana('super_administrador')}
-            className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-              esSuperAdmin
-                ? 'bg-amber-500 text-slate-950 shadow-xs'
-                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
-            }`}
-          >
-            Super-Admin
-          </button>
-          <button
-            type="button"
-            onClick={() => cambiarRolYDefinirPestana('administrador')}
-            className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-              esAdmin
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
-            }`}
-          >
-            Administrador
-          </button>
-          <button
-            type="button"
-            onClick={() => cambiarRolYDefinirPestana('vigilador')}
-            className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-              esVigilador
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
-            }`}
-          >
-            Vigilador
-          </button>
         </div>
       </div>
 
