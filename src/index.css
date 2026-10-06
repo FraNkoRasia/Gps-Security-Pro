@@ -12,15 +12,15 @@
     --color-plata: #CBD5E1;
 
     /* Tema Oscuro por defecto (Deep Cyber Slate / Carbon) */
-    --app-bg: #070B12;
-    --app-card-bg: #0C121E;
-    --app-card-hover: #111A2B;
-    --app-border: #1E293B;
-    --app-border-highlight: rgba(0, 140, 255, 0.4);
-    --app-text: #F1F5F9;
+    --app-bg: #0F172A;
+    --app-card-bg: #172033;
+    --app-card-hover: #1E293B;
+    --app-border: #334155;
+    --app-border-highlight: rgba(0, 112, 243, 0.3);
+    --app-text: #F8FAFC;
     --app-text-muted: #94A3B8;
-    --app-input-bg: #0A0F1A;
-    --app-header-bg: rgba(7, 11, 18, 0.88);
+    --app-input-bg: #111827;
+    --app-header-bg: rgba(15, 23, 42, 0.94);
   }
 
   html.light {
@@ -51,11 +51,11 @@ html, body {
 
 /* Efectos visuales de logoAPP.png */
 .glow-cyan {
-  box-shadow: 0 0 25px -4px rgba(0, 163, 255, 0.35);
+  box-shadow: 0 0 18px -6px rgba(0, 163, 255, 0.22);
 }
 
 .glow-blue {
-  box-shadow: 0 0 30px -5px rgba(0, 112, 243, 0.4);
+  box-shadow: 0 0 22px -7px rgba(0, 112, 243, 0.25);
 }
 
 .borde-cromo {
@@ -78,10 +78,10 @@ html, body {
   height: 6px;
 }
 html.dark ::-webkit-scrollbar-track {
-  background: #090E17;
+  background: #0B1220;
 }
 html.dark ::-webkit-scrollbar-thumb {
-  background: #1E293B;
+  background: #334155;
   border-radius: 9999px;
 }
 html.dark ::-webkit-scrollbar-thumb:hover {
