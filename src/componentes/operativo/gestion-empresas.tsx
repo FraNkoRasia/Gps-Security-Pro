@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Building2, Plus, Edit2, MapPin, UserPlus } from 'lucide-react'
+import { Building2, Plus, Edit2, MapPin, UserPlus, ArrowRight } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -9,7 +9,7 @@ import { Etiqueta } from '@/componentes/ui/etiqueta'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import type { Empresa } from '@/tipos'
 
-export const GestionEmpresas: React.FC = () => {
+export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => void }> = ({ onSeleccionarEmpresa }) => {
   const { empresas, objetivos, vigiladores, crearEmpresaConAdministrador, editarEmpresa } = useOperativo()
 
   const [modalAbierto, setModalAbierto] = useState(false)
@@ -172,6 +172,18 @@ export const GestionEmpresas: React.FC = () => {
                     <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{cantidadVigiladores} asignados</span>
                   </div>
                 </div>
+
+                {onSeleccionarEmpresa && (
+                  <Boton
+                    variante="primario"
+                    tamano="chico"
+                    className="w-fit mt-3"
+                    onClick={() => onSeleccionarEmpresa(emp.id)}
+                    icono={<ArrowRight className="w-3.5 h-3.5" />}
+                  >
+                    Ingresar a la Empresa
+                  </Boton>
+                )}
               </TarjetaContenido>
             </Tarjeta>
           )
