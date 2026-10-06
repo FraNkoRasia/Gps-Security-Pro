@@ -124,7 +124,16 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
         {empresas.map((emp) => {
           const objetivosEmpresa = objetivos.filter((o) => o.id_empresa === emp.id)
           const cantidadObjetivos = objetivosEmpresa.length
-          const cantidadVigiladores = vigiladores.filter((v) => v.id_empresa === emp.id && v.activo).length
+          const idsVigiladoresActivos = new Set(
+            vigiladores
+              .filter((v) => v.id_empresa === emp.id && v.activo)
+              .map((v) => v.id)
+          )
+          const cantidadVigiladores = new Set(
+            asignaciones
+              .filter((a) => a.activa && idsVigiladoresActivos.has(a.id_vigilador))
+              .map((a) => a.id_vigilador)
+          ).size
 
           return (
             <Tarjeta key={emp.id} className="relative group hover:border-blue-500/50 transition-all">
@@ -205,45 +214,6 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
                   </div>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800/80">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Objetivos y vigiladores</span>
-                    <Insignia variante="gris">{objetivosEmpresa.length}</Insignia>
-                  </div>
-                  {objetivosEmpresa.length > 0 ? (
-                    <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                      {objetivosEmpresa.map((objetivo) => {
-                        const cantidadVigiladoresObjetivo = asignaciones.filter((a) =>
-                          a.id_objetivo === objetivo.id &&
-                          a.activa &&
-                          vigiladores.some((v) =>
-                            v.id === a.id_vigilador &&
-                            v.id_empresa === objetivo.id_empresa &&
-                            v.activo
-                          )
-                        ).length
-
-                        return (
-                          <div
-                            key={objetivo.id}
-                            className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 px-3 py-2"
-                          >
-                            <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
-                              {objetivo.nombre}
-                            </span>
-                            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">
-                              {cantidadVigiladoresObjetivo} {cantidadVigiladoresObjetivo === 1 ? 'vigilador' : 'vigiladores'}
-                            </span>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Esta empresa no tiene objetivos registrados.
-                    </p>
-                  )}
-                </div>
 
                 {onSeleccionarEmpresa && (
                   <Boton
