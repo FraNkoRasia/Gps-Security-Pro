@@ -19,46 +19,6 @@ const ContextoAutenticacion = createContext<ContextoAutenticacionTipo | undefine
 const CLAVE_SESION_LOCAL = 'gsp_sesion_activa'
 const CLAVE_RECORDAR_EMAIL = 'gsp_email_recordado'
 
-// Cuentas de demostración iniciales para desarrollo y verificación operativa
-const USUARIOS_DEMO: Record<string, Usuario> = {
-  [superAdminInicial]: {
-    id: 'usr-super-admin-01',
-    email: superAdminInicial,
-    nombre: 'FraNko',
-    apellido: 'Rasia',
-    rol: 'super_administrador',
-    id_empresa: null,
-    empresa_nombre: 'GSP Plataforma Global',
-    activo: true,
-    debe_cambiar_contrasena: false,
-    creado_en: '2026-10-01T00:00:00Z'
-  },
-  'admin@wallsecurity.com': {
-    id: 'usr-admin-01',
-    email: 'admin@wallsecurity.com',
-    nombre: 'Carlos',
-    apellido: 'Méndez',
-    rol: 'administrador',
-    id_empresa: 'emp-wall-01',
-    empresa_nombre: 'Wall Security',
-    activo: true,
-    debe_cambiar_contrasena: false,
-    creado_en: '2026-10-01T00:00:00Z'
-  },
-  'franco.rasia@wallsecurity.com': {
-    id: 'usr-vigilador-01',
-    email: 'franco.rasia@wallsecurity.com',
-    nombre: 'Franco',
-    apellido: 'Rasia',
-    rol: 'vigilador',
-    id_empresa: 'emp-wall-01',
-    empresa_nombre: 'Wall Security',
-    activo: true,
-    debe_cambiar_contrasena: false,
-    creado_en: '2026-10-01T00:00:00Z'
-  }
-}
-
 export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [cargando, setCargando] = useState<boolean>(true)
@@ -132,14 +92,7 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
 
   useEffect(() => {
     if (!hayConexionSupabase || !supabase) {
-      const sesionGuardada = localStorage.getItem(CLAVE_SESION_LOCAL)
-      if (sesionGuardada) {
-        try {
-          setUsuario(JSON.parse(sesionGuardada) as Usuario)
-        } catch {
-          localStorage.removeItem(CLAVE_SESION_LOCAL)
-        }
-      }
+      setErrorAuth('Supabase no está configurado. Configurá VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY para iniciar sesión.')
       setCargando(false)
       return
     }
@@ -232,31 +185,9 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
         return { exito: true }
       }
 
-      await new Promise((resolver) => setTimeout(resolver, 600))
-
-      const usuarioEncontrado = USUARIOS_DEMO[emailLimpio]
-      if (!usuarioEncontrado) {
-        const err = 'Usuario no registrado. La creación de cuentas es realizada exclusivamente por la administración.'
-        setErrorAuth(err)
-        return { exito: false, error: err }
-      }
-
-      if (contrasena.length < 6) {
-        const err = 'Contraseña incorrecta.'
-        setErrorAuth(err)
-        return { exito: false, error: err }
-      }
-
-      setUsuario(usuarioEncontrado)
-      if (recordarme) {
-        localStorage.setItem(CLAVE_SESION_LOCAL, JSON.stringify(usuarioEncontrado))
-        localStorage.setItem(CLAVE_RECORDAR_EMAIL, emailLimpio)
-      } else {
-        sessionStorage.setItem(CLAVE_SESION_LOCAL, JSON.stringify(usuarioEncontrado))
-        localStorage.removeItem(CLAVE_RECORDAR_EMAIL)
-      }
-
-      return { exito: true }
+      const err = 'Supabase no está configurado.'
+      setErrorAuth(err)
+      return { exito: false, error: err }
     } catch (err: unknown) {
       const mensaje = err instanceof Error ? err.message : 'Error inesperado al conectar con el servicio'
       setErrorAuth(mensaje)
