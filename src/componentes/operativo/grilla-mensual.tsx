@@ -7,7 +7,7 @@ import {
   ChevronRight,
   Wand2,
 } from 'lucide-react'
-import { Tarjeta }
+import { Tarjeta } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Dialogo } from '@/componentes/ui/dialogo'
 import { Etiqueta } from '@/componentes/ui/etiqueta'
