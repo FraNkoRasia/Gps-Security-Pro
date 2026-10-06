@@ -420,15 +420,69 @@ interface ContextoOperativoTipo {
   }
 
   // Cambios de Turno (Sección 29)
-  solicitarCambioTurno: (datos: {
+  const solicitarCambioTurno = (datos: {
     id_solicitante: string
     id_destinatario: string
     id_turno_origen: string
     fecha_turno: string
     motivo: string
-  }) => void
-  responderSolicitudCambio: (id_solicitud: string, aceptado: boolean) => void
-  aprobarCambioAdmin: (id_solicitud: string, aprobado: boolean) => void
+  }) => {
+    if (!supabase || !usuario) return
+    const solicitante = vigiladores.find((v) => v.id === datos.id_solicitante)
+    const destinatario = vigiladores.find((v) => v.id === datos.id_destinatario)
+    const turno = turnos.find((t) => t.id === datos.id_turno_origen)
+    const dbSolicitante = solicitante ? vigiladorPorUsuario.get(solicitante.id) : undefined
+    const dbDestinatario = destinatario ? vigiladorPorUsuario.get(destinatario.id) : undefined
+    if (!solicitante || !destinatario || !turno || !dbSolicitante || !dbDestinatario) return
+
+    void (async () => {
+      const { data, error } = await supabase.from('solicitudes_cambio').insert({
+        id_empresa: solicitante.id_empresa,
+        id_solicitante: dbSolicitante.id,
+        id_destinatario: dbDestinatario.id,
+        id_turno_origen: turno.id,
+        fecha_turno: datos.fecha_turno,
+        estado: 'pendiente',
+        motivo: datos.motivo
+      }).select('*').single()
+      if (error) { console.error('Error creando solicitud:', error); return }
+      setSolicitudesCambio((prev) => [{ ...data, id_destinatario: datos.id_destinatario, id_solicitante: datos.id_solicitante }, ...prev])
+    })()
+  }
+
+  const responderSolicitudCambio = (id_solicitud: string, aceptado: boolean) => {
+    if (!supabase) return
+    void (async () => {
+      const estado = aceptado ? 'aceptada_vigilador' : 'rechazada_vigilador'
+      const { error } = await supabase.from('solicitudes_cambio').update({ estado }).eq('id', id_solicitud)
+      if (error) { console.error('Error respondiendo solicitud:', error); return }
+      setSolicitudesCambio((prev) => prev.map((s) => s.id === id_solicitud ? { ...s, estado } : s))
+    })()
+  }
+
+  const aprobarCambioAdmin = (id_solicitud: string, aprobado: boolean) => {
+    const solicitud = solicitudesCambio.find((s) => s.id === id_solicitud)
+    if (!solicitud || !supabase) return
+    void (async () => {
+      const estado = aprobado ? 'aprobada_admin' : 'cancelada'
+      if (aprobado) {
+        const turno = turnos.find((t) => t.id === solicitud.id_turno_origen)
+        const destinatario = vigiladores.find((v) => v.id === solicitud.id_destinatario)
+        const dbDestinatario = destinatario ? vigiladorPorUsuario.get(destinatario.id) : undefined
+        if (!turno || !dbDestinatario) return
+        const { error: turnoError } = await supabase.from('turnos')
+          .update({ id_vigilador: dbDestinatario.id }).eq('id', turno.id)
+        if (turnoError) { console.error('Error reasignando turno:', turnoError); return }
+      }
+      const { error } = await supabase.from('solicitudes_cambio').update({ estado }).eq('id', id_solicitud)
+      if (error) { console.error('Error aprobando solicitud:', error); return }
+      setSolicitudesCambio((prev) => prev.map((s) => s.id === id_solicitud ? { ...s, estado } : s))
+      if (aprobado) {
+        const destinatario = solicitud.id_destinatario
+        setTurnos((prev) => prev.map((t) => t.id === solicitud.id_turno_origen ? { ...t, id_vigilador: destinatario } : t))
+      }
+    })()
+  }
 
   // Avisos (Sección 31)
   crearAviso: (datos: { titulo: string; contenido: string; prioridad: Aviso['prioridad'] }) => void
