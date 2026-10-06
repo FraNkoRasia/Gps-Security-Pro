@@ -1,20 +1,14 @@
 import React, { useState } from 'react'
 import {
-  Calendar,
   Sun,
   Moon,
   Edit3,
   ChevronLeft,
   ChevronRight,
-  Filter,
   Wand2,
-  Download,
-  CheckCircle2,
-  Clock
 } from 'lucide-react'
-import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
+import { Tarjeta }
 import { Boton } from '@/componentes/ui/boton'
-import { Insignia } from '@/componentes/ui/insignia'
 import { Dialogo } from '@/componentes/ui/dialogo'
 import { Etiqueta } from '@/componentes/ui/etiqueta'
 import { useOperativo } from '@/contextos/contexto-operativo'
@@ -29,7 +23,6 @@ export const GrillaMensual: React.FC = () => {
   // Selector de Modo: 'semana' (7 días a simple vista) o 'mes' (31 días completo)
   const [modoVista, setModoVista] = useState<'semana' | 'mes'>('semana')
   const [semanaActiva, setSemanaActiva] = useState<number>(1) // 1 a 5
-  const [filtroObjetivo, setFiltroObjetivo] = useState<string>('todos')
 
   // Modal para edición interactiva de celda
   const [modalEdicionAbierto, setModalEdicionAbierto] = useState(false)
