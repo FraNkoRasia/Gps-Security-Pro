@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Lock, Mail, Eye, EyeOff, ShieldCheck, ArrowRight, Sparkles } from 'lucide-react'
+import { Lock, Mail, Eye, EyeOff, ShieldCheck, ArrowRight } from 'lucide-react'
 import { Entrada } from '@/componentes/ui/entrada'
 import { Etiqueta } from '@/componentes/ui/etiqueta'
 import { Boton } from '@/componentes/ui/boton'
