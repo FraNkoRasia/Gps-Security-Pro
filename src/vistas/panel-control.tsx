@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import {
-  Building2,
   Users,
   MapPin,
   Calendar,
