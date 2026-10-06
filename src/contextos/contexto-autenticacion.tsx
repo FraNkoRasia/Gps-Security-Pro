@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 import type { Usuario, RolUsuario } from '@/tipos'
 import { supabase, hayConexionSupabase, superAdminInicial } from '@/servicios/supabase'
 
@@ -63,7 +64,7 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
   const [cargando, setCargando] = useState<boolean>(true)
   const [errorAuth, setErrorAuth] = useState<string | null>(null)
 
-  const cargarPerfil = async (authUser: NonNullable<Awaited<ReturnType<typeof supabase.auth.getUser>>['data']['user']>) => {
+  const cargarPerfil = async (authUser: SupabaseUser) => {
     if (!supabase) return null
 
     const email = authUser.email || ''
