@@ -608,27 +608,51 @@ export const ProveedorOperativo: React.FC<{ children: React.ReactNode }> = ({ ch
     localidad: string
     provincia: string
   }) => {
+    if (supabase) {
+      void (async () => {
+        const { data, error } = await supabase.from('objetivos').insert({
+          id_empresa: datos.id_empresa, nombre: datos.nombre, descripcion: datos.descripcion || null,
+          direccion: datos.direccion, localidad: datos.localidad, provincia: datos.provincia, activo: true
+        }).select('*').single()
+        if (error) { console.error('Error creando objetivo:', error); return }
+        setObjetivos((prev) => [data as Objetivo, ...prev])
+      })()
+      return
+    }
     const nuevo: Objetivo = {
-      id: `obj-${Date.now()}`,
-      id_empresa: datos.id_empresa,
-      nombre: datos.nombre,
-      descripcion: datos.descripcion || '',
-      direccion: datos.direccion,
-      localidad: datos.localidad,
-      provincia: datos.provincia,
-      activo: true,
-      creado_en: new Date().toISOString()
+      id: `obj-${Date.now()}`, id_empresa: datos.id_empresa, nombre: datos.nombre,
+      descripcion: datos.descripcion || '', direccion: datos.direccion, localidad: datos.localidad,
+      provincia: datos.provincia, activo: true, creado_en: new Date().toISOString()
     }
     setObjetivos((prev) => [nuevo, ...prev])
     registrarAuditoria('CREAR_OBJETIVO', 'Objetivo', `Creó el objetivo ${datos.nombre} en ${datos.localidad}`)
   }
 
   const editarObjetivo = (id: string, datos: Partial<Objetivo>) => {
+    if (supabase) {
+      void (async () => {
+        const { data, error } = await supabase.from('objetivos').update({
+          nombre: datos.nombre, descripcion: datos.descripcion || null, direccion: datos.direccion,
+          localidad: datos.localidad, provincia: datos.provincia, activo: datos.activo
+        }).eq('id', id).select('*').single()
+        if (error) { console.error('Error editando objetivo:', error); return }
+        setObjetivos((prev) => prev.map((o) => o.id === id ? data as Objetivo : o))
+      })()
+      return
+    }
     setObjetivos((prev) => prev.map((o) => (o.id === id ? { ...o, ...datos } : o)))
     registrarAuditoria('EDITAR_OBJETIVO', 'Objetivo', `Editó objetivo ID: ${id}`)
   }
 
   const eliminarObjetivo = (id: string) => {
+    if (supabase) {
+      void (async () => {
+        const { error } = await supabase.from('objetivos').update({ activo: false }).eq('id', id)
+        if (error) { console.error('Error desactivando objetivo:', error); return }
+        setObjetivos((prev) => prev.map((o) => o.id === id ? { ...o, activo: false } : o))
+      })()
+      return
+    }
     setObjetivos((prev) => prev.filter((o) => o.id !== id))
     registrarAuditoria('ELIMINAR_OBJETIVO', 'Objetivo', `Eliminó objetivo ID: ${id}`)
   }
