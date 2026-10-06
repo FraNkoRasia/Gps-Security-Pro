@@ -113,6 +113,7 @@ export const GestionVigiladores: React.FC = () => {
     }
 
     setModalNuevoAbierto(false)
+    window.location.reload()
   }
 
   // Historial del vigilador seleccionado
