@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Sun,
   Moon,
@@ -37,7 +37,13 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
 
   // Modal Generador de Diagramas (Sección 28)
   const [modalGeneradorAbierto, setModalGeneradorAbierto] = useState(false)
-  const [vigiladorDiagrama, setVigiladorDiagrama] = useState(vigiladores[0]?.id || '')
+  const [vigiladorDiagrama, setVigiladorDiagrama] = useState('')
+
+  useEffect(() => {
+    if (!vigiladorDiagrama && vigiladoresMostrados.length > 0) {
+      setVigiladorDiagrama(vigiladoresMostrados[0].id)
+    }
+  }, [vigiladoresMostrados, vigiladorDiagrama])
   const [patronDiagrama, setPatronDiagrama] = useState<'4x3' | '4x2' | '2x2' | '6x1'>('4x3')
   const [tipoGuardiaDiagrama, setTipoGuardiaDiagrama] = useState<'diurno' | 'nocturno'>('nocturno')
 
@@ -86,7 +92,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
   const aplicarCodigoTurno = (codigo: '12☀️' | '12🌙' | '10' | '8' | 'F' | 'borrar') => {
     if (!celdaEditando) return
 
-    const objId = celdaEditando.turnoActual?.id_objetivo || objetivos[0]?.id || 'obj-melli-01'
+    const objId = objetivoSeleccionado || celdaEditando.turnoActual?.id_objetivo || ''
+    if (!objId) return
 
     asignarTurnoGrilla({
       id_vigilador: celdaEditando.idVigilador,
@@ -100,7 +107,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
 
   // Generador de Diagramas (Sección 28: ej 4x3)
   const aplicarGeneradorDiagrama = () => {
-    const objId = objetivos[0]?.id || 'obj-melli-01'
+    const objId = objetivoSeleccionado
+    if (!objId || !vigiladorDiagrama) return
     let diasTrabajo = 4
     let diasFranco = 3
 
