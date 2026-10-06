@@ -10,7 +10,7 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import type { Empresa } from '@/tipos'
 
 export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => void }> = ({ onSeleccionarEmpresa }) => {
-  const { empresas, objetivos, vigiladores, crearEmpresaConAdministrador, editarEmpresa, cambiarEstadoEmpresa, eliminarEmpresa } = useOperativo()
+  const { empresas, objetivos, vigiladores, asignaciones, crearEmpresaConAdministrador, editarEmpresa, cambiarEstadoEmpresa, eliminarEmpresa } = useOperativo()
 
   const [modalAbierto, setModalAbierto] = useState(false)
   const [empresaEditando, setEmpresaEditando] = useState<Empresa | null>(null)
@@ -122,7 +122,8 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
       {/* Grid de Empresas */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {empresas.map((emp) => {
-          const cantidadObjetivos = objetivos.filter((o) => o.id_empresa === emp.id).length
+          const objetivosEmpresa = objetivos.filter((o) => o.id_empresa === emp.id)
+          const cantidadObjetivos = objetivosEmpresa.length
           const cantidadVigiladores = vigiladores.filter((v) => v.id_empresa === emp.id && v.activo).length
 
           return (
@@ -202,6 +203,46 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
                     <span className="text-slate-500 dark:text-slate-400 block text-[11px]">Vigiladores:</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{cantidadVigiladores} asignados</span>
                   </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800/80">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Objetivos y vigiladores</span>
+                    <Insignia variante="gris">{objetivosEmpresa.length}</Insignia>
+                  </div>
+                  {objetivosEmpresa.length > 0 ? (
+                    <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                      {objetivosEmpresa.map((objetivo) => {
+                        const cantidadVigiladoresObjetivo = asignaciones.filter((a) =>
+                          a.id_objetivo === objetivo.id &&
+                          a.activa &&
+                          vigiladores.some((v) =>
+                            v.id === a.id_vigilador &&
+                            v.id_empresa === emp.id &&
+                            v.activo
+                          )
+                        ).length
+
+                        return (
+                          <div
+                            key={objetivo.id}
+                            className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 px-3 py-2"
+                          >
+                            <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
+                              {objetivo.nombre}
+                            </span>
+                            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">
+                              {cantidadVigiladoresObjetivo} {cantidadVigiladoresObjetivo === 1 ? 'vigilador' : 'vigiladores'}
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Esta empresa no tiene objetivos registrados.
+                    </p>
+                  )}
                 </div>
 
                 {onSeleccionarEmpresa && (
