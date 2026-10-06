@@ -27,7 +27,6 @@ export const GestionVigiladores: React.FC = () => {
   const [apellido, setApellido] = useState('')
   const [email, setEmail] = useState('')
   const [telefono, setTelefono] = useState('')
-  const [idEmpresaSeleccionada, setIdEmpresaSeleccionada] = useState('')
   const [idObjetivoInicial, setIdObjetivoInicial] = useState('')
   const [error, setError] = useState<string | null>(null)
 
@@ -41,7 +40,6 @@ export const GestionVigiladores: React.FC = () => {
     setEmail('')
     setTelefono('')
     const empresaInicial = usuario?.id_empresa || ''
-    setIdEmpresaSeleccionada(empresaInicial)
     setIdObjetivoInicial(objetivos.find((obj) => obj.id_empresa === empresaInicial)?.id || '')
     setError(null)
     setModalNuevoAbierto(true)
