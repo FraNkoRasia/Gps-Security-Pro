@@ -105,11 +105,11 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {objetivosMostrados.map((obj) => {
-          const vigiladoresAsignados = asignaciones.filter((a) =>
-            a.id_objetivo === obj.id &&
-            a.activa &&
-            vigiladores.some((v) => v.id === a.id_vigilador && v.id_empresa === obj.id_empresa && v.activo)
-          ).length
+          const vigiladoresAsignados = new Set(
+            asignaciones
+              .filter((a) => a.id_objetivo === obj.id && a.activa)
+              .map((a) => a.id_vigilador)
+          ).size
 
           return (
             <Tarjeta key={obj.id} className="hover:border-blue-500/50 transition-all flex flex-col justify-between">
