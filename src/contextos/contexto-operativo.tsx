@@ -666,6 +666,436 @@ export const ProveedorOperativo: React.FC<{ children: React.ReactNode }> = ({ ch
     id_empresa: string
     id_objetivo_inicial?: string
   }) => {
+    if (!supabase) return
+
+    void (async () => {
+      // Auth se crea desde el panel administrativo mediante una Edge Function segura.
+      // Aquí solo creamos el registro operativo cuando el perfil ya existe.
+      const { data: perfil, error: perfilError } = await supabase
+        .from('perfiles')
+        .insert({
+          id: crypto.randomUUID(),
+          id_empresa: datos.id_empresa,
+          nombre: datos.nombre,
+          apellido: datos.apellido,
+          telefono: datos.telefono || null,
+          rol: 'vigilador',
+          activo: true,
+          debe_cambiar_contrasena: true
+        })
+        .select('*')
+        .single()
+
+      if (perfilError) {
+        console.error('Error creando perfil de vigilador:', perfilError)
+        return
+      }
+
+      const { data: vigilador, error: vigiladorError } = await supabase
+        .from('vigiladores')
+        .insert({
+          id_empresa: datos.id_empresa,
+          id_usuario: perfil.id,
+          nombre: datos.nombre,
+          apellido: datos.apellido,
+          telefono: datos.telefono || null,
+          activo: true
+        })
+        .select('*')
+        .single()
+
+      if (vigiladorError) {
+        console.error('Error creando vigilador:', vigiladorError)
+        await supabase.from('perfiles').delete().eq('id', perfil.id)
+        return
+      }
+
+      const empresa = empresas.find((e) => e.id === datos.id_empresa)
+      const nuevo: Usuario = {
+        id: perfil.id, email: datos.email, nombre: datos.nombre, apellido: datos.apellido,
+        rol: 'vigilador', id_empresa: datos.id_empresa,
+        empresa_nombre: empresa?.nombre || null, telefono: datos.telefono || null,
+        activo: true, debe_cambiar_contrasena: true, creado_en: perfil.creado_en
+      }
+      setVigiladores((prev) => [nuevo, ...prev])
+
+      if (datos.id_objetivo_inicial) {
+        const { data: asig, error: asigError } = await supabase.from('asignaciones').insert({
+          id_empresa: datos.id_empresa, id_vigilador: vigilador.id,
+          id_objetivo: datos.id_objetivo_inicial,
+          fecha_inicio: new Date().toISOString().split('T')[0],
+          activa: true, motivo_traslado: 'Asignación inicial al dar de alta',
+          creado_por: usuario?.id || null
+        }).select('*').single()
+
+        if (!asigError && asig) {
+          const obj = objetivos.find((o) => o.id === datos.id_objetivo_inicial)
+          setAsignaciones((prev) => [{
+            id: asig.id, id_vigilador: asig.id_vigilador, id_objetivo: asig.id_objetivo,
+            objetivo_nombre: obj?.nombre, fecha_inicio: asig.fecha_inicio,
+            fecha_fin: asig.fecha_fin, activa: asig.activa,
+            motivo_traslado: asig.motivo_traslado, creado_por: asig.creado_por || '',
+            creado_en: asig.creado_en
+          }, ...prev])
+        }
+      }
+    })()
+  }
+
+  const editarVigilador = (id: string, datos: Partial<Usuario>) => {
+    if (!supabase) return
+    void (async () => {
+      const { error } = await supabase.from('perfiles').update({
+        nombre: datos.nombre, apellido: datos.apellido, telefono: datos.telefono,
+        activo: datos.activo, debe_cambiar_contrasena: datos.debe_cambiar_contrasena
+      }).eq('id', id)
+      if (error) { console.error('Error editando vigilador:', error); return }
+      setVigiladores((prev) => prev.map((v) => v.id === id ? { ...v, ...datos } : v))
+    })()
+  }
+
+  const eliminarVigilador = (id: string) => {
+    if (!supabase) return
+    void (async () => {
+      const { error } = await supabase.from('vigiladores').update({ activo: false }).eq('id_usuario', id)
+      if (error) { console.error('Error desactivando vigilador:', error); return }
+      await supabase.from('perfiles').update({ activo: false }).eq('id', id)
+      setVigiladores((prev) => prev.map((v) => v.id === id ? { ...v, activo: false } : v))
+    })()
+  }
+
+  // Traslados y Asignaciones (Sección 20 y 21)
+  trasladarVigilador: (parametros: {
+    id_vigilador: string
+    id_nuevo_objetivo: string
+    fecha_efectiva: string
+    motivo: string
+    accion_turnos_futuros: 'mantener' | 'reasignar' | 'cancelar'
+  }) => void
+
+  // Grilla Mensual y Turnos (Sección 22 y 23)
+  asignarTurnoGrilla: (parametros: {
+    id_vigilador: string
+    id_objetivo: string
+    fecha: string
+    codigo: '12☀️' | '12🌙' | '10' | '8' | 'F' | 'borrar'
+  }) => void
+
+  // Libro de Novedades (Sección 32)
+  crearNovedad: (datos: {
+    id_objetivo: string
+    id_vigilador: string
+    nombre_vigilante: string
+    nombre_supervisor: string
+    fecha: string
+    hora: string
+    turno: string
+    elementos_a_cargo: string
+    informe_novedades: string
+  }) => void
+  editarNovedad: (id: string, datos: { informe_novedades: string; motivo_correccion: string }) => void
+
+  // Cambios de Turno (Sección 29)
+  solicitarCambioTurno: (datos: {
+    id_solicitante: string
+    id_destinatario: string
+    id_turno_origen: string
+    fecha_turno: string
+    motivo: string
+  }) => void
+  responderSolicitudCambio: (id_solicitud: string, aceptado: boolean) => void
+  aprobarCambioAdmin: (id_solicitud: string, aprobado: boolean) => void
+
+  // Avisos (Sección 31)
+  crearAviso: (datos: { titulo: string; contenido: string; prioridad: Aviso['prioridad'] }) => void
+  marcarAvisoLeido: (id: string) => void
+}
+
+const ContextoOperativo = createContext<ContextoOperativoTipo | undefined>(undefined)
+
+const CLAVE_STORE = 'gsp_seguridad_pro_db_v1'
+
+export const ProveedorOperativo: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { usuario } = useAutenticacion()
+
+  const [empresas, setEmpresas] = useState<Empresa[]>([])
+  const [objetivos, setObjetivos] = useState<Objetivo[]>([])
+  const [vigiladores, setVigiladores] = useState<Usuario[]>([])
+  const [asignaciones, setAsignaciones] = useState<Asignacion[]>([])
+  const [turnos, setTurnos] = useState<Turno[]>([])
+  const [novedades, setNovedades] = useState<NovedadLibro[]>([])
+  const [solicitudesCambio, setSolicitudesCambio] = useState<SolicitudCambio[]>([])
+  const [avisos, setAvisos] = useState<Aviso[]>([])
+  const [auditorias, setAuditorias] = useState<RegistroAuditoria[]>([])
+
+  useEffect(() => {
+    if (!usuario || !supabase) return
+
+    let cancelado = false
+
+    const cargarDatosOperativos = async () => {
+      try {
+        const empresaId = usuario.id_empresa
+
+        const [
+          empresasResult,
+          objetivosResult,
+          perfilesResult,
+          vigiladoresResult,
+          asignacionesResult,
+          turnosResult,
+          novedadesResult,
+          solicitudesResult,
+          avisosResult,
+          auditoriaResult,
+          lecturasResult
+        ] = await Promise.all([
+          usuario.rol === 'super_administrador'
+            ? supabase.from('empresas').select('*').order('nombre')
+            : supabase.from('empresas').select('*').eq('id', empresaId).order('nombre'),
+          supabase.from('objetivos').select('*').order('nombre'),
+          supabase.from('perfiles').select('id,id_empresa,nombre,apellido,telefono,rol,activo,debe_cambiar_contrasena,creado_en'),
+          supabase.from('vigiladores').select('*').order('apellido'),
+          supabase.from('asignaciones').select('*').order('fecha_inicio', { ascending: false }),
+          supabase.from('turnos').select('*').order('fecha', { ascending: true }),
+          supabase.from('novedades_libro').select('*').order('fecha', { ascending: false }).order('hora', { ascending: false }),
+          supabase.from('solicitudes_cambio').select('*').order('creado_en', { ascending: false }),
+          supabase.from('avisos').select('*').order('creado_en', { ascending: false }),
+          supabase.from('auditoria').select('*').order('fecha_hora', { ascending: false }),
+          supabase.from('avisos_lecturas').select('id_aviso,id_usuario').eq('id_usuario', usuario.id)
+        ])
+
+        const resultados = [
+          empresasResult, objetivosResult, perfilesResult, vigiladoresResult,
+          asignacionesResult, turnosResult, novedadesResult, solicitudesResult,
+          avisosResult, auditoriaResult, lecturasResult
+        ]
+
+        const error = resultados.find((r) => r.error)?.error
+        if (error) throw error
+        if (cancelado) return
+
+        const empresasDb = empresasResult.data || []
+        const objetivosDb = objetivosResult.data || []
+        const perfilesDb = perfilesResult.data || []
+        const vigiladoresDb = vigiladoresResult.data || []
+        const lecturas = new Set((lecturasResult.data || []).map((l) => l.id_aviso))
+
+        const empresaMap = new Map(empresasDb.map((e) => [e.id, e.nombre]))
+        const objetivoMap = new Map(objetivosDb.map((o) => [o.id, o.nombre]))
+        const perfilMap = new Map(perfilesDb.map((p) => [p.id, p]))
+
+        const perfilesVigiladores = vigiladoresDb
+          .map((v) => {
+            const perfil = v.id_usuario ? perfilMap.get(v.id_usuario) : null
+            if (!perfil) return null
+            return {
+              id: v.id_usuario,
+              email: '',
+              nombre: perfil.nombre,
+              apellido: perfil.apellido,
+              rol: perfil.rol,
+              id_empresa: perfil.id_empresa,
+              empresa_nombre: perfil.id_empresa ? empresaMap.get(perfil.id_empresa) || null : null,
+              telefono: perfil.telefono,
+              activo: perfil.activo && v.activo,
+              debe_cambiar_contrasena: perfil.debe_cambiar_contrasena,
+              creado_en: perfil.creado_en
+            } satisfies Usuario
+          })
+          .filter((v): v is Usuario => Boolean(v))
+
+        setEmpresas(empresasDb.map((e) => ({
+          id: e.id, nombre: e.nombre, cuit: e.cuit || '', direccion: e.direccion || '',
+          activa: e.activa, creada_en: e.creada_en
+        })))
+        setObjetivos(objetivosDb.map((o) => ({
+          id: o.id, id_empresa: o.id_empresa, nombre: o.nombre, descripcion: o.descripcion || '',
+          direccion: o.direccion || '', localidad: o.localidad || '', provincia: o.provincia || '',
+          activo: o.activo, creado_en: o.creado_en
+        })).filter((o) => usuario.rol === 'super_administrador' || o.id_empresa === empresaId))
+        setVigiladores(perfilesVigiladores.filter((v) => usuario.rol === 'super_administrador' || v.id_empresa === empresaId))
+        setAsignaciones((asignacionesResult.data || []).map((a) => ({
+          id: a.id, id_vigilador: a.id_vigilador, id_objetivo: a.id_objetivo,
+          objetivo_nombre: objetivoMap.get(a.id_objetivo), fecha_inicio: a.fecha_inicio,
+          fecha_fin: a.fecha_fin, activa: a.activa, motivo_traslado: a.motivo_traslado,
+          creado_por: a.creado_por || '', creado_en: a.creado_en
+        })).filter((a) => usuario.rol === 'super_administrador' || a.id_empresa === empresaId))
+        setTurnos((turnosResult.data || []).map((t) => ({
+          id: t.id, id_empresa: t.id_empresa, id_objetivo: t.id_objetivo, id_vigilador: t.id_vigilador,
+          fecha: t.fecha, hora_inicio: t.hora_inicio || '00:00', hora_fin: t.hora_fin || '00:00',
+          horas_totales: Number(t.horas_totales || 0), tipo: t.tipo, horas_diurnas: Number(t.horas_diurnas || 0),
+          horas_nocturnas: Number(t.horas_nocturnas || 0), es_feriado: t.es_feriado, es_domingo: t.es_domingo,
+          horas_extra: Number(t.horas_extra || 0), estado: t.estado
+        })).filter((t) => usuario.rol === 'super_administrador' || t.id_empresa === empresaId))
+        setNovedades((novedadesResult.data || []).map((n) => ({
+          id: n.id, id_empresa: n.id_empresa, id_objetivo: n.id_objetivo, id_vigilador: n.id_vigilador || '',
+          nombre_vigilante: n.nombre_vigilante, nombre_supervisor: n.nombre_supervisor || '',
+          fecha: n.fecha, hora: n.hora, turno: n.turno || '', elementos_a_cargo: n.elementos_a_cargo || '',
+          informe_novedades: n.informe_novedades
+        })).filter((n) => usuario.rol === 'super_administrador' || n.id_empresa === empresaId))
+        setSolicitudesCambio((solicitudesResult.data || []).map((s) => ({
+          id: s.id, id_empresa: s.id_empresa, id_solicitante: s.id_solicitante, id_destinatario: s.id_destinatario || '',
+          id_turno_origen: s.id_turno_origen, fecha_turno: s.fecha_turno, estado: s.estado,
+          motivo: s.motivo || '', creado_en: s.creado_en
+        })).filter((s) => usuario.rol === 'super_administrador' || s.id_empresa === empresaId))
+        setAvisos((avisosResult.data || []).map((a) => ({
+          id: a.id, id_empresa: a.id_empresa, autor_nombre: a.autor_id ? (perfilMap.get(a.autor_id) ? `${perfilMap.get(a.autor_id)!.nombre} ${perfilMap.get(a.autor_id)!.apellido}` : 'Administración') : 'Administración',
+          titulo: a.titulo, contenido: a.contenido, prioridad: a.prioridad, leido: lecturas.has(a.id), creado_en: a.creado_en
+        })).filter((a) => usuario.rol === 'super_administrador' || a.id_empresa === empresaId))
+        setAuditorias((auditoriaResult.data || []).map((a) => ({
+          id: a.id, id_usuario: a.id_usuario || '', usuario_nombre: a.id_usuario && perfilMap.get(a.id_usuario) ? `${perfilMap.get(a.id_usuario)!.nombre} ${perfilMap.get(a.id_usuario)!.apellido}` : 'Sistema',
+          accion: a.accion, entidad: a.entidad, detalle: JSON.stringify(a.detalle || {}), fecha_hora: a.fecha_hora
+        })).filter((a) => usuario.rol === 'super_administrador' || a.id_empresa === empresaId))
+      } catch (error) {
+        console.error('Error cargando datos operativos desde Supabase:', error)
+      }
+    }
+
+    cargarDatosOperativos()
+    return () => { cancelado = true }
+  }, [usuario])
+
+  const registrarAuditoria = (accion: string, entidad: string, detalle: string) => {
+    const nuevo: RegistroAuditoria = {
+      id: `aud-${Date.now()}`,
+      id_usuario: usuario?.id || 'sistema',
+      usuario_nombre: usuario ? `${usuario.nombre} ${usuario.apellido}` : 'Sistema',
+      accion,
+      entidad,
+      detalle,
+      fecha_hora: new Date().toISOString()
+    }
+    setAuditorias((prev) => [nuevo, ...prev])
+  }
+
+  // Empresas
+  const crearEmpresa = (datos: { nombre: string; cuit?: string; direccion?: string }) => {
+    if (supabase) {
+      void (async () => {
+        const { data, error } = await supabase.from('empresas').insert({
+          nombre: datos.nombre, cuit: datos.cuit || null, direccion: datos.direccion || null
+        }).select('*').single()
+        if (error) { console.error('Error creando empresa:', error); return }
+        setEmpresas((prev) => [data as Empresa, ...prev])
+        if (usuario) {
+          await supabase.from('auditoria').insert({
+            id_empresa: usuario.id_empresa || data.id, id_usuario: usuario.id,
+            accion: 'CREAR_EMPRESA', entidad: 'Empresa', entidad_id: data.id,
+            detalle: { texto: `Creó la empresa ${datos.nombre}` }
+          })
+        }
+      })()
+      return
+    }
+    const nueva: Empresa = {
+      id: `emp-${Date.now()}`,
+      nombre: datos.nombre,
+      cuit: datos.cuit || '',
+      direccion: datos.direccion || '',
+      activa: true,
+      creada_en: new Date().toISOString()
+    }
+    setEmpresas((prev) => [nueva, ...prev])
+    registrarAuditoria('CREAR_EMPRESA', 'Empresa', `Creó la empresa ${datos.nombre}`)
+  }
+
+  const editarEmpresa = (id: string, datos: Partial<Empresa>) => {
+    if (supabase) {
+      void (async () => {
+        const { data, error } = await supabase.from('empresas').update({
+          nombre: datos.nombre, cuit: datos.cuit || null, direccion: datos.direccion || null,
+          activa: datos.activa
+        }).eq('id', id).select('*').single()
+        if (error) { console.error('Error editando empresa:', error); return }
+        setEmpresas((prev) => prev.map((e) => e.id === id ? data as Empresa : e))
+      })()
+      return
+    }
+    setEmpresas((prev) => prev.map((e) => (e.id === id ? { ...e, ...datos } : e)))
+    registrarAuditoria('EDITAR_EMPRESA', 'Empresa', `Modificó empresa ID: ${id}`)
+  }
+
+  const eliminarEmpresa = (id: string) => {
+    if (supabase) {
+      void (async () => {
+        const { error } = await supabase.from('empresas').update({ activa: false }).eq('id', id)
+        if (error) { console.error('Error desactivando empresa:', error); return }
+        setEmpresas((prev) => prev.map((e) => e.id === id ? { ...e, activa: false } : e))
+      })()
+      return
+    }
+    setEmpresas((prev) => prev.filter((e) => e.id !== id))
+    registrarAuditoria('ELIMINAR_EMPRESA', 'Empresa', `Eliminó empresa ID: ${id}`)
+  }
+
+  // Objetivos
+  const crearObjetivo = (datos: {
+    id_empresa: string
+    nombre: string
+    descripcion?: string
+    direccion: string
+    localidad: string
+    provincia: string
+  }) => {
+    if (supabase) {
+      void (async () => {
+        const { data, error } = await supabase.from('objetivos').insert({
+          id_empresa: datos.id_empresa, nombre: datos.nombre, descripcion: datos.descripcion || null,
+          direccion: datos.direccion, localidad: datos.localidad, provincia: datos.provincia, activo: true
+        }).select('*').single()
+        if (error) { console.error('Error creando objetivo:', error); return }
+        setObjetivos((prev) => [data as Objetivo, ...prev])
+      })()
+      return
+    }
+    const nuevo: Objetivo = {
+      id: `obj-${Date.now()}`, id_empresa: datos.id_empresa, nombre: datos.nombre,
+      descripcion: datos.descripcion || '', direccion: datos.direccion, localidad: datos.localidad,
+      provincia: datos.provincia, activo: true, creado_en: new Date().toISOString()
+    }
+    setObjetivos((prev) => [nuevo, ...prev])
+    registrarAuditoria('CREAR_OBJETIVO', 'Objetivo', `Creó el objetivo ${datos.nombre} en ${datos.localidad}`)
+  }
+
+  const editarObjetivo = (id: string, datos: Partial<Objetivo>) => {
+    if (supabase) {
+      void (async () => {
+        const { data, error } = await supabase.from('objetivos').update({
+          nombre: datos.nombre, descripcion: datos.descripcion || null, direccion: datos.direccion,
+          localidad: datos.localidad, provincia: datos.provincia, activo: datos.activo
+        }).eq('id', id).select('*').single()
+        if (error) { console.error('Error editando objetivo:', error); return }
+        setObjetivos((prev) => prev.map((o) => o.id === id ? data as Objetivo : o))
+      })()
+      return
+    }
+    setObjetivos((prev) => prev.map((o) => (o.id === id ? { ...o, ...datos } : o)))
+    registrarAuditoria('EDITAR_OBJETIVO', 'Objetivo', `Editó objetivo ID: ${id}`)
+  }
+
+  const eliminarObjetivo = (id: string) => {
+    if (supabase) {
+      void (async () => {
+        const { error } = await supabase.from('objetivos').update({ activo: false }).eq('id', id)
+        if (error) { console.error('Error desactivando objetivo:', error); return }
+        setObjetivos((prev) => prev.map((o) => o.id === id ? { ...o, activo: false } : o))
+      })()
+      return
+    }
+    setObjetivos((prev) => prev.filter((o) => o.id !== id))
+    registrarAuditoria('ELIMINAR_OBJETIVO', 'Objetivo', `Eliminó objetivo ID: ${id}`)
+  }
+
+  // Vigiladores
+  const crearVigilador = (datos: {
+    nombre: string
+    apellido: string
+    email: string
+    telefono?: string
+    id_empresa: string
+    id_objetivo_inicial?: string
+  }) => {
     const nuevoId = `usr-vig-${Date.now()}`
     const emp = empresas.find((e) => e.id === datos.id_empresa)
 
