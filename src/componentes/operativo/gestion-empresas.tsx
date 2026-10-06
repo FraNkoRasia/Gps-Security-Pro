@@ -10,7 +10,7 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import type { Empresa } from '@/tipos'
 
 export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => void }> = ({ onSeleccionarEmpresa }) => {
-  const { empresas, objetivos, vigiladores, asignaciones, crearEmpresaConAdministrador, editarEmpresa, cambiarEstadoEmpresa, eliminarEmpresa } = useOperativo()
+  const { empresas, objetivos, vigiladores, crearEmpresaConAdministrador, editarEmpresa, cambiarEstadoEmpresa, eliminarEmpresa } = useOperativo()
 
   const [modalAbierto, setModalAbierto] = useState(false)
   const [empresaEditando, setEmpresaEditando] = useState<Empresa | null>(null)
