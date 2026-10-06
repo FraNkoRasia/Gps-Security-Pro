@@ -142,7 +142,7 @@ export const VistaPanelControl: React.FC = () => {
       <div className="pt-1">
         {pestanaRenderizada === 'empresas' && esSuperAdmin && <GestionEmpresas />}
         {pestanaRenderizada === 'objetivos' && esAdmin && <GestionObjetivos onSeleccionarObjetivo={(id) => { setObjetivoGrillaId(id); setPestanaActiva('grillaObjetivo') }} />}
-        {pestanaRenderizada === 'grillaObjetivo' && esAdmin && objetivoGrillaId && <GrillaMensual objetivoInicial={objetivoGrillaId} onVolver={() => setPestanaActiva('objetivos')} />}
+        {pestanaRenderizada === 'grillaObjetivo' && esAdmin && objetivoGrillaId && <GrillaMensual objetivoInicial={objetivoGrillaId} />}
         {pestanaRenderizada === 'vigiladores' && esAdmin && <GestionVigiladores />}
         {pestanaRenderizada === 'novedades' && (esAdmin || esVigilador) && <LibroNovedades />}
         {pestanaRenderizada === 'cambios' && (esAdmin || esVigilador) && <CambiosTurnos />}
