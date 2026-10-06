@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { MapPin, Plus, Edit2, Shield, Users, CalendarDays } from 'lucide-react'
+import { MapPin, Plus, Edit2, Shield, Users } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -154,6 +154,16 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
                   <Insignia variante={obj.activo ? 'verde' : 'gris'}>
                     {obj.activo ? 'Operativo' : 'Inactivo'}
                   </Insignia>
+                {onSeleccionarObjetivo && (
+                  <Boton
+                    variante="primario"
+                    tamano="chico"
+                    className="w-full mt-3"
+                    onClick={() => onSeleccionarObjetivo(obj.id)}
+                  >
+                    Crear / ver grilla de turnos
+                  </Boton>
+                )}
                 </div>
               </TarjetaContenido>
             </Tarjeta>
