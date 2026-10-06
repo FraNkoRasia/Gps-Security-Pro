@@ -541,6 +541,23 @@ export const ProveedorOperativo: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Empresas
   const crearEmpresa = (datos: { nombre: string; cuit?: string; direccion?: string }) => {
+    if (supabase) {
+      void (async () => {
+        const { data, error } = await supabase.from('empresas').insert({
+          nombre: datos.nombre, cuit: datos.cuit || null, direccion: datos.direccion || null
+        }).select('*').single()
+        if (error) { console.error('Error creando empresa:', error); return }
+        setEmpresas((prev) => [data as Empresa, ...prev])
+        if (usuario) {
+          await supabase.from('auditoria').insert({
+            id_empresa: usuario.id_empresa || data.id, id_usuario: usuario.id,
+            accion: 'CREAR_EMPRESA', entidad: 'Empresa', entidad_id: data.id,
+            detalle: { texto: `Creó la empresa ${datos.nombre}` }
+          })
+        }
+      })()
+      return
+    }
     const nueva: Empresa = {
       id: `emp-${Date.now()}`,
       nombre: datos.nombre,
@@ -554,11 +571,30 @@ export const ProveedorOperativo: React.FC<{ children: React.ReactNode }> = ({ ch
   }
 
   const editarEmpresa = (id: string, datos: Partial<Empresa>) => {
+    if (supabase) {
+      void (async () => {
+        const { data, error } = await supabase.from('empresas').update({
+          nombre: datos.nombre, cuit: datos.cuit || null, direccion: datos.direccion || null,
+          activa: datos.activa
+        }).eq('id', id).select('*').single()
+        if (error) { console.error('Error editando empresa:', error); return }
+        setEmpresas((prev) => prev.map((e) => e.id === id ? data as Empresa : e))
+      })()
+      return
+    }
     setEmpresas((prev) => prev.map((e) => (e.id === id ? { ...e, ...datos } : e)))
     registrarAuditoria('EDITAR_EMPRESA', 'Empresa', `Modificó empresa ID: ${id}`)
   }
 
   const eliminarEmpresa = (id: string) => {
+    if (supabase) {
+      void (async () => {
+        const { error } = await supabase.from('empresas').update({ activa: false }).eq('id', id)
+        if (error) { console.error('Error desactivando empresa:', error); return }
+        setEmpresas((prev) => prev.map((e) => e.id === id ? { ...e, activa: false } : e))
+      })()
+      return
+    }
     setEmpresas((prev) => prev.filter((e) => e.id !== id))
     registrarAuditoria('ELIMINAR_EMPRESA', 'Empresa', `Eliminó empresa ID: ${id}`)
   }
