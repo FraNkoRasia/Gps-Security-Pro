@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import {
   Users,
   MapPin,
@@ -30,33 +30,6 @@ export const VistaPanelControl: React.FC = () => {
   const [objetivoGrillaId, setObjetivoGrillaId] = useState<string | null>(null)
   const [empresaSeleccionadaId, setEmpresaSeleccionadaId] = useState<string | null>(null)
   const [objetivoSeleccionadoId, setObjetivoSeleccionadoId] = useState<string | null>(null)
-
-  useEffect(() => {
-    const manejarNavegacion = (evento: Event) => {
-      const pestana = (evento as CustomEvent<{ pestana?: string }>).detail?.pestana
-      if (!pestana) return
-
-      if (pestana === 'inicio' || pestana === 'empresas') {
-        setObjetivoSeleccionadoId(null)
-        setEmpresaSeleccionadaId(null)
-        setObjetivoGrillaId(null)
-        if (pestana === 'inicio') setPestanaActiva('objetivos')
-        return
-      }
-
-      if (usuario?.rol === 'super_administrador') {
-        if (pestana === 'objetivos' || pestana === 'vigiladores') {
-          setObjetivoSeleccionadoId(null)
-        }
-        return
-      }
-
-      setPestanaActiva(pestana)
-    }
-
-    window.addEventListener('gsp:navegar-panel', manejarNavegacion)
-    return () => window.removeEventListener('gsp:navegar-panel', manejarNavegacion)
-  }, [usuario?.rol])
 
   if (!usuario) return null
 
