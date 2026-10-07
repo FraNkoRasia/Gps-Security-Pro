@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Bell, Plus, CheckCircle } from 'lucide-react'
+import { Bell, Plus, CheckCircle, Users } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -11,7 +11,7 @@ import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { Aviso } from '@/tipos'
 
 export const AvisosComunicacion: React.FC = () => {
-  const { avisos, crearAviso, marcarAvisoLeido } = useOperativo()
+  const { avisos, crearAviso, marcarAvisoLeido, cargarLecturasAviso } = useOperativo()
   const { usuario } = useAutenticacion()
 
   const [modalAbierto, setModalAbierto] = useState(false)
@@ -19,8 +19,19 @@ export const AvisosComunicacion: React.FC = () => {
   const [contenido, setContenido] = useState('')
   const [prioridad, setPrioridad] = useState<Aviso['prioridad']>('media')
   const [error, setError] = useState<string | null>(null)
+  const [lecturasAbiertas, setLecturasAbiertas] = useState<string | null>(null)
+  const [lecturas, setLecturas] = useState<{id_usuario:string;nombre:string;apellido:string;leido_en:string}[]>([])
+  const [cargandoLecturas, setCargandoLecturas] = useState(false)
 
   const esAdmin = usuario?.rol === 'super_administrador' || usuario?.rol === 'administrador'
+
+  const verLecturas = async (id: string) => {
+    if (!esAdmin) return
+    setLecturasAbiertas(id)
+    setCargandoLecturas(true)
+    setLecturas(await cargarLecturasAviso(id))
+    setCargandoLecturas(false)
+  }
 
   const manejarCrear = (e: React.FormEvent) => {
     e.preventDefault()
@@ -115,22 +126,63 @@ export const AvisosComunicacion: React.FC = () => {
                     {new Date(av.creado_en).toLocaleString()}
                   </span>
 
-                  {!av.leido && (
-                    <button
-                      type="button"
-                      onClick={() => marcarAvisoLeido(av.id)}
-                      className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      <span>Marcar como leído</span>
-                    </button>
-                  )}
+                  <div className="flex items-center gap-3">
+                    {esAdmin ? (
+                      <button
+                        type="button"
+                        onClick={() => void verLecturas(av.id)}
+                        className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Users className="w-3.5 h-3.5" />
+                        <span>Ver quiénes lo vieron</span>
+                      </button>
+                    ) : !av.leido ? (
+                      <button
+                        type="button"
+                        onClick={() => marcarAvisoLeido(av.id)}
+                        className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        <span>Marcar como visto</span>
+                      </button>
+                    ) : (
+                      <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        Visto
+                      </span>
+                    )}
+                  </div>
                 </div>
               </TarjetaContenido>
             </Tarjeta>
           ))
         )}
       </div>
+
+      {esAdmin && lecturasAbiertas && (
+        <Dialogo
+          abierto={true}
+          alCerrar={() => setLecturasAbiertas(null)}
+          titulo="Lecturas del aviso"
+          subtitulo="Vigiladores que marcaron este comunicado como visto."
+          icono={<Users className="w-5 h-5 text-blue-500" />}
+        >
+          {cargandoLecturas ? (
+            <div className="py-6 text-center text-sm text-slate-500">Cargando registros...</div>
+          ) : lecturas.length === 0 ? (
+            <div className="py-6 text-center text-sm text-slate-500">Ningún vigilador marcó este aviso como visto todavía.</div>
+          ) : (
+            <div className="space-y-2">
+              {lecturas.map((l) => (
+                <div key={l.id_usuario} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-slate-800 p-3">
+                  <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">{l.nombre} {l.apellido}</span>
+                  <span className="text-[11px] text-slate-500">{new Date(l.leido_en).toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Dialogo>
+      )}
 
       {/* Modal Crear Aviso */}
       <Dialogo
