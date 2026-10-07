@@ -26,7 +26,7 @@ export const GestionTiposTurno:React.FC<{objetivoId:string;alCerrar:()=>void}>=(
   e.preventDefault();setError('')
   const h=Number(horas)
   if(!Number.isFinite(h)||h<0){setError('Completá una cantidad válida de horas.');return}
-  const finCalculado=tipo==='franco'?'':calcularFin(inicio,h)
+  const finCalculado=tipo==='franco'?'':calcularFin(inicio,String(h))
   if(tipo!=='franco'&&!inicio){setError('Indicá la hora de inicio.');return}
   const d={nombre:tipo==='franco'?'Franco':(h+' hs '+(tipo==='diurno'?'Día':tipo==='nocturno'?'Noche':tipo==='mixto'?'Mixto':'Especial')),abreviatura:tipo==='franco'?'F':(h+'h'+tipo.charAt(0).toUpperCase()),horas:h,tipo,hora_inicio:inicio||null,hora_fin:finCalculado||null,color:null,id_objetivo:objetivoId}
   const r=editando?await editarTipoTurno(editando.id,d):await crearTipoTurno(d);if(r){setError(r);return};setModal(false)
