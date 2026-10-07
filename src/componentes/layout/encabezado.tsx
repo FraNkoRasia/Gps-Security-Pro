@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { LogOut, Menu, X, Lock, Globe, Sun, Moon } from 'lucide-react'
+import { LogOut, Menu, X, Globe, Sun, Moon, UserRound } from 'lucide-react'
 import { SelectorIdioma } from '@/componentes/ui/selector-idioma'
 import { SelectorTema } from '@/componentes/ui/selector-tema'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -10,10 +10,10 @@ import { useTraduccion } from '@/i18n'
 
 interface PropiedadesEncabezado {
   alIrAInicio?: () => void
-  alAbrirSeguridad?: () => void
+  alAbrirPerfil?: () => void
 }
 
-export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbrirSeguridad }) => {
+export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbrirPerfil }) => {
   const { usuario, estaAutenticado, cerrarSesion } = useAutenticacion()
   const { t, idioma, cambiarIdioma } = useTraduccion()
   const { temaActual, cambiarTema } = useTema()
@@ -74,14 +74,14 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbr
                 <Insignia variante={obtenerEtiquetaRol(usuario.rol).variante}>
                   {obtenerEtiquetaRol(usuario.rol).texto}
                 </Insignia>
-                {alAbrirSeguridad && (
+                {alAbrirPerfil && (
                   <button
                     type="button"
-                    onClick={alAbrirSeguridad}
-                    title="Seguridad y Cambio de Contraseña"
-                    className="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                    onClick={alAbrirPerfil}
+                    title="Perfil"
+                    className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-500 transition-colors cursor-pointer"
                   >
-                    <Lock className="w-4 h-4" />
+                    Perfil
                   </button>
                 )}
                 <button
