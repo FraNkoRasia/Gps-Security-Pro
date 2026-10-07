@@ -241,22 +241,6 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbr
                 </div>
               </div>
 
-              {/* Acciones de Seguridad en Menú Móvil */}
-              {estaAutenticado && alAbrirSeguridad && (
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuMovilAbierto(false)
-                      alAbrirSeguridad()
-                    }}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-blue-500 flex items-center gap-2 transition-all cursor-pointer"
-                  >
-                    <Lock className="w-4 h-4 text-blue-500" />
-                    <span>Configuración de Seguridad</span>
-                  </button>
-                </div>
-              )}
             </div>
 
             {/* Pie del menú móvil con Cierre de Sesión */}
