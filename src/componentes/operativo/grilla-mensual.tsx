@@ -198,27 +198,27 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
   }
 
   const obtenerEtiquetaTurno = (t?: Turno) => {
-    if (!t) return <span className="text-slate-300 dark:text-slate-700">-</span>
+    if (!t) return <span className="text-slate-600 dark:text-slate-700">-</span>
     if (t.tipo === 'franco') {
-      return <span className="text-slate-500 dark:text-slate-400 font-bold">F</span>
+      return <span className="text-slate-300 font-extrabold text-xs">F</span>
     }
     if (t.tipo === 'nocturno') {
       return (
-        <span className="text-blue-600 dark:text-blue-400 font-bold flex flex-col items-center justify-center leading-none gap-0.5">
+        <span className="font-extrabold flex flex-col items-center justify-center leading-none gap-0.5 text-blue-400">
           <span className="text-[11px]">{t.horas_totales}</span>
-          <Moon className="w-3 h-3" aria-label="Nocturno" />
+          <span className="text-[11px] leading-none" aria-label="Nocturno">🌙</span>
         </span>
       )
     }
     if (t.tipo === 'diurno') {
       return (
-        <span className="text-amber-500 font-bold flex flex-col items-center justify-center leading-none gap-0.5">
+        <span className="font-extrabold flex flex-col items-center justify-center leading-none gap-0.5 text-amber-400">
           <span className="text-[11px]">{t.horas_totales}</span>
-          <Sun className="w-3 h-3" aria-label="Diurno" />
+          <span className="text-[11px] leading-none" aria-label="Diurno">☀️</span>
         </span>
       )
     }
-    return <span className="text-emerald-500 font-bold">{t.horas_totales}</span>
+    return <span className="text-emerald-400 font-extrabold">{t.horas_totales}</span>
   }
 
   return (
@@ -323,12 +323,12 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
       )}
 
       {/* Tabla de la Grilla (Semanal o Mensual con Scroll Controlado) */}
-      <Tarjeta className="overflow-hidden border-slate-200 dark:border-slate-800">
+      <Tarjeta className="overflow-hidden rounded-2xl border-slate-200 dark:border-slate-800">
         <div className="overflow-x-auto max-w-full scrollbar-thin">
-          <table className="w-max min-w-full text-xs text-left border-collapse">
+          <table className="w-max min-w-full text-xs text-left border-separate border-spacing-0 bg-white dark:bg-[#0C121E]">
             <thead>
               <tr className="bg-slate-100 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px] select-none">
-                <th className="p-3 sticky left-0 z-20 bg-slate-100 dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-200 w-28 sm:w-32 min-w-[118px]">
+                <th className="p-2.5 sm:p-3 sticky left-0 z-20 bg-[#0C121E] border-r border-slate-800 font-bold text-white w-[120px] min-w-[120px] sm:w-32 sm:min-w-[128px] rounded-tl-xl">
                   Vigilador
                 </th>
                 {diasVisibles.map((dia) => {
@@ -338,7 +338,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
                   return (
                     <th
                       key={dia}
-                      className={`p-2 text-center border-r border-slate-200 dark:border-slate-800/60 font-semibold ${
+                      className={`p-1.5 text-center border-r border-slate-800/80 font-semibold bg-[#0C121E] ${
                         modoVista === 'semana' ? 'min-w-[36px] max-w-[36px]' : 'min-w-[30px] max-w-[30px]'
                       } ${
                         esFeriado
@@ -363,7 +363,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
                     </th>
                   )
                 })}
-                <th className="p-1.5 sm:p-2 text-center sticky right-0 z-20 bg-slate-100 dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-200 min-w-[78px] sm:min-w-[88px]">
+                <th className="p-1.5 sm:p-2 text-center bg-slate-100 dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-200 min-w-[78px] sm:min-w-[88px]">
                   {modoVista === 'semana' ? 'Sem / Mes' : 'Total hs'}
                 </th>
               </tr>
@@ -379,7 +379,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
                     className="hover:bg-blue-50/40 dark:hover:bg-blue-950/20 transition-colors"
                   >
                     {/* Columna Vigilador Sticky */}
-                    <td className="p-2 sm:p-2.5 sticky left-0 z-10 bg-white dark:bg-[#0C121E] border-r border-slate-200 dark:border-slate-800 shadow-xs">
+                    <td className="p-2 sm:p-2.5 sticky left-0 z-10 bg-[#0C121E] border-r border-slate-800 shadow-xs">
                       <div className="font-bold text-slate-900 dark:text-white leading-tight truncate">
                         {vig.apellido}, {vig.nombre.charAt(0)}.
                       </div>
@@ -401,11 +401,11 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
                         <td
                           key={dia}
                           onClick={() => abrirEditarCelda(vig.id, `${vig.nombre} ${vig.apellido}`, dia)}
-                          className="p-0.5 text-center border-r border-slate-200 dark:border-slate-800/40 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors select-none group"
+                          className="p-1 text-center border-r border-slate-800/70 cursor-pointer hover:bg-slate-800/80 transition-colors select-none group bg-[#0C121E]"
                           title="Clic para modificar turno"
                         >
                           <div
-                            className={`h-8 sm:h-7 min-w-[31px] sm:min-w-0 flex items-center justify-center rounded-lg border transition-transform group-hover:scale-105 ${
+                            className={`h-10 sm:h-7 min-w-[38px] sm:min-w-0 flex items-center justify-center rounded-lg border transition-transform group-hover:scale-105 ${
                               !turno
                                 ? 'border-transparent'
                                 : turno.tipo === 'franco'
@@ -424,7 +424,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
                     })}
 
                     {/* Columna Totales y Meta Sticky */}
-                    <td className="p-1.5 text-center sticky right-0 z-10 bg-white dark:bg-[#0C121E] border-l border-slate-200 dark:border-slate-800 shadow-xs">
+                    <td className="p-1.5 text-center bg-white dark:bg-[#0C121E] border-l border-slate-200 dark:border-slate-800 shadow-xs">
                       <div className="flex flex-col items-center justify-center gap-0.5">
                         {modoVista === 'semana' ? (
                           <>
@@ -461,7 +461,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
 
               {/* Fila Total Diario del Servicio */}
               <tr className="bg-slate-100/90 dark:bg-slate-950/90 font-bold border-t-2 border-slate-300 dark:border-slate-700 text-[11px]">
-                <td className="p-2 sm:p-2.5 sticky left-0 z-10 bg-slate-100 dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
+                <td className="p-2 sm:p-2.5 sticky left-0 z-10 bg-[#101827] border-r border-slate-800 text-slate-200">
                   Total Día
                 </td>
                 {diasVisibles.map((dia) => {
@@ -469,13 +469,13 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
                   return (
                     <td
                       key={dia}
-                      className="p-0.5 text-center border-r border-slate-200 dark:border-slate-800/40 text-blue-600 dark:text-blue-400 font-mono"
+                      className="p-1 text-center border-r border-slate-800/70 text-blue-400 font-mono bg-[#101827]"
                     >
                       {total}h
                     </td>
                   )
                 })}
-                <td className="p-2 text-center sticky right-0 z-10 bg-slate-100 dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
+                <td className="p-2 text-center bg-slate-100 dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
                   Total
                 </td>
               </tr>
