@@ -184,12 +184,12 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
                       </h4>
                       <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
                         <Mail className="w-3 h-3 text-slate-400" />
-                        <span>{vig.email}</span>
+                        <span>{vig.email || 'Sin cuenta de acceso'}</span>
                       </p>
                     </div>
                   </div>
 
-                  {!modoConsulta && <div className="flex items-center gap-1">
+                  {!modoConsulta && vig.id_usuario && <div className="flex items-center gap-1">
                     <button
                       type="button"
                       onClick={() => abrirEditar(vig)}
