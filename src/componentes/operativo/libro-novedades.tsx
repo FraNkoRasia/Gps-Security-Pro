@@ -11,7 +11,7 @@ import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { NovedadLibro } from '@/tipos'
 
 export const LibroNovedades: React.FC = () => {
-  const { novedades, objetivos, crearNovedad, editarNovedad, marcarNovedadLeida } = useOperativo()
+  const { novedades, novedadesLeidas, objetivos, crearNovedad, editarNovedad, marcarNovedadLeida } = useOperativo()
   const { usuario } = useAutenticacion()
 
   const [modalNuevoAbierto, setModalNuevoAbierto] = useState(false)
@@ -237,6 +237,26 @@ export const LibroNovedades: React.FC = () => {
                       {nov.nombre_supervisor}
                     </div>
                   </div>
+
+                  {nov.id_vigilador !== usuario?.id && (
+                    <div className="flex justify-end pt-1">
+                      {novedadesLeidas.has(nov.id) ? (
+                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          Visto
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => marcarNovedadLeida(nov.id)}
+                          className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          Marcar como visto
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </TarjetaContenido>
               </Tarjeta>
             )
