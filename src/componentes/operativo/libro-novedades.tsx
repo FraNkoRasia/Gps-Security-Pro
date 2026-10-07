@@ -11,7 +11,7 @@ import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { NovedadLibro } from '@/tipos'
 
 export const LibroNovedades: React.FC = () => {
-  const { novedades, novedadesLeidas, objetivos, crearNovedad, editarNovedad, marcarNovedadLeida, asignaciones } = useOperativo()
+  const { novedades, novedadesLeidas, objetivos, crearNovedad, editarNovedad, marcarNovedadLeida, asignaciones, vigiladores } = useOperativo()
   const { usuario } = useAutenticacion()
 
   const [modalNuevoAbierto, setModalNuevoAbierto] = useState(false)
@@ -106,6 +106,8 @@ export const LibroNovedades: React.FC = () => {
     }
     setModalEditarAbierto(false)
   }
+
+  const esAutorNovedad = (nov: NovedadLibro) => nov.id_vigilador === vigiladores.find(v => v.id_usuario === usuario?.id)?.id
 
   const novedadesFiltradas = novedades.filter((nov) => {
     const coincideObj = filtroObjetivo === 'todos' || nov.id_objetivo === filtroObjetivo
@@ -222,7 +224,7 @@ export const LibroNovedades: React.FC = () => {
                     </div>
                   </div>
 
-                  {(usuario?.rol === 'vigilador' || usuario?.rol === 'administrador' || usuario?.rol === 'super_administrador') && nov.id_vigilador !== usuario?.id && (
+                  {(usuario?.rol === 'vigilador' || usuario?.rol === 'administrador' || usuario?.rol === 'super_administrador') && !esAutorNovedad(nov) && (
                     <div className="flex justify-end pt-1">
                       {novedadesLeidas.has(nov.id) ? (
                         <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
