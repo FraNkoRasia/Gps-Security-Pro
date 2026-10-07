@@ -7,7 +7,7 @@ import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import { SolicitarHorasExtra } from '@/componentes/operativo/solicitar-horas-extra'
 
 export const MiTurno: React.FC = () => {
-  const { turnos, objetivos, asignaciones, supervisores } = useOperativo()
+  const { turnos, objetivos, asignaciones, supervisores, tiposTurno } = useOperativo()
   const { usuario } = useAutenticacion()
 
   const idVig = usuario?.id || 'usr-vig-01'
@@ -77,7 +77,7 @@ export const MiTurno: React.FC = () => {
                   {turnoHoy ? `${turnoHoy.hora_inicio} → ${turnoHoy.hora_fin}` : 'Sin turno hoy'}
                 </span>
                 <span className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold block mt-0.5">
-                  {turnoHoy ? (turnoHoy.tipo === 'nocturno' ? 'Turno nocturno' : turnoHoy.tipo === 'diurno' ? 'Turno diurno' : 'Franco') : 'Sin guardia programada'}
+                  {turnoHoy ? (tiposTurno.find(t => t.id === turnoHoy.id_tipo_turno)?.nombre || (turnoHoy.tipo === 'nocturno' ? 'Turno nocturno' : turnoHoy.tipo === 'diurno' ? 'Turno diurno' : 'Franco')) : 'Sin guardia programada'}
                 </span>
               </div>
 
@@ -139,7 +139,7 @@ export const MiTurno: React.FC = () => {
                     </div>
                     <div>
                       <Insignia variante={trn.tipo === 'nocturno' ? 'azul' : 'dorado'}>
-                        {trn.tipo === 'nocturno' ? '12🌙 Nocturno' : '12☀️ Diurno'}
+                        {tiposTurno.find(t => t.id === trn.id_tipo_turno)?.nombre || (trn.tipo === 'nocturno' ? '12🌙 Nocturno' : trn.tipo === 'diurno' ? '12☀️ Diurno' : trn.tipo)}
                       </Insignia>
                     </div>
                   </div>
