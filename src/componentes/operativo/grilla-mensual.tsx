@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import {
-  Sun,
-  Moon,
   Edit3,
   ChevronLeft,
   ChevronRight,
   Wand2,
+  Settings2,
 } from 'lucide-react'
+import { GestionTiposTurno } from '@/componentes/operativo/gestion-tipos-turno'
 import { Tarjeta } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Dialogo } from '@/componentes/ui/dialogo'
@@ -15,7 +15,7 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import type { Turno } from '@/tipos'
 
 export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: boolean }> = ({ objetivoInicial = '', soloLectura = false }) => {
-  const { vigiladores, asignaciones, turnos, asignarTurnoGrilla } = useOperativo()
+  const { vigiladores, asignaciones, turnos, tiposTurno, asignarTurnoGrilla } = useOperativo()
   const [objetivoSeleccionado] = useState(objetivoInicial)
 
   const mesSeleccionado = '2026-10'
@@ -37,10 +37,11 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
 
   // Modal Generador de Diagramas (Sección 28)
   const [modalGeneradorAbierto, setModalGeneradorAbierto] = useState(false)
+  const [modalTiposTurnoAbierto, setModalTiposTurnoAbierto] = useState(false)
   const [vigiladorDiagrama, setVigiladorDiagrama] = useState('')
 
   const [patronDiagrama, setPatronDiagrama] = useState<'4x3' | '4x2' | '2x2' | '6x1'>('4x3')
-  const [tipoGuardiaDiagrama, setTipoGuardiaDiagrama] = useState<'diurno' | 'nocturno'>('nocturno')
+  const [tipoTurnoDiagrama, setTipoTurnoDiagrama] = useState('')
 
   // Definición de las 5 semanas de Octubre 2026
   const semanas = [
@@ -89,7 +90,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
     setModalEdicionAbierto(true)
   }
 
-  const aplicarCodigoTurno = (codigo: '12☀️' | '12🌙' | '10' | '8' | 'F' | 'borrar') => {
+  const aplicarCodigoTurno = (codigo: string, idTipoTurno?: string) => {
     if (!celdaEditando) return
 
     const objId = objetivoSeleccionado || celdaEditando.turnoActual?.id_objetivo || ''
@@ -99,7 +100,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
       id_vigilador: celdaEditando.idVigilador,
       id_objetivo: objId,
       fecha: celdaEditando.fecha,
-      codigo
+      codigo,
+      id_tipo_turno: idTipoTurno || null
     })
 
     setModalEdicionAbierto(false)
@@ -124,7 +126,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
     }
 
     const cicloTotal = diasTrabajo + diasFranco
-    const codigoGuardia = tipoGuardiaDiagrama === 'nocturno' ? '12🌙' : '12☀️'
+    const tipoSeleccionado = tiposTurno.find(t => t.id === tipoTurnoDiagrama && t.activo)
+    const codigoGuardia = tipoSeleccionado?.abreviatura || '12🌙'
 
     for (let d = 1; d <= totalDiasMes; d++) {
       const posCiclo = (d - 1) % cicloTotal
@@ -136,7 +139,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
           id_vigilador: vigiladorDiagrama,
           id_objetivo: objId,
           fecha,
-          codigo: codigoGuardia
+          codigo: codigoGuardia,
+          id_tipo_turno: tipoSeleccionado?.id || null
         })
       } else {
         asignarTurnoGrilla({
@@ -154,10 +158,10 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   // Cálculos por vigilador (Sección 24)
   const calcularTotalesVigilador = (idVig: string) => {
     const turnosVig = turnos.filter(
-      (t) => t.id_vigilador === idVig && t.id_objetivo === objetivoSeleccionado && t.id_objetivo === objetivoSeleccionado && t.fecha.startsWith(mesSeleccionado)
+      (t) => t.id_vigilador === idVig && t.id_objetivo === objetivoSeleccionado && t.fecha.startsWith(mesSeleccionado)
     )
 
-    const horasTotales = turnosVig.reduce((acc, t) => acc + t.horas_totales, 0)
+    const horasTotales = turnosVig.reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
     const horasDiurnas = turnosVig.reduce((acc, t) => acc + t.horas_diurnas, 0)
     const horasNocturnas = turnosVig.reduce((acc, t) => acc + t.horas_nocturnas, 0)
     const francos = turnosVig.filter((t) => t.tipo === 'franco').length
@@ -168,7 +172,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
         const d = Number(t.fecha.split('-')[2])
         return d >= semanaActualData.inicio && d <= semanaActualData.fin
       })
-      .reduce((acc, t) => acc + t.horas_totales, 0)
+      .reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
 
     const metaHoras = 204
     let estadoMeta: 'verde' | 'amarillo' | 'rojo' = 'amarillo'
@@ -194,7 +198,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
     const diaStr = dia < 10 ? `0${dia}` : `${dia}`
     const fecha = `${mesSeleccionado}-${diaStr}`
     const turnosDia = turnos.filter((t) => t.id_objetivo === objetivoSeleccionado && t.fecha === fecha)
-    return turnosDia.reduce((acc, t) => acc + t.horas_totales, 0)
+    return turnosDia.reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
   }
 
   const obtenerEtiquetaTurno = (t?: Turno) => {
@@ -218,7 +222,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
         </span>
       )
     }
-    return <span className="text-emerald-400 font-extrabold">{t.horas_totales}</span>
+    const personalizado = t.id_tipo_turno ? tiposTurno.find((x) => x.id === t.id_tipo_turno) : null
+    return <span className="text-emerald-400 font-extrabold flex flex-col items-center justify-center leading-none gap-0.5"><span className="text-[10px]">{personalizado?.abreviatura || t.horas_totales}</span><span className="text-[8px] text-slate-400">{personalizado?.nombre || 'Especial'}</span></span>
   }
 
   return (
@@ -265,7 +270,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
             <Boton
               variante="secundario"
               tamano="chico"
-              onClick={() => setModalGeneradorAbierto(true)}
+              onClick={() => { const primero = tiposTurno.find(t => (t.id_objetivo === objetivoSeleccionado || t.id_objetivo === null) && t.activo); setTipoTurnoDiagrama(primero?.id || ''); setModalGeneradorAbierto(true)  }}
               icono={<Wand2 className="w-3.5 h-3.5 text-blue-500" />}
             >
               Generar Diagrama
@@ -397,6 +402,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                       const turno = turnos.find(
                         (t) => t.id_vigilador === vig.id && t.id_objetivo === objetivoSeleccionado && t.fecha === fecha
                       )
+                      const horasExtra = turno?.horas_extra ?? 0
 
                       return (
                         <td
@@ -418,7 +424,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                                 : 'bg-emerald-500/10 border-emerald-500/60 dark:bg-emerald-950/40'
                             }`}
                           >
-                            {obtenerEtiquetaTurno(turno)}
+                            {obtenerEtiquetaTurno(turno)}{horasExtra > 0 && <span className="text-[8px] font-bold text-emerald-400">+{horasExtra}h extra</span>}
                           </div>
                         </td>
                       )
@@ -503,84 +509,16 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
             Seleccioná el código de guardia para esta jornada:
           </p>
 
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <button
-              type="button"
-              onClick={() => aplicarCodigoTurno('12☀️')}
-              className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 hover:scale-102 transition-all text-left cursor-pointer"
-            >
-              <div className="font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-                <Sun className="w-4 h-4" /> 12☀️ Diurno
-              </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                07:00 a 19:00 (12 hs)
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => aplicarCodigoTurno('12🌙')}
-              className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-300 dark:border-blue-800 hover:scale-102 transition-all text-left cursor-pointer"
-            >
-              <div className="font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
-                <Moon className="w-4 h-4" /> 12🌙 Nocturno
-              </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                19:00 a 07:00 (9h nocturnas)
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => aplicarCodigoTurno('10')}
-              className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 hover:scale-102 transition-all text-left cursor-pointer"
-            >
-              <div className="font-bold text-slate-800 dark:text-slate-200">
-                10 hs Especial
-              </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                08:00 a 18:00 (10 hs)
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => aplicarCodigoTurno('8')}
-              className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 hover:scale-102 transition-all text-left cursor-pointer"
-            >
-              <div className="font-bold text-slate-800 dark:text-slate-200">
-                8 hs Estándar
-              </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                08:00 a 16:00 (8 hs)
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => aplicarCodigoTurno('F')}
-              className="p-3 rounded-xl bg-slate-200/70 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 hover:scale-102 transition-all text-left cursor-pointer"
-            >
-              <div className="font-bold text-slate-800 dark:text-white">
-                F — Franco
-              </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                Descanso del vigilador (0 hs)
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => aplicarCodigoTurno('borrar')}
-              className="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 hover:scale-102 transition-all text-left cursor-pointer"
-            >
-              <div className="font-bold text-red-600 dark:text-red-400">
-                Borrar Guardia
-              </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                Dejar sin turno asignado
-              </div>
-            </button>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-slate-500 dark:text-slate-400">Seleccioná un atajo configurado para este objetivo.</p>
+              <Boton variante="secundario" tamano="chico" onClick={()=>setModalTiposTurnoAbierto(true)} icono={<Settings2 className="w-3.5 h-3.5"/>}>Gestionar atajos</Boton>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {tiposTurno.filter(t=>(t.id_objetivo===objetivoSeleccionado||t.id_objetivo===null)&&t.activo).map(t=><button key={t.id} type="button" onClick={()=>aplicarCodigoTurno(t.abreviatura,t.id)} className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 hover:scale-102 transition-all text-left cursor-pointer"><div className="font-bold text-slate-800 dark:text-slate-200">{t.abreviatura} — {t.nombre}</div><div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{t.horas} hs{t.hora_inicio&&t.hora_fin?' • '+t.hora_inicio+' → '+t.hora_fin:''}</div></button>)}
+              {tiposTurno.filter(t=>(t.id_objetivo===objetivoSeleccionado||t.id_objetivo===null)&&t.activo).length===0&&<div className="col-span-2 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-5 text-center text-xs text-slate-500">No hay atajos configurados. Creá uno para comenzar.</div>}{tiposTurno.filter(t=>(t.id_objetivo===objetivoSeleccionado||t.id_objetivo===null)&&t.activo).length===0&&<><button type="button" onClick={()=>aplicarCodigoTurno('12☀️')} className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-left cursor-pointer"><div className="font-bold text-amber-700 dark:text-amber-400">12☀️ — Diurno</div><div className="text-[11px] text-slate-500 mt-1">07:00 → 19:00 • 12 hs</div></button><button type="button" onClick={()=>aplicarCodigoTurno('12🌙')} className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-300 dark:border-blue-800 text-left cursor-pointer"><div className="font-bold text-blue-600 dark:text-blue-400">12🌙 — Nocturno</div><div className="text-[11px] text-slate-500 mt-1">19:00 → 07:00 • 12 hs</div></button><button type="button" onClick={()=>aplicarCodigoTurno('10')} className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-left cursor-pointer"><div className="font-bold">10 — Especial</div><div className="text-[11px] text-slate-500 mt-1">08:00 → 18:00 • 10 hs</div></button><button type="button" onClick={()=>aplicarCodigoTurno('8')} className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-left cursor-pointer"><div className="font-bold">8 — Estándar</div><div className="text-[11px] text-slate-500 mt-1">08:00 → 16:00 • 8 hs</div></button><button type="button" onClick={()=>aplicarCodigoTurno('F')} className="p-3 rounded-xl bg-slate-200/70 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-left cursor-pointer"><div className="font-bold">F — Franco</div><div className="text-[11px] text-slate-500 mt-1">0 hs</div></button></>}
+              <button type="button" onClick={()=>aplicarCodigoTurno('borrar')} className="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 text-left cursor-pointer"><div className="font-bold text-red-600 dark:text-red-400">Borrar Guardia</div><div className="text-[11px] text-slate-500 mt-1">Dejar sin turno asignado</div></button>
+            </div>
           </div>
 
           <div className="pt-2 flex justify-end">
@@ -594,6 +532,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
           </div>
         </div>
       </Dialogo>
+
+      {modalTiposTurnoAbierto && <GestionTiposTurno objetivoId={objetivoSeleccionado} alCerrar={()=>setModalTiposTurnoAbierto(false)} />}
 
       {/* Modal Generador Automático de Diagramas (Sección 28) */}
       <Dialogo
@@ -638,12 +578,12 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
             <div>
               <Etiqueta requerido>Turno Predeterminado</Etiqueta>
               <select
-                value={tipoGuardiaDiagrama}
-                onChange={(e) => setTipoGuardiaDiagrama(e.target.value as typeof tipoGuardiaDiagrama)}
+                value={tipoTurnoDiagrama}
+                onChange={(e) => setTipoTurnoDiagrama(e.target.value)}
                 className="w-full min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700/80 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
               >
-                <option value="nocturno">12🌙 Nocturno (19:00 - 07:00)</option>
-                <option value="diurno">12☀️ Diurno (07:00 - 19:00)</option>
+                {tiposTurno.filter(t => (t.id_objetivo === objetivoSeleccionado || t.id_objetivo === null) && t.activo).map(t => <option key={t.id} value={t.id}>{t.abreviatura} — {t.nombre} ({t.horas} hs)</option>)}
+                {tiposTurno.filter(t => (t.id_objetivo === objetivoSeleccionado || t.id_objetivo === null) && t.activo).length === 0 && <option value="">12🌙 Nocturno (19:00 - 07:00)</option>}
               </select>
             </div>
           </div>

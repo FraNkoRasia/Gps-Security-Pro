@@ -17,7 +17,7 @@ export const MiMes: React.FC = () => {
     (t) => t.id_vigilador === idVig && t.fecha.startsWith(mesActual)
   )
 
-  const horasTotales = turnosMes.reduce((acc, t) => acc + t.horas_totales, 0)
+  const horasTotales = turnosMes.reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
   const horasDiurnas = turnosMes.reduce((acc, t) => acc + t.horas_diurnas, 0)
   const horasNocturnas = turnosMes.reduce((acc, t) => acc + t.horas_nocturnas, 0)
   const horasDomingos = turnosMes

@@ -19,6 +19,7 @@ import { CambiosTurnos } from '@/componentes/operativo/cambios-turnos'
 import { AvisosComunicacion } from '@/componentes/operativo/avisos-comunicacion'
 import { MiTurno } from '@/componentes/operativo/mi-turno'
 import { MiMes } from '@/componentes/operativo/mi-mes'
+import { GestionHorasExtra } from '@/componentes/operativo/gestion-horas-extra'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import { useTraduccion } from '@/i18n'
 import { useOperativo } from '@/contextos/contexto-operativo'
@@ -37,7 +38,7 @@ export const VistaPanelControl: React.FC = () => {
   const esSuperAdmin = usuario.rol === 'super_administrador'
   const esAdmin = usuario.rol === 'administrador'
   const esVigilador = usuario.rol === 'vigilador'
-  const { asignaciones } = useOperativo()
+  const { asignaciones, solicitudesHorasExtra } = useOperativo()
   const asignacionActiva = asignaciones.find((a) => a.id_vigilador === usuario.id && a.activa)
   const objetivoVigiladorId = asignacionActiva?.id_objetivo || null
 
@@ -59,7 +60,8 @@ export const VistaPanelControl: React.FC = () => {
         { id: 'vigiladores', label: 'Vigiladores', icono: <Users className="w-4 h-4" /> },
         { id: 'novedades', label: 'Libro de Novedades', icono: <BookOpen className="w-4 h-4" /> },
         { id: 'cambios', label: 'Cambios y Reemplazos', icono: <ArrowRightLeft className="w-4 h-4" /> },
-        { id: 'avisos', label: 'Avisos', icono: <Bell className="w-4 h-4" /> }
+        { id: 'avisos', label: 'Avisos', icono: <Bell className="w-4 h-4" /> },
+        { id: 'horasExtra', label: `Horas Extra${solicitudesHorasExtra.filter(s => s.estado === 'pendiente').length ? ` (${solicitudesHorasExtra.filter(s => s.estado === 'pendiente').length})` : ''}`, icono: <Clock className="w-4 h-4" /> }
       ]
     : []
 
@@ -186,6 +188,7 @@ export const VistaPanelControl: React.FC = () => {
             {pestanaRenderizada === 'novedades' && (esAdmin || esVigilador) && <LibroNovedades />}
             {pestanaRenderizada === 'cambios' && (esAdmin || esVigilador) && <CambiosTurnos />}
             {pestanaRenderizada === 'avisos' && (esAdmin || esVigilador) && <AvisosComunicacion />}
+            {pestanaRenderizada === 'horasExtra' && esAdmin && <GestionHorasExtra />}
             {pestanaRenderizada === 'miTurno' && esVigilador && <MiTurno />}
             {pestanaRenderizada === 'grilla' && esVigilador && objetivoVigiladorId && <GrillaMensual objetivoInicial={objetivoVigiladorId} soloLectura />}
             {pestanaRenderizada === 'grilla' && esVigilador && !objetivoVigiladorId && <div className="rounded-2xl border border-slate-800 bg-[#0C121E] p-6 text-center text-sm text-slate-400">No tenés un objetivo activo asignado actualmente.</div>}

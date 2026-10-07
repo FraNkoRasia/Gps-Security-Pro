@@ -52,6 +52,20 @@ export interface Asignacion {
 
 export type TipoTurno = 'diurno' | 'nocturno' | 'franco' | 'especial'
 
+export interface TipoTurnoPersonalizado {
+  id: string
+  id_empresa: string
+  id_objetivo?: string | null
+  nombre: string
+  abreviatura: string
+  horas: number
+  tipo: 'diurno' | 'nocturno' | 'mixto' | 'franco' | 'especial'
+  hora_inicio?: string | null
+  hora_fin?: string | null
+  color?: string | null
+  activo: boolean
+}
+
 export interface Turno {
   id: string
   id_empresa: string
@@ -67,6 +81,7 @@ export interface Turno {
   es_feriado: boolean
   es_domingo: boolean
   horas_extra: number
+  id_tipo_turno?: string | null
   estado: 'programado' | 'cumplido' | 'ausente' | 'reemplazado'
 }
 
@@ -118,4 +133,26 @@ export interface RegistroAuditoria {
   entidad: string
   detalle: string
   fecha_hora: string
+}
+
+export type EstadoSolicitudHorasExtra = 'pendiente' | 'aprobada' | 'rechazada'
+
+export interface SolicitudHorasExtra {
+  id: string
+  id_empresa: string
+  id_objetivo: string
+  id_vigilador: string
+  id_turno: string
+  fecha: string
+  hora_salida_programada: string
+  hora_salida_real: string
+  minutos_solicitados: number
+  minutos_aprobados?: number | null
+  motivo: string
+  observacion?: string | null
+  estado: EstadoSolicitudHorasExtra
+  creado_por: string
+  revisado_por?: string | null
+  revisado_en?: string | null
+  creado_en: string
 }
