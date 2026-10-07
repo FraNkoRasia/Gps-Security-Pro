@@ -158,7 +158,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   // Cálculos por vigilador (Sección 24)
   const calcularTotalesVigilador = (idVig: string) => {
     const turnosVig = turnos.filter(
-      (t) => t.id_vigilador === idVig && t.id_objetivo === objetivoSeleccionado && t.id_objetivo === objetivoSeleccionado && t.fecha.startsWith(mesSeleccionado)
+      (t) => t.id_vigilador === idVig && t.id_objetivo === objetivoSeleccionado && t.fecha.startsWith(mesSeleccionado)
     )
 
     const horasTotales = turnosVig.reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
