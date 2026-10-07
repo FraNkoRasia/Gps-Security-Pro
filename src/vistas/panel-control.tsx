@@ -21,6 +21,7 @@ import { MiTurno } from '@/componentes/operativo/mi-turno'
 import { MiMes } from '@/componentes/operativo/mi-mes'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import { useTraduccion } from '@/i18n'
+import { useOperativo } from '@/contextos/contexto-operativo'
 
 export const VistaPanelControl: React.FC = () => {
   const { usuario } = useAutenticacion()
@@ -36,11 +37,15 @@ export const VistaPanelControl: React.FC = () => {
   const esSuperAdmin = usuario.rol === 'super_administrador'
   const esAdmin = usuario.rol === 'administrador'
   const esVigilador = usuario.rol === 'vigilador'
+  const { asignaciones } = useOperativo()
+  const asignacionActiva = asignaciones.find((a) => a.id_vigilador === usuario.id && a.activa)
+  const objetivoVigiladorId = asignacionActiva?.id_objetivo || null
 
   // Lista de pestañas según rol
   const pestanas = esVigilador
     ? [
         { id: 'miTurno', label: 'Mi Turno', icono: <Clock className="w-4 h-4" /> },
+        { id: 'grilla', label: 'Grilla', icono: <Calendar className="w-4 h-4" /> },
         { id: 'miMes', label: 'Mi Mes (204 hs)', icono: <Calendar className="w-4 h-4" /> },
         { id: 'novedades', label: 'Libro de Novedades', icono: <BookOpen className="w-4 h-4" /> },
         { id: 'cambios', label: 'Cambios de Turno', icono: <ArrowRightLeft className="w-4 h-4" /> },
@@ -182,6 +187,8 @@ export const VistaPanelControl: React.FC = () => {
             {pestanaRenderizada === 'cambios' && (esAdmin || esVigilador) && <CambiosTurnos />}
             {pestanaRenderizada === 'avisos' && (esAdmin || esVigilador) && <AvisosComunicacion />}
             {pestanaRenderizada === 'miTurno' && esVigilador && <MiTurno />}
+            {pestanaRenderizada === 'grilla' && esVigilador && objetivoVigiladorId && <GrillaMensual objetivoInicial={objetivoVigiladorId} soloLectura />}
+            {pestanaRenderizada === 'grilla' && esVigilador && !objetivoVigiladorId && <div className="rounded-2xl border border-slate-800 bg-[#0C121E] p-6 text-center text-sm text-slate-400">No tenés un objetivo activo asignado actualmente.</div>}
             {pestanaRenderizada === 'miMes' && esVigilador && <MiMes />}
           </div>
         </>
