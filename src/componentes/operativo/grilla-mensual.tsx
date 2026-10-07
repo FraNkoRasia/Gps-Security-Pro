@@ -324,8 +324,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
 
       {/* Tabla de la Grilla (Semanal o Mensual con Scroll Controlado) */}
       <Tarjeta className="overflow-hidden border-slate-200 dark:border-slate-800">
-        <div className="overflow-x-auto max-w-full">
-          <table className="w-full text-xs text-left border-collapse">
+        <div className="overflow-x-auto max-w-full scrollbar-thin">
+          <table className="w-max min-w-full text-xs text-left border-collapse">
             <thead>
               <tr className="bg-slate-100 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px] select-none">
                 <th className="p-3 sticky left-0 z-20 bg-slate-100 dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-200 w-28 sm:w-32 min-w-[118px]">
@@ -349,7 +349,12 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
                       }`}
                     >
                       <div className="text-[10px] leading-tight opacity-75 font-semibold">
-                        {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][dateObj.getDay()]}
+                        <span className="sm:hidden">
+                          {['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'][dateObj.getDay()]}
+                        </span>
+                        <span className="hidden sm:inline">
+                          {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][dateObj.getDay()]}
+                        </span>
                       </div>
                       <div className="font-extrabold text-sm">{dia}</div>
                       {esFeriado && (
@@ -378,8 +383,9 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
                       <div className="font-bold text-slate-900 dark:text-white leading-tight truncate">
                         {vig.apellido}, {vig.nombre.charAt(0)}.
                       </div>
-                      <div className="text-[10px] text-slate-400 truncate max-w-[105px]">
-                        {vig.email.split('@')[0]}
+                      <div className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold truncate max-w-[105px]">
+                        <span className="sm:hidden">{totales.horasSemana}h sem</span>
+                        <span className="hidden sm:inline text-slate-400 font-normal">{vig.email.split('@')[0]}</span>
                       </div>
                     </td>
 
@@ -398,7 +404,19 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
                           className="p-0.5 text-center border-r border-slate-200 dark:border-slate-800/40 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors select-none group"
                           title="Clic para modificar turno"
                         >
-                          <div className="h-7 flex items-center justify-center rounded-md group-hover:scale-105 transition-transform text-xs">
+                          <div
+                            className={`h-8 sm:h-7 min-w-[31px] sm:min-w-0 flex items-center justify-center rounded-lg border transition-transform group-hover:scale-105 ${
+                              !turno
+                                ? 'border-transparent'
+                                : turno.tipo === 'franco'
+                                ? 'bg-slate-800/40 dark:bg-slate-800/70 border-slate-500/40'
+                                : turno.tipo === 'diurno'
+                                ? 'bg-amber-500/10 border-amber-500/70 dark:bg-amber-950/50'
+                                : turno.tipo === 'nocturno'
+                                ? 'bg-blue-500/10 border-blue-500/70 dark:bg-blue-950/50'
+                                : 'bg-emerald-500/10 border-emerald-500/60 dark:bg-emerald-950/40'
+                            }`}
+                          >
                             {obtenerEtiquetaTurno(turno)}
                           </div>
                         </td>
