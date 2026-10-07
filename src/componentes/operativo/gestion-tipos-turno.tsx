@@ -28,7 +28,9 @@ export const GestionTiposTurno:React.FC<{objetivoId:string;alCerrar:()=>void}>=(
   if(!Number.isFinite(h)||h<0){setError('Completá una cantidad válida de horas.');return}
   const finCalculado=tipo==='franco'?'':calcularFin(inicio,String(h))
   if(tipo!=='franco'&&!inicio){setError('Indicá la hora de inicio.');return}
-  const d={nombre:tipo==='franco'?'Franco':(h+' '+(tipo==='diurno'?'Sol':tipo==='nocturno'?'Luna':tipo==='mixto'?'Mixto':'Especial')),abreviatura:tipo==='franco'?'F':(h+(tipo==='diurno'?'☀️':tipo==='nocturno'?'🌙':tipo==='mixto'?'M':'E')),horas:h,tipo,hora_inicio:inicio||null,hora_fin:finCalculado||null,color:null,id_objetivo:objetivoId}
+  const nombre=tipo==='franco'?'Franco':(h+'Hs '+(tipo==='diurno'?'Diurno':tipo==='nocturno'?'Nocturno':tipo==='mixto'?'Mixto':'Especial'))
+  const abreviatura=tipo==='franco'?'F':(h+(tipo==='diurno'?'☀️':tipo==='nocturno'?'🌙':tipo==='mixto'?'M':'E'))
+  const d={nombre,abreviatura,horas:h,tipo,hora_inicio:inicio||null,hora_fin:finCalculado||null,color:null,id_objetivo:objetivoId}
   const r=editando?await editarTipoTurno(editando.id,d):await crearTipoTurno(d);if(r){setError(r);return};setModal(false)
  }
  return <Dialogo abierto alCerrar={alCerrar} titulo="Atajos de turnos" subtitulo="Creá una vez cada tipo de guardia y luego asignalo rápidamente desde la grilla." icono={<Clock3 className="w-5 h-5 text-blue-500"/>} tamano="grande">
