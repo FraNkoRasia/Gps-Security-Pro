@@ -50,7 +50,7 @@ export const VistaPanelControl: React.FC = () => {
         { id: 'miMes', label: 'Mi Mes (204 hs)', icono: <Calendar className="w-4 h-4" /> },
         { id: 'novedades', label: 'Libro de Novedades', icono: <BookOpen className="w-4 h-4" /> },
         { id: 'cambios', label: 'Cambios de Turno', icono: <ArrowRightLeft className="w-4 h-4" /> },
-        { id: 'avisos', label: 'Avisos', icono: <Bell className="w-4 h-4" />, contador: avisos.filter(a => !a.leido).length }
+        { id: 'avisos', label: 'Avisos', icono: <Bell className="w-4 h-4" /> }
       ]
     : esSuperAdmin
     ? []
@@ -177,9 +177,9 @@ export const VistaPanelControl: React.FC = () => {
                 >
                   {p.icono}
                   <span className="truncate">{p.label}</span>
-                  {'contador' in p && p.contador > 0 && (
+                  {p.id === 'avisos' && avisos.filter(a => !a.leido).length > 0 && (
                     <span className="ml-1 inline-flex min-w-5 h-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white shadow-sm">
-                      {p.contador > 99 ? '99+' : p.contador}
+                      {avisos.filter(a => !a.leido).length > 99 ? '99+' : avisos.filter(a => !a.leido).length}
                     </span>
                   )}
                 </button>
