@@ -32,6 +32,7 @@ export interface Objetivo {
   localidad: string
   provincia: string
   elementos_a_cargo?: string | null
+  id_supervisor?: string | null
   activo: boolean
   creado_en: string
 }
