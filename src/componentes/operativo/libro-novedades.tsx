@@ -109,8 +109,10 @@ export const LibroNovedades: React.FC = () => {
 
   const esAutorNovedad = (nov: NovedadLibro) => nov.id_vigilador === vigiladores.find(v => v.id === usuario?.id)?.id || nov.nombre_vigilante === `${usuario?.nombre} ${usuario?.apellido}`
 
+  const objetivoActual = usuario?.rol === 'vigilador' ? asignaciones.find(a => a.id_vigilador === usuario.id && a.activa)?.id_objetivo : null
+
   const novedadesFiltradas = novedades.filter((nov) => {
-    const coincideObj = filtroObjetivo === 'todos' || nov.id_objetivo === filtroObjetivo
+    const coincideObj = usuario?.rol === 'vigilador' ? nov.id_objetivo === objetivoActual : (filtroObjetivo === 'todos' || nov.id_objetivo === filtroObjetivo)
     const coincideTexto =
       nov.informe_novedades.toLowerCase().includes(busqueda.toLowerCase()) ||
       nov.nombre_vigilante.toLowerCase().includes(busqueda.toLowerCase())
@@ -137,31 +139,28 @@ export const LibroNovedades: React.FC = () => {
         </Boton>
       </div>
 
-      {/* Barra de Filtros y Búsqueda */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1">
-          <Entrada
-            placeholder="Buscar por vigilador, informe o palabras clave..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            iconoIzquierda={<Search className="w-4 h-4" />}
-          />
+      {usuario?.rol !== 'vigilador' && (
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1">
+            <Entrada
+              placeholder="Buscar por vigilador, informe o palabras clave..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              iconoIzquierda={<Search className="w-4 h-4" />}
+            />
+          </div>
+          <div className="w-full sm:w-64">
+            <select
+              value={filtroObjetivo}
+              onChange={(e) => setFiltroObjetivo(e.target.value)}
+              className="w-full min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700/80 px-3 py-2.5 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
+            >
+              <option value="todos">Todos los objetivos</option>
+              {objetivos.map((o) => <option key={o.id} value={o.id}>{o.nombre}</option>)}
+            </select>
+          </div>
         </div>
-        <div className="w-full sm:w-64">
-          <select
-            value={filtroObjetivo}
-            onChange={(e) => setFiltroObjetivo(e.target.value)}
-            className="w-full min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700/80 px-3 py-2.5 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
-          >
-            <option value="todos">Todos los objetivos</option>
-            {objetivos.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.nombre}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      )}
 
       {/* Listado de Novedades */}
       <div className="space-y-3">
