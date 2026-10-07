@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { BookOpen, Plus, Search, Eye, Edit2 } from 'lucide-react'
+import { BookOpen, Plus, Search, Eye, Edit2, CheckCircle } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -11,7 +11,7 @@ import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { NovedadLibro } from '@/tipos'
 
 export const LibroNovedades: React.FC = () => {
-  const { novedades, objetivos, crearNovedad, editarNovedad } = useOperativo()
+  const { novedades, objetivos, crearNovedad, editarNovedad, marcarNovedadLeida } = useOperativo()
   const { usuario } = useAutenticacion()
 
   const [modalNuevoAbierto, setModalNuevoAbierto] = useState(false)
@@ -209,6 +209,23 @@ export const LibroNovedades: React.FC = () => {
                   <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line">
                     {nov.informe_novedades}
                   </p>
+
+                  <div className="flex items-center justify-between gap-3 pt-2 border-t border-slate-200 dark:border-slate-800/60">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">Vigilante:</span>{' '}
+                      {nov.nombre_vigilante}
+                    </span>
+                    {nov.id_vigilador !== usuario?.id && (
+                      <button
+                        type="button"
+                        onClick={() => marcarNovedadLeida(nov.id)}
+                        className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        {novedades.some(n => n.id === nov.id) ? 'Marcar como visto' : 'Marcar como visto'}
+                      </button>
+                    )}
+                  </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800/60">
                     <div>
