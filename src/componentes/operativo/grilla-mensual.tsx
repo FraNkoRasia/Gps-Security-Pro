@@ -423,7 +423,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                                 : 'bg-emerald-500/10 border-emerald-500/60 dark:bg-emerald-950/40'
                             }`}
                           >
-                            {obtenerEtiquetaTurno(turno)}
+                            {obtenerEtiquetaTurno(turno)}{turno?.horas_extra > 0 && <span className="text-[8px] font-bold text-emerald-400">+{turno.horas_extra}h extra</span>}
                           </div>
                         </td>
                       )
