@@ -1,5 +1,5 @@
 import React,{useState} from 'react'
-import {Plus,Edit3,Power,Clock3} from 'lucide-react'
+import {Plus,Edit3,Power,Clock3,Trash2} from 'lucide-react'
 import {Dialogo} from '@/componentes/ui/dialogo'
 import {Boton} from '@/componentes/ui/boton'
 import {Entrada} from '@/componentes/ui/entrada'
@@ -8,7 +8,7 @@ import {useOperativo} from '@/contextos/contexto-operativo'
 import type {TipoTurnoPersonalizado} from '@/tipos'
 
 export const GestionTiposTurno:React.FC<{objetivoId:string;alCerrar:()=>void}>=({objetivoId,alCerrar})=>{
- const {tiposTurno,crearTipoTurno,editarTipoTurno,cambiarEstadoTipoTurno}=useOperativo()
+ const {tiposTurno,crearTipoTurno,editarTipoTurno,cambiarEstadoTipoTurno,eliminarTipoTurno}=useOperativo()
  const [editando,setEditando]=useState<TipoTurnoPersonalizado|null>(null); const [modal,setModal]=useState(false)
  const [horas,setHoras]=useState(''); const [tipo,setTipo]=useState<TipoTurnoPersonalizado['tipo']>('especial'); const [inicio,setInicio]=useState(''); const [fin,setFin]=useState(''); const [error,setError]=useState('')
  const disponibles=tiposTurno.filter(t=>t.id_objetivo===objetivoId||t.id_objetivo===null)
@@ -28,7 +28,7 @@ export const GestionTiposTurno:React.FC<{objetivoId:string;alCerrar:()=>void}>=(
   if(!Number.isFinite(h)||h<0){setError('Completá una cantidad válida de horas.');return}
   const finCalculado=tipo==='franco'?'':calcularFin(inicio,String(h))
   if(tipo!=='franco'&&!inicio){setError('Indicá la hora de inicio.');return}
-  const d={nombre:tipo==='franco'?'Franco':(h+' hs '+(tipo==='diurno'?'Día':tipo==='nocturno'?'Noche':tipo==='mixto'?'Mixto':'Especial')),abreviatura:tipo==='franco'?'F':(h+'h'+tipo.charAt(0).toUpperCase()),horas:h,tipo,hora_inicio:inicio||null,hora_fin:finCalculado||null,color:null,id_objetivo:objetivoId}
+  const d={nombre:tipo==='franco'?'Franco':(h+' '+(tipo==='diurno'?'Sol':tipo==='nocturno'?'Luna':tipo==='mixto'?'Mixto':'Especial')),abreviatura:tipo==='franco'?'F':(h+(tipo==='diurno'?'☀️':tipo==='nocturno'?'🌙':tipo==='mixto'?'M':'E')),horas:h,tipo,hora_inicio:inicio||null,hora_fin:finCalculado||null,color:null,id_objetivo:objetivoId}
   const r=editando?await editarTipoTurno(editando.id,d):await crearTipoTurno(d);if(r){setError(r);return};setModal(false)
  }
  return <Dialogo abierto alCerrar={alCerrar} titulo="Atajos de turnos" subtitulo="Creá una vez cada tipo de guardia y luego asignalo rápidamente desde la grilla." icono={<Clock3 className="w-5 h-5 text-blue-500"/>} tamano="grande">
