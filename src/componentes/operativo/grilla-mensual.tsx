@@ -14,7 +14,7 @@ import { Etiqueta } from '@/componentes/ui/etiqueta'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import type { Turno } from '@/tipos'
 
-export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivoInicial = '' }) => {
+export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: boolean }> = ({ objetivoInicial = '', soloLectura = false }) => {
   const { vigiladores, asignaciones, turnos, asignarTurnoGrilla } = useOperativo()
   const [objetivoSeleccionado] = useState(objetivoInicial)
 
@@ -261,15 +261,16 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
             </button>
           </div>
 
-          {/* Generador de Diagramas (Sección 28) */}
-          <Boton
-            variante="secundario"
-            tamano="chico"
-            onClick={() => setModalGeneradorAbierto(true)}
-            icono={<Wand2 className="w-3.5 h-3.5 text-blue-500" />}
-          >
-            Generar Diagrama
-          </Boton>
+          {!soloLectura && (
+            <Boton
+              variante="secundario"
+              tamano="chico"
+              onClick={() => setModalGeneradorAbierto(true)}
+              icono={<Wand2 className="w-3.5 h-3.5 text-blue-500" />}
+            >
+              Generar Diagrama
+            </Boton>
+          )}
         </div>
       </div>
 
@@ -400,9 +401,9 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string }> = ({ objetivo
                       return (
                         <td
                           key={dia}
-                          onClick={() => abrirEditarCelda(vig.id, `${vig.nombre} ${vig.apellido}`, dia)}
-                          className="p-1 text-center border-r border-slate-800/70 cursor-pointer hover:bg-slate-800/80 transition-colors select-none group bg-[#0C121E]"
-                          title="Clic para modificar turno"
+                          onClick={() => !soloLectura && abrirEditarCelda(vig.id, `${vig.nombre} ${vig.apellido}`, dia)}
+                          className={`p-1 text-center border-r border-slate-800/70 transition-colors select-none group bg-[#0C121E] ${soloLectura ? '' : 'cursor-pointer hover:bg-slate-800/80'}`}
+                          title={soloLectura ? 'Turno programado' : 'Clic para modificar turno'}
                         >
                           <div
                             className={`h-10 sm:h-7 min-w-[38px] sm:min-w-0 flex items-center justify-center rounded-lg border transition-transform group-hover:scale-105 ${
