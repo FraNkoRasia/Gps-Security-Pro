@@ -137,7 +137,7 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbr
                       setMenuMovilAbierto(false)
                       alAbrirPerfil()
                     }}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white border border-blue-500 transition-colors cursor-pointer shadow-sm"
+                    className="w-full flex items-center gap-3 p-3 rounded-xl bg-blue-500/10 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/70 hover:bg-blue-500/20 hover:border-blue-400 transition-colors cursor-pointer shadow-sm"
                   >
                     <span className="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
                       <UserRound className="w-4 h-4" />
@@ -226,7 +226,7 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbr
                 <Boton
                   variante="fantasma"
                   tamano="medio"
-                  className="w-full bg-red-500/50 dark:bg-red-500/50 border border-red-500/30 dark:border-red-400/30 text-white hover:bg-red-500/60 dark:hover:bg-red-500/60 hover:border-red-500/50 transition-colors"
+                  className="w-full bg-red-500/10 dark:bg-red-500/10 border border-red-500/80 dark:border-red-500/80 text-red-500 dark:text-red-400 hover:bg-red-500/20 dark:hover:bg-red-500/20 hover:border-red-400 transition-colors"
                   onClick={() => {
                     setMenuMovilAbierto(false)
                     cerrarSesion()
