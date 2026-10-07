@@ -41,7 +41,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   const [vigiladorDiagrama, setVigiladorDiagrama] = useState('')
 
   const [patronDiagrama, setPatronDiagrama] = useState<'4x3' | '4x2' | '2x2' | '6x1'>('4x3')
-  const [tipoGuardiaDiagrama, setTipoGuardiaDiagrama] = useState<'diurno' | 'nocturno'>('nocturno')
+  const [tipoTurnoDiagrama, setTipoTurnoDiagrama] = useState('')
 
   // Definición de las 5 semanas de Octubre 2026
   const semanas = [
@@ -126,7 +126,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
     }
 
     const cicloTotal = diasTrabajo + diasFranco
-    const codigoGuardia = tipoGuardiaDiagrama === 'nocturno' ? '12🌙' : '12☀️'
+    const tipoSeleccionado = tiposTurno.find(t => t.id === tipoTurnoDiagrama && t.activo)
+    const codigoGuardia = tipoSeleccionado?.abreviatura || '12🌙'
 
     for (let d = 1; d <= totalDiasMes; d++) {
       const posCiclo = (d - 1) % cicloTotal
@@ -138,7 +139,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
           id_vigilador: vigiladorDiagrama,
           id_objetivo: objId,
           fecha,
-          codigo: codigoGuardia
+          codigo: codigoGuardia,
+          id_tipo_turno: tipoSeleccionado?.id || null
         })
       } else {
         asignarTurnoGrilla({
@@ -573,12 +575,12 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
             <div>
               <Etiqueta requerido>Turno Predeterminado</Etiqueta>
               <select
-                value={tipoGuardiaDiagrama}
-                onChange={(e) => setTipoGuardiaDiagrama(e.target.value as typeof tipoGuardiaDiagrama)}
+                value={tipoTurnoDiagrama}
+                onChange={(e) => setTipoTurnoDiagrama(e.target.value)}
                 className="w-full min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700/80 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
               >
-                <option value="nocturno">12🌙 Nocturno (19:00 - 07:00)</option>
-                <option value="diurno">12☀️ Diurno (07:00 - 19:00)</option>
+                {tiposTurno.filter(t => (t.id_objetivo === objetivoSeleccionado || t.id_objetivo === null) && t.activo).map(t => <option key={t.id} value={t.id}>{t.abreviatura} — {t.nombre} ({t.horas} hs)</option>)}
+                {tiposTurno.filter(t => (t.id_objetivo === objetivoSeleccionado || t.id_objetivo === null) && t.activo).length === 0 && <option value="">12🌙 Nocturno (19:00 - 07:00)</option>}
               </select>
             </div>
           </div>
