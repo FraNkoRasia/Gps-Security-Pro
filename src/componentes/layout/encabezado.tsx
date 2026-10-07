@@ -178,6 +178,25 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbr
                 </div>
               )}
 
+              {/* Volver al inicio */}
+              {alIrAInicio && (
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuMovilAbierto(false)
+                      alIrAInicio()
+                    }}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl bg-slate-500/10 dark:bg-slate-500/10 text-slate-700 dark:text-slate-300 border border-slate-400/70 dark:border-slate-600 hover:bg-slate-500/20 hover:border-slate-500 transition-colors cursor-pointer shadow-sm"
+                  >
+                    <span className="w-9 h-9 rounded-lg bg-slate-500/10 flex items-center justify-center shrink-0">
+                      <span className="text-base leading-none">⌂</span>
+                    </span>
+                    <span className="text-sm font-bold">Volver al inicio</span>
+                  </button>
+                </div>
+              )}
+
               {/* Acceso al perfil */}
               {estaAutenticado && usuario && alAbrirPerfil && (
                 <div className="pt-1">
