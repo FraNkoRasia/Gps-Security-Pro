@@ -159,7 +159,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
       (t) => t.id_vigilador === idVig && t.id_objetivo === objetivoSeleccionado && t.id_objetivo === objetivoSeleccionado && t.fecha.startsWith(mesSeleccionado)
     )
 
-    const horasTotales = turnosVig.reduce((acc, t) => acc + t.horas_totales, 0)
+    const horasTotales = turnosVig.reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
     const horasDiurnas = turnosVig.reduce((acc, t) => acc + t.horas_diurnas, 0)
     const horasNocturnas = turnosVig.reduce((acc, t) => acc + t.horas_nocturnas, 0)
     const francos = turnosVig.filter((t) => t.tipo === 'franco').length
@@ -196,7 +196,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
     const diaStr = dia < 10 ? `0${dia}` : `${dia}`
     const fecha = `${mesSeleccionado}-${diaStr}`
     const turnosDia = turnos.filter((t) => t.id_objetivo === objetivoSeleccionado && t.fecha === fecha)
-    return turnosDia.reduce((acc, t) => acc + t.horas_totales, 0)
+    return turnosDia.reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
   }
 
   const obtenerEtiquetaTurno = (t?: Turno) => {
