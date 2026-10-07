@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { cn } from '@/utilidades/cn'
 
@@ -49,7 +50,7 @@ export const Dialogo: React.FC<PropiedadesDialogo> = ({
     grande: 'max-w-2xl'
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex min-h-[100dvh] items-center justify-center p-4 sm:p-6 overflow-hidden animate-fadeIn">
       {/* Telón de fondo (Backdrop) */}
       <div
@@ -69,7 +70,7 @@ export const Dialogo: React.FC<PropiedadesDialogo> = ({
       >
         {/* Cabecera del diálogo */}
         {(titulo || subtitulo) && (
-          <div className="flex items-start justify-between p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/50">
+          <div className="flex items-start justify-between p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/50 shrink-0">
             <div className="flex items-center gap-3 pr-4">
               {icono && (
                 <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800/40 text-blue-600 dark:text-blue-400">
@@ -104,6 +105,7 @@ export const Dialogo: React.FC<PropiedadesDialogo> = ({
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
-}
+}}
