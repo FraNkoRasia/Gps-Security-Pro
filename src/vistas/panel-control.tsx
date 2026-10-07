@@ -38,7 +38,7 @@ export const VistaPanelControl: React.FC = () => {
   const esSuperAdmin = usuario.rol === 'super_administrador'
   const esAdmin = usuario.rol === 'administrador'
   const esVigilador = usuario.rol === 'vigilador'
-  const { asignaciones, solicitudesHorasExtra } = useOperativo()
+  const { asignaciones, solicitudesHorasExtra, avisos } = useOperativo()
   const asignacionActiva = asignaciones.find((a) => a.id_vigilador === usuario.id && a.activa)
   const objetivoVigiladorId = asignacionActiva?.id_objetivo || null
 
@@ -50,7 +50,7 @@ export const VistaPanelControl: React.FC = () => {
         { id: 'miMes', label: 'Mi Mes (204 hs)', icono: <Calendar className="w-4 h-4" /> },
         { id: 'novedades', label: 'Libro de Novedades', icono: <BookOpen className="w-4 h-4" /> },
         { id: 'cambios', label: 'Cambios de Turno', icono: <ArrowRightLeft className="w-4 h-4" /> },
-        { id: 'avisos', label: 'Avisos', icono: <Bell className="w-4 h-4" /> }
+        { id: 'avisos', label: 'Avisos', icono: <Bell className="w-4 h-4" />, contador: avisos.filter(a => !a.leido).length }
       ]
     : esSuperAdmin
     ? []
@@ -177,6 +177,11 @@ export const VistaPanelControl: React.FC = () => {
                 >
                   {p.icono}
                   <span className="truncate">{p.label}</span>
+                  {'contador' in p && p.contador > 0 && (
+                    <span className="ml-1 inline-flex min-w-5 h-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white shadow-sm">
+                      {p.contador > 99 ? '99+' : p.contador}
+                    </span>
+                  )}
                 </button>
               )
             })}
