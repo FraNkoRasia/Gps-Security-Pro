@@ -1,10 +1,15 @@
-import React, { useState } from 'react'
-import { LogOut, Menu, X, Globe, Sun, Moon, UserRound } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { LogOut, Menu, X, Globe, Sun, Moon, UserRound, Download } from 'lucide-react'
 import { Insignia } from '@/componentes/ui/insignia'
 import { Boton } from '@/componentes/ui/boton'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import { useTema } from '@/contextos/contexto-tema'
 import { useTraduccion } from '@/i18n'
+
+interface EventoInstalacionPWA extends Event {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>
+}
 
 interface PropiedadesEncabezado {
   alIrAInicio?: () => void
@@ -17,6 +22,46 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbr
   const { temaActual, cambiarTema } = useTema()
 
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false)
+  const [eventoInstalacion, setEventoInstalacion] = useState<EventoInstalacionPWA | null>(null)
+  const [appInstalada, setAppInstalada] = useState(false)
+
+  useEffect(() => {
+    const verificarInstalacion = () => {
+      const instalada = window.matchMedia('(display-mode: standalone)').matches
+        || (window.navigator as Navigator & { standalone?: boolean }).standalone === true
+      setAppInstalada(instalada)
+    }
+
+    const manejarBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault()
+      setEventoInstalacion(event as EventoInstalacionPWA)
+    }
+
+    const manejarAppInstalled = () => {
+      setEventoInstalacion(null)
+      setAppInstalada(true)
+    }
+
+    verificarInstalacion()
+    window.addEventListener('beforeinstallprompt', manejarBeforeInstallPrompt)
+    window.addEventListener('appinstalled', manejarAppInstalled)
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', manejarBeforeInstallPrompt)
+      window.removeEventListener('appinstalled', manejarAppInstalled)
+    }
+  }, [])
+
+  const instalarAplicacion = async () => {
+    if (!eventoInstalacion) return
+
+    await eventoInstalacion.prompt()
+    const resultado = await eventoInstalacion.userChoice
+
+    if (resultado.outcome === 'accepted') {
+      setEventoInstalacion(null)
+    }
+  }
 
   const obtenerEtiquetaRol = (rol: string) => {
     switch (rol) {
@@ -143,6 +188,28 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbr
                       <UserRound className="w-4 h-4" />
                     </span>
                     <span className="text-sm font-bold">Perfil</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Instalación de la PWA */}
+              {!appInstalada && (
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!eventoInstalacion) return
+                      setMenuMovilAbierto(false)
+                      void instalarAplicacion()
+                    }}
+                    disabled={!eventoInstalacion}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl bg-blue-500/10 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/70 hover:bg-blue-500/20 hover:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-sm"
+                    title={!eventoInstalacion ? 'Chrome todavía no habilitó la instalación automática' : 'Instalar GSP Security Pro'}
+                  >
+                    <span className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                      <Download className="w-4 h-4" />
+                    </span>
+                    <span className="text-sm font-bold">Instalar aplicación</span>
                   </button>
                 </div>
               )}
