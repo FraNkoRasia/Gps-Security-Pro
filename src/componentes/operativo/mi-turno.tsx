@@ -4,6 +4,7 @@ import { Tarjeta, TarjetaContenido, TarjetaEncabezado, TarjetaTitulo } from '@/c
 import { Insignia } from '@/componentes/ui/insignia'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
+import { SolicitarHorasExtra } from '@/componentes/operativo/solicitar-horas-extra'
 
 export const MiTurno: React.FC = () => {
   const { turnos, objetivos, asignaciones, supervisores } = useOperativo()
@@ -92,6 +93,8 @@ export const MiTurno: React.FC = () => {
                 </span>
               </div>
             </div>
+
+            {turnoHoy && turnoHoy.tipo !== 'franco' && <div className="flex justify-end"><SolicitarHorasExtra turno={turnoHoy}/></div>}
 
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs">
               <span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold uppercase mb-1">
