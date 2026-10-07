@@ -23,7 +23,7 @@ export const ProveedorOperativo:React.FC<{children:React.ReactNode}>=({children}
 const {usuario}=useAutenticacion()
 const [empresas,setEmpresas]=useState<Empresa[]>([]),[objetivos,setObjetivos]=useState<Objetivo[]>([]),[vigiladores,setVigiladores]=useState<Usuario[]>([]),[supervisores,setSupervisores]=useState<Usuario[]>([])
 const [asignaciones,setAsignaciones]=useState<Asignacion[]>([]),[turnos,setTurnos]=useState<Turno[]>([]),[novedades,setNovedades]=useState<NovedadLibro[]>([]),[novedadesLeidas,setNovedadesLeidas]=useState<Set<string>>(new Set())
-const novedadesPendientes=(usuario?.rol==='vigilador'||usuario?.rol==='administrador'||usuario?.rol==='super_administrador')?novedades.filter(n=>!novedadesLeidas.has(n.id)&&n.id_vigilador!==usuario?.id).length:0
+const idVigiladorActual=usuario?.rol==='vigilador'?vigiladores.find(v=>v.id===usuario.id)?.id:null;const novedadesPendientes=(usuario?.rol==='vigilador'||usuario?.rol==='administrador'||usuario?.rol==='super_administrador')?novedades.filter(n=>!novedadesLeidas.has(n.id)&&n.id_vigilador!==idVigiladorActual).length:0
 const [solicitudesCambio,setSolicitudesCambio]=useState<SolicitudCambio[]>([]),[avisos,setAvisos]=useState<Aviso[]>([]),[auditorias,setAuditorias]=useState<RegistroAuditoria[]>([]),[tiposTurno,setTiposTurno]=useState<TipoTurnoPersonalizado[]>([]),[solicitudesHorasExtra,setSolicitudesHorasExtra]=useState<SolicitudHorasExtra[]>([])
 const [modalCambio,setModalCambio]=useState<{abierto:boolean;exito:boolean;titulo:string;mensaje:string}>({abierto:false,exito:true,titulo:'',mensaje:''})
 const [modalConfirmacion,setModalConfirmacion]=useState<{abierto:boolean;id:string;aprobar:boolean}>({abierto:false,id:'',aprobar:false})
