@@ -272,7 +272,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
             <Boton
               variante="secundario"
               tamano="chico"
-              onClick={() => { const primero = tiposTurno.find(t => (t.id_objetivo === objetivoSeleccionado || t.id_objetivo === null) && t.activo); setTipoTurnoDiagrama(primero?.id || ''); setModalGeneradorAbierto(true) }
+              onClick={() => { const primero = tiposTurno.find(t => (t.id_objetivo === objetivoSeleccionado || t.id_objetivo === null) && t.activo); setTipoTurnoDiagrama(primero?.id || ''); setModalGeneradorAbierto(true)  }}
               icono={<Wand2 className="w-3.5 h-3.5 text-blue-500" />}
             >
               Generar Diagrama
