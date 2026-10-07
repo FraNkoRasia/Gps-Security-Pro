@@ -50,8 +50,7 @@ export const VistaPanelControl: React.FC = () => {
         { id: 'miMes', label: 'Mi Mes (204 hs)', icono: <Calendar className="w-4 h-4" /> },
         { id: 'novedades', label: 'Libro de Novedades', icono: <BookOpen className="w-4 h-4" /> },
         { id: 'cambios', label: 'Cambios de Turno', icono: <ArrowRightLeft className="w-4 h-4" /> },
-        { id: 'avisos', label: 'Avisos', icono: <Bell className="w-4 h-4" /> },
-        { id: 'horasExtra', label: 'Horas Extra', icono: <Clock className="w-4 h-4" /> }
+        { id: 'avisos', label: 'Avisos', icono: <Bell className="w-4 h-4" /> }
       ]
     : esSuperAdmin
     ? []
@@ -61,7 +60,8 @@ export const VistaPanelControl: React.FC = () => {
         { id: 'vigiladores', label: 'Vigiladores', icono: <Users className="w-4 h-4" /> },
         { id: 'novedades', label: 'Libro de Novedades', icono: <BookOpen className="w-4 h-4" /> },
         { id: 'cambios', label: 'Cambios y Reemplazos', icono: <ArrowRightLeft className="w-4 h-4" /> },
-        { id: 'avisos', label: 'Avisos', icono: <Bell className="w-4 h-4" /> }
+        { id: 'avisos', label: 'Avisos', icono: <Bell className="w-4 h-4" /> },
+        { id: 'horasExtra', label: 'Horas Extra', icono: <Clock className="w-4 h-4" /> }
       ]
     : []
 
