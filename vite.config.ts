@@ -18,11 +18,15 @@ export default defineConfig({
       },
       includeAssets: ['favicon.svg', 'Escudo.png', 'logoAPP.png'],
       manifest: {
+        id: '/',
         name: 'GSP Security Pro — Gestión de Seguridad Profesional',
         short_name: 'GSP Security Pro',
         description: 'Plataforma profesional para la gestión de empresas de seguridad y servicios de vigilancia.',
+        start_url: '/',
+        scope: '/',
         theme_color: '#080C14',
         background_color: '#080C14',
+        display_override: ['standalone'],
         display: 'standalone',
         orientation: 'portrait-primary',
         icons: [
