@@ -5,12 +5,13 @@ import { VistaAyuda } from '@/vistas/ayuda'
 import { VistaTerminos } from '@/vistas/terminos'
 import { VistaPrivacidad } from '@/vistas/privacidad'
 import { VistaAcercaDe } from '@/vistas/acerca-de'
+import { VistaPerfil } from '@/vistas/perfil'
 
 interface PropiedadesDisposicionPrincipal {
   children: React.ReactNode
 }
 
-export type SubVista = 'ninguna' | 'ayuda' | 'terminos' | 'privacidad' | 'acercaDe'
+export type SubVista = 'ninguna' | 'ayuda' | 'terminos' | 'privacidad' | 'acercaDe' | 'perfil'
 
 export const DisposicionPrincipal: React.FC<PropiedadesDisposicionPrincipal> = ({ children }) => {
   const [subVista, setSubVista] = useState<SubVista>('ninguna')
@@ -18,11 +19,14 @@ export const DisposicionPrincipal: React.FC<PropiedadesDisposicionPrincipal> = (
   return (
     <div className="min-h-screen flex flex-col bg-[#F4F7FC] dark:bg-[#070B12] text-slate-900 dark:text-slate-100 overflow-x-hidden selection:bg-blue-600 selection:text-white transition-colors duration-200">
       {/* Encabezado Principal */}
-      <Encabezado alIrAInicio={() => setSubVista('ninguna')} />
+      <Encabezado
+        alIrAInicio={() => setSubVista('ninguna')}
+        alAbrirPerfil={() => setSubVista('perfil')}
+      />
 
       {/* Contenido Principal con soporte desde 320px */}
       <main className="flex-1 flex flex-col w-full max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8">
-        {children}
+        {subVista === 'perfil' ? <VistaPerfil /> : children}
       </main>
 
       {/* Pie de Página Global */}
@@ -44,6 +48,9 @@ export const DisposicionPrincipal: React.FC<PropiedadesDisposicionPrincipal> = (
       <VistaAcercaDe
         abierto={subVista === 'acercaDe'}
         alCerrar={() => setSubVista('ninguna')}
+      />
+      <VistaPerfil
+        alAbrirCambioContrasena={false}
       />
     </div>
   )
