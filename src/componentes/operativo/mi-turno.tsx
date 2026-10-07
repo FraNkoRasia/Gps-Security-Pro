@@ -94,7 +94,7 @@ export const MiTurno: React.FC = () => {
               </div>
             </div>
 
-            {turnoHoy && turnoHoy.tipo !== 'franco' && <div className="flex justify-end"><SolicitarHorasExtra turno={turnoHoy}/></div>}
+            {turnoHoy && turnoHoy.tipo !== 'franco' && <div className="space-y-2"><div className="flex justify-end"><SolicitarHorasExtra turno={turnoHoy}/></div>{turnoHoy.horas_extra > 0 && <p className="text-right text-xs font-semibold text-emerald-500">Horas extra confirmadas: +{turnoHoy.horas_extra} h</p>}</div>}
 
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs">
               <span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold uppercase mb-1">
