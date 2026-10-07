@@ -108,4 +108,4 @@ export const Dialogo: React.FC<PropiedadesDialogo> = ({
     </div>,
     document.body
   )
-}}
+}
