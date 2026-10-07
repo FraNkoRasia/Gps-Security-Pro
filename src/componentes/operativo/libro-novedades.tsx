@@ -222,7 +222,7 @@ export const LibroNovedades: React.FC = () => {
                     </div>
                   </div>
 
-                  {nov.id_vigilador !== usuario?.id && (
+                  {(usuario?.rol === 'vigilador' || usuario?.rol === 'administrador' || usuario?.rol === 'super_administrador') && nov.id_vigilador !== usuario?.id && (
                     <div className="flex justify-end pt-1">
                       {novedadesLeidas.has(nov.id) ? (
                         <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
