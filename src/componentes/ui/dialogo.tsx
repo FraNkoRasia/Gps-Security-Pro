@@ -50,7 +50,7 @@ export const Dialogo: React.FC<PropiedadesDialogo> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex min-h-[100dvh] items-center justify-center p-4 sm:p-6 overflow-hidden animate-fadeIn">
       {/* Telón de fondo (Backdrop) */}
       <div
         className="fixed inset-0 bg-slate-950/70 dark:bg-black/80 backdrop-blur-sm transition-opacity"
@@ -61,7 +61,7 @@ export const Dialogo: React.FC<PropiedadesDialogo> = ({
       {/* Contenedor del Modal */}
       <div
         className={cn(
-          'relative w-full rounded-2xl bg-white dark:bg-[#0C121E] border border-slate-200 dark:border-slate-800 shadow-2xl text-slate-900 dark:text-slate-100 z-10 overflow-hidden flex flex-col max-h-[90vh] my-auto',
+          'relative w-full max-h-[calc(100dvh-2rem)] rounded-2xl bg-white dark:bg-[#0C121E] border border-slate-200 dark:border-slate-800 shadow-2xl text-slate-900 dark:text-slate-100 z-10 overflow-hidden flex flex-col',
           maxAnchos[tamano]
         )}
         role="dialog"
@@ -100,7 +100,7 @@ export const Dialogo: React.FC<PropiedadesDialogo> = ({
         )}
 
         {/* Cuerpo scrolleable con padding adecuado */}
-        <div className="p-5 sm:p-6 overflow-y-auto flex-1">
+        <div className="min-h-0 p-5 sm:p-6 overflow-y-auto overscroll-contain flex-1">
           {children}
         </div>
       </div>
