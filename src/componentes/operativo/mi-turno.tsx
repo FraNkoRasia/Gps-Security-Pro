@@ -38,11 +38,11 @@ export const MiTurno: React.FC = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {/* Tarjeta de Guardia Actual */}
         <Tarjeta className="border-blue-500/40 bg-gradient-to-br from-white via-blue-50/20 to-white dark:from-[#0C121E] dark:via-blue-950/20 dark:to-[#0C121E]">
           <TarjetaEncabezado>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <TarjetaTitulo className="flex items-center gap-2">
                 <Clock className="w-5 h-5 text-blue-500" />
                 Guardia de Hoy ({hoyStr})
@@ -69,12 +69,12 @@ export const MiTurno: React.FC = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800">
                 <span className="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-bold">
-                  Horario de Guardia:
+                  Horario del Turno:
                 </span>
-                <span className="font-extrabold text-slate-900 dark:text-white text-base">
+                <span className="font-extrabold text-slate-900 dark:text-white text-base break-words">
                   {turnoHoy ? `${turnoHoy.hora_inicio} → ${turnoHoy.hora_fin}` : 'Sin turno hoy'}
                 </span>
                 <span className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold block mt-0.5">
@@ -86,7 +86,7 @@ export const MiTurno: React.FC = () => {
                 <span className="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-bold">
                   Supervisor a Cargo:
                 </span>
-                <span className="font-bold text-slate-900 dark:text-white text-sm">
+                <span className="font-bold text-slate-900 dark:text-white text-sm break-words">
                   {supervisorActivo ? `${supervisorActivo.nombre} ${supervisorActivo.apellido}` : 'Sin supervisor asignado'}
                 </span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
@@ -99,14 +99,14 @@ export const MiTurno: React.FC = () => {
               <span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold uppercase mb-1">
                 Elementos a Cargo del Puesto:
               </span>
-              <p className="text-slate-800 dark:text-slate-200">
+              <p className="text-slate-800 dark:text-slate-200 break-words whitespace-pre-line leading-5">
                 {objetivoActivo?.elementos_a_cargo || 'No hay elementos registrados para este objetivo.'}
               </p>
             </div>
 
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs">
               <span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold uppercase mb-1">Descripción y Puntos de Cobertura:</span>
-              <p className="text-slate-800 dark:text-slate-200 whitespace-pre-line">{objetivoActivo?.descripcion || 'No hay descripción ni puntos de cobertura registrados para este objetivo.'}</p>
+              <p className="text-slate-800 dark:text-slate-200 break-words whitespace-pre-line leading-5">{objetivoActivo?.descripcion || 'No hay descripción ni puntos de cobertura registrados para este objetivo.'}</p>
             </div>
           </TarjetaContenido>
         </Tarjeta>
