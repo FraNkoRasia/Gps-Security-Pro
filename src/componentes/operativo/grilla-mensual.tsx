@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import {
-  Sun,
-  Moon,
   Edit3,
   ChevronLeft,
   ChevronRight,
@@ -404,6 +402,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                       const turno = turnos.find(
                         (t) => t.id_vigilador === vig.id && t.id_objetivo === objetivoSeleccionado && t.fecha === fecha
                       )
+                      const horasExtra = turno?.horas_extra ?? 0
 
                       return (
                         <td
@@ -425,7 +424,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                                 : 'bg-emerald-500/10 border-emerald-500/60 dark:bg-emerald-950/40'
                             }`}
                           >
-                            {obtenerEtiquetaTurno(turno)}{turno?.horas_extra > 0 && <span className="text-[8px] font-bold text-emerald-400">+{turno.horas_extra}h extra</span>}
+                            {obtenerEtiquetaTurno(turno)}{horasExtra > 0 && <span className="text-[8px] font-bold text-emerald-400">+{horasExtra}h extra</span>}
                           </div>
                         </td>
                       )
