@@ -6,7 +6,7 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 
 export const MiTurno: React.FC = () => {
-  const { turnos, objetivos, asignaciones, novedades } = useOperativo()
+  const { turnos, objetivos, asignaciones, novedades, supervisores } = useOperativo()
   const { usuario } = useAutenticacion()
 
   const idVig = usuario?.id || 'usr-vig-01'
@@ -22,6 +22,7 @@ export const MiTurno: React.FC = () => {
   // Asignación activa
   const asignacionActiva = asignaciones.find((a) => a.id_vigilador === idVig && a.activa)
   const objetivoActivo = objetivos.find((o) => o.id === asignacionActiva?.id_objetivo)
+  const supervisorActivo = supervisores.find((s) => s.id === objetivoActivo?.id_supervisor)
 
   // Última novedad registrada
   const ultimaNovedad = novedades.find((n) => n.id_vigilador === idVig)
@@ -33,7 +34,7 @@ export const MiTurno: React.FC = () => {
           Mi Turno Operativo
         </h3>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          Información en tiempo real de tu puesto de guardia, relevo y elementos asignados (Sección 33).
+          Información de tu puesto, horario, supervisor y elementos asignados.
         </p>
       </div>
 
@@ -74,10 +75,10 @@ export const MiTurno: React.FC = () => {
                   Horario de Guardia:
                 </span>
                 <span className="font-extrabold text-slate-900 dark:text-white text-base">
-                  {turnoHoy ? `${turnoHoy.hora_inicio} → ${turnoHoy.hora_fin}` : '19:00 → 07:00'}
+                  {turnoHoy ? `${turnoHoy.hora_inicio} → ${turnoHoy.hora_fin}` : 'Sin turno hoy'}
                 </span>
                 <span className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold block mt-0.5">
-                  {turnoHoy?.tipo === 'nocturno' ? '12🌙 Cruce de Medianoche' : '12☀️ Diurno'}
+                  {turnoHoy ? (turnoHoy.tipo === 'nocturno' ? 'Turno nocturno' : turnoHoy.tipo === 'diurno' ? 'Turno diurno' : 'Franco') : 'Sin guardia programada'}
                 </span>
               </div>
 
@@ -86,10 +87,10 @@ export const MiTurno: React.FC = () => {
                   Supervisor a Cargo:
                 </span>
                 <span className="font-bold text-slate-900 dark:text-white text-sm">
-                  Carlos Méndez
+                  {supervisorActivo ? `${supervisorActivo.nombre} ${supervisorActivo.apellido}` : 'Sin supervisor asignado'}
                 </span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                  Móvil de Apoyo 04
+                  {supervisorActivo?.telefono || 'Contacto no registrado'}
                 </span>
               </div>
             </div>
@@ -99,9 +100,13 @@ export const MiTurno: React.FC = () => {
                 Elementos a Cargo del Puesto:
               </span>
               <p className="text-slate-800 dark:text-slate-200">
-                {ultimaNovedad?.elementos_a_cargo ||
-                  'Handy Motorola VHF #12, Linterna LED táctica, Llaves de acceso portón este, Libro Tomo IV.'}
+                {objetivoActivo?.elementos_a_cargo || 'No hay elementos registrados para este objetivo.'}
               </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs">
+              <span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold uppercase mb-1">Descripción y Puntos de Cobertura:</span>
+              <p className="text-slate-800 dark:text-slate-200 whitespace-pre-line">{objetivoActivo?.descripcion || 'No hay descripción ni puntos de cobertura registrados para este objetivo.'}</p>
             </div>
           </TarjetaContenido>
         </Tarjeta>
