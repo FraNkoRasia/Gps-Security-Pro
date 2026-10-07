@@ -14,7 +14,7 @@ interface ContextoOperativoTipo {
  crearNovedad:(d:{id_objetivo:string;id_vigilador:string;nombre_vigilante:string;nombre_supervisor:string;fecha:string;hora:string;turno:string;elementos_a_cargo:string;informe_novedades:string})=>void; editarNovedad:(id:string,d:{informe_novedades:string;motivo_correccion:string})=>void
  solicitarCambioTurno:(d:{id_solicitante:string;id_destinatario:string;id_turno_origen:string;fecha_turno:string;motivo:string})=>void; responderSolicitudCambio:(id:string,a:boolean)=>void; aprobarCambioAdmin:(id:string,a:boolean)=>void
  crearAviso:(d:{titulo:string;contenido:string;prioridad:Aviso['prioridad']})=>void; marcarAvisoLeido:(id:string)=>void
- crearTipoTurno:(d:Omit<TipoTurnoPersonalizado,'id'|'activo'>)=>Promise<string|null>; editarTipoTurno:(id:string,d:Partial<TipoTurnoPersonalizado>)=>Promise<string|null>; cambiarEstadoTipoTurno:(id:string,activo:boolean)=>Promise<string|null>
+ crearTipoTurno:(d:Omit<TipoTurnoPersonalizado,'id'|'activo'|'id_empresa'>)=>Promise<string|null>; editarTipoTurno:(id:string,d:Partial<TipoTurnoPersonalizado>)=>Promise<string|null>; cambiarEstadoTipoTurno:(id:string,activo:boolean)=>Promise<string|null>
  solicitarHorasExtra:(d:Omit<SolicitudHorasExtra,'id'|'estado'|'creado_en'|'revisado_por'|'revisado_en'|'minutos_aprobados'|'creado_por'|'id_empresa'>)=>Promise<string|null>; aprobarHorasExtra:(id:string,aprobar:boolean,minutos?:number)=>Promise<string|null>
 }
 const ContextoOperativo=createContext<ContextoOperativoTipo|undefined>(undefined)
