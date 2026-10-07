@@ -38,7 +38,7 @@ export const VistaPanelControl: React.FC = () => {
   const esSuperAdmin = usuario.rol === 'super_administrador'
   const esAdmin = usuario.rol === 'administrador'
   const esVigilador = usuario.rol === 'vigilador'
-  const { asignaciones } = useOperativo()
+  const { asignaciones, solicitudesHorasExtra } = useOperativo()
   const asignacionActiva = asignaciones.find((a) => a.id_vigilador === usuario.id && a.activa)
   const objetivoVigiladorId = asignacionActiva?.id_objetivo || null
 
@@ -61,7 +61,7 @@ export const VistaPanelControl: React.FC = () => {
         { id: 'novedades', label: 'Libro de Novedades', icono: <BookOpen className="w-4 h-4" /> },
         { id: 'cambios', label: 'Cambios y Reemplazos', icono: <ArrowRightLeft className="w-4 h-4" /> },
         { id: 'avisos', label: 'Avisos', icono: <Bell className="w-4 h-4" /> },
-        { id: 'horasExtra', label: 'Horas Extra', icono: <Clock className="w-4 h-4" /> }
+        { id: 'horasExtra', label: `Horas Extra${solicitudesHorasExtra.filter(s => s.estado === 'pendiente').length ? ` (${solicitudesHorasExtra.filter(s => s.estado === 'pendiente').length})` : ''}`, icono: <Clock className="w-4 h-4" /> }
       ]
     : []
 
