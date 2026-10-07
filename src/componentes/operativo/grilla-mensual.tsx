@@ -15,7 +15,7 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import type { Turno } from '@/tipos'
 
 export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: boolean }> = ({ objetivoInicial = '', soloLectura = false }) => {
-  const { vigiladores, asignaciones, turnos, asignarTurnoGrilla } = useOperativo()
+  const { vigiladores, asignaciones, turnos, tiposTurno, asignarTurnoGrilla } = useOperativo()
   const [objetivoSeleccionado] = useState(objetivoInicial)
 
   const mesSeleccionado = '2026-10'
@@ -37,6 +37,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
 
   // Modal Generador de Diagramas (Sección 28)
   const [modalGeneradorAbierto, setModalGeneradorAbierto] = useState(false)
+  const [modalTiposTurnoAbierto, setModalTiposTurnoAbierto] = useState(false)
   const [vigiladorDiagrama, setVigiladorDiagrama] = useState('')
 
   const [patronDiagrama, setPatronDiagrama] = useState<'4x3' | '4x2' | '2x2' | '6x1'>('4x3')
@@ -89,7 +90,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
     setModalEdicionAbierto(true)
   }
 
-  const aplicarCodigoTurno = (codigo: '12☀️' | '12🌙' | '10' | '8' | 'F' | 'borrar') => {
+  const aplicarCodigoTurno = (codigo: string, idTipoTurno?: string) => {
     if (!celdaEditando) return
 
     const objId = objetivoSeleccionado || celdaEditando.turnoActual?.id_objetivo || ''
@@ -99,7 +100,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
       id_vigilador: celdaEditando.idVigilador,
       id_objetivo: objId,
       fecha: celdaEditando.fecha,
-      codigo
+      codigo,
+      id_tipo_turno: idTipoTurno || null
     })
 
     setModalEdicionAbierto(false)
@@ -503,84 +505,16 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
             Seleccioná el código de guardia para esta jornada:
           </p>
 
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <button
-              type="button"
-              onClick={() => aplicarCodigoTurno('12☀️')}
-              className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 hover:scale-102 transition-all text-left cursor-pointer"
-            >
-              <div className="font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-                <Sun className="w-4 h-4" /> 12☀️ Diurno
-              </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                07:00 a 19:00 (12 hs)
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => aplicarCodigoTurno('12🌙')}
-              className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-300 dark:border-blue-800 hover:scale-102 transition-all text-left cursor-pointer"
-            >
-              <div className="font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
-                <Moon className="w-4 h-4" /> 12🌙 Nocturno
-              </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                19:00 a 07:00 (9h nocturnas)
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => aplicarCodigoTurno('10')}
-              className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 hover:scale-102 transition-all text-left cursor-pointer"
-            >
-              <div className="font-bold text-slate-800 dark:text-slate-200">
-                10 hs Especial
-              </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                08:00 a 18:00 (10 hs)
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => aplicarCodigoTurno('8')}
-              className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 hover:scale-102 transition-all text-left cursor-pointer"
-            >
-              <div className="font-bold text-slate-800 dark:text-slate-200">
-                8 hs Estándar
-              </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                08:00 a 16:00 (8 hs)
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => aplicarCodigoTurno('F')}
-              className="p-3 rounded-xl bg-slate-200/70 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 hover:scale-102 transition-all text-left cursor-pointer"
-            >
-              <div className="font-bold text-slate-800 dark:text-white">
-                F — Franco
-              </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                Descanso del vigilador (0 hs)
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => aplicarCodigoTurno('borrar')}
-              className="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 hover:scale-102 transition-all text-left cursor-pointer"
-            >
-              <div className="font-bold text-red-600 dark:text-red-400">
-                Borrar Guardia
-              </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                Dejar sin turno asignado
-              </div>
-            </button>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-slate-500 dark:text-slate-400">Seleccioná un atajo configurado para este objetivo.</p>
+              <Boton variante="secundario" tamano="chico" onClick={()=>setModalTiposTurnoAbierto(true)} icono={<Settings2 className="w-3.5 h-3.5"/>}>Gestionar atajos</Boton>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {tiposTurno.filter(t=>(t.id_objetivo===objetivoSeleccionado||t.id_objetivo===null)&&t.activo).map(t=><button key={t.id} type="button" onClick={()=>aplicarCodigoTurno(t.abreviatura,t.id)} className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 hover:scale-102 transition-all text-left cursor-pointer"><div className="font-bold text-slate-800 dark:text-slate-200">{t.abreviatura} — {t.nombre}</div><div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{t.horas} hs{t.hora_inicio&&t.hora_fin?' • '+t.hora_inicio+' → '+t.hora_fin:''}</div></button>)}
+              {tiposTurno.filter(t=>(t.id_objetivo===objetivoSeleccionado||t.id_objetivo===null)&&t.activo).length===0&&<div className="col-span-2 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-5 text-center text-xs text-slate-500">No hay atajos configurados. Creá uno para comenzar.</div>}
+              <button type="button" onClick={()=>aplicarCodigoTurno('borrar')} className="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 text-left cursor-pointer"><div className="font-bold text-red-600 dark:text-red-400">Borrar Guardia</div><div className="text-[11px] text-slate-500 mt-1">Dejar sin turno asignado</div></button>
+            </div>
           </div>
 
           <div className="pt-2 flex justify-end">
@@ -595,7 +529,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
         </div>
       </Dialogo>
 
-      {/* Modal Generador Automático de Diagramas (Sección 28) */}
+      {modalTiposTurnoAbierto && <GestionTiposTurno objetivoId={objetivoSeleccionado} alCerrar={()=>setModalTiposTurnoAbierto(false)} />}\n\n      {/* Modal Generador Automático de Diagramas (Sección 28) */}
       <Dialogo
         abierto={modalGeneradorAbierto}
         alCerrar={() => setModalGeneradorAbierto(false)}
