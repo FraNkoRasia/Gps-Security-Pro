@@ -1,7 +1,5 @@
 import React, { useState } from 'react'
 import { LogOut, Menu, X, Globe, Sun, Moon, UserRound } from 'lucide-react'
-import { SelectorIdioma } from '@/componentes/ui/selector-idioma'
-import { SelectorTema } from '@/componentes/ui/selector-tema'
 import { Insignia } from '@/componentes/ui/insignia'
 import { Boton } from '@/componentes/ui/boton'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
