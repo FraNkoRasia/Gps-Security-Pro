@@ -170,7 +170,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
         const d = Number(t.fecha.split('-')[2])
         return d >= semanaActualData.inicio && d <= semanaActualData.fin
       })
-      .reduce((acc, t) => acc + t.horas_totales, 0)
+      .reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
 
     const metaHoras = 204
     let estadoMeta: 'verde' | 'amarillo' | 'rojo' = 'amarillo'
@@ -220,7 +220,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
         </span>
       )
     }
-    return <span className="text-emerald-400 font-extrabold">{t.horas_totales}</span>
+    const personalizado = t.id_tipo_turno ? tiposTurno.find((x) => x.id === t.id_tipo_turno) : null
+    return <span className="text-emerald-400 font-extrabold flex flex-col items-center justify-center leading-none gap-0.5"><span className="text-[10px]">{personalizado?.abreviatura || t.horas_totales}</span><span className="text-[8px] text-slate-400">{personalizado?.nombre || 'Especial'}</span></span>
   }
 
   return (
