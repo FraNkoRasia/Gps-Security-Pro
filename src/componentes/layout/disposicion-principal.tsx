@@ -15,44 +15,24 @@ export type SubVista = 'ninguna' | 'ayuda' | 'terminos' | 'privacidad' | 'acerca
 
 export const DisposicionPrincipal: React.FC<PropiedadesDisposicionPrincipal> = ({ children }) => {
   const [subVista, setSubVista] = useState<SubVista>('ninguna')
-  const [cambioContrasenaSolicitado, setCambioContrasenaSolicitado] = useState(false)
-
-  const abrirPerfil = () => {
-    setCambioContrasenaSolicitado(false)
-    setSubVista('perfil')
-  }
-
-  const abrirCambioContrasena = () => {
-    setSubVista('perfil')
-    setCambioContrasenaSolicitado(true)
-  }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F4F7FC] dark:bg-[#070B12] text-slate-900 dark:text-slate-100 overflow-x-hidden selection:bg-blue-600 selection:text-white transition-colors duration-200 md:pl-72">
+    <div className="min-h-screen flex flex-col bg-[#F4F7FC] dark:bg-[#070B12] text-slate-900 dark:text-slate-100 overflow-x-hidden selection:bg-blue-600 selection:text-white transition-colors duration-200">
+      {/* Encabezado Principal */}
       <Encabezado
-        alIrAInicio={() => {
-          setCambioContrasenaSolicitado(false)
-          setSubVista('ninguna')
-        }}
-        alAbrirPerfil={abrirPerfil}
-        alAbrirCambioContrasena={abrirCambioContrasena}
+        alIrAInicio={() => setSubVista('ninguna')}
+        alAbrirPerfil={() => setSubVista('perfil')}
       />
 
-      <main className="flex-1 flex flex-col w-full max-w-7xl mx-auto px-3 sm:px-6 pt-4 md:pt-24 pb-4 sm:pb-8">
-        {subVista === 'perfil' ? (
-          <VistaPerfil
-            alAbrirCambioContrasena={cambioContrasenaSolicitado}
-            alCerrarCambioContrasena={() => setCambioContrasenaSolicitado(false)}
-          />
-        ) : (
-          children
-        )}
+      {/* Contenido Principal con soporte desde 320px */}
+      <main className="flex-1 flex flex-col w-full max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8">
+        {subVista === 'perfil' ? <VistaPerfil /> : children}
       </main>
 
-      <div className="md:pl-0">
-        <PieDePagina alNavegar={(vista) => setSubVista(vista)} />
-      </div>
+      {/* Pie de Página Global */}
+      <PieDePagina alNavegar={(vista) => setSubVista(vista)} />
 
+      {/* Modales informativos de Ayuda, Términos, Privacidad, Acerca de */}
       <VistaAyuda
         abierto={subVista === 'ayuda'}
         alCerrar={() => setSubVista('ninguna')}
