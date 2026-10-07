@@ -8,7 +8,7 @@ import {useOperativo} from '@/contextos/contexto-operativo'
 import {useAutenticacion} from '@/contextos/contexto-autenticacion'
 import type {Turno} from '@/tipos'
 
-const minutosEntre=(inicio:string,fin:string)=>{const [ih,im]=inicio.split(':').map(Number);const [fh,fm]=fin.split(':').map(Number);let a=ih*60+im,b=fh*60+fm;if(b<=a)b+=1440;return b-a}
+const minutosEntre=(inicio:string,fin:string)=>{const [ih,im]=inicio.split(':').map(Number);const [fh,fm]=fin.split(':').map(Number);const a=ih*60+im,b=fh*60+fm;return b-a}
 export const SolicitarHorasExtra:React.FC<{turno:Turno}>=({turno})=>{
  const {solicitarHorasExtra}=useOperativo(); const {usuario}=useAutenticacion(); const [abierto,setAbierto]=useState(false); const [salida,setSalida]=useState(turno.hora_fin); const [motivo,setMotivo]=useState('Reemplazo no llegó'); const [obs,setObs]=useState(''); const [error,setError]=useState(''); const [guardando,setGuardando]=useState(false)
  const enviar=async(e:React.FormEvent)=>{e.preventDefault();setError('');const minutos=minutosEntre(turno.hora_fin,salida);if(minutos<=0){setError('La hora de salida real debe ser posterior a la salida programada.');return};if(!usuario){setError('No hay una sesión activa.');return};setGuardando(true);const r=await solicitarHorasExtra({id_objetivo:turno.id_objetivo,id_vigilador:turno.id_vigilador,id_turno:turno.id,fecha:turno.fecha,hora_salida_programada:turno.hora_fin,hora_salida_real:salida,minutos_solicitados:minutos,motivo,observacion:obs||null});setGuardando(false);if(r){setError(r);return};setAbierto(false);setObs('')}
