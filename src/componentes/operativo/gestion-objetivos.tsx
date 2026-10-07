@@ -21,6 +21,7 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
 
   const [nombre, setNombre] = useState('')
   const [descripcion, setDescripcion] = useState('')
+  const [elementosACargo, setElementosACargo] = useState('')
   const [direccion, setDireccion] = useState('')
   const [localidad, setLocalidad] = useState('Río Cuarto')
   const [provincia, setProvincia] = useState('Córdoba')
@@ -36,6 +37,7 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
     setObjetivoEditando(null)
     setNombre('')
     setDescripcion('')
+    setElementosACargo('')
     setDireccion('')
     setLocalidad('Río Cuarto')
     setProvincia('Córdoba')
@@ -60,6 +62,7 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
     setObjetivoEditando(obj)
     setNombre(obj.nombre)
     setDescripcion(obj.descripcion || '')
+    setElementosACargo(obj.elementos_a_cargo || '')
     setDireccion(obj.direccion)
     setLocalidad(obj.localidad)
     setProvincia(obj.provincia)
@@ -80,6 +83,7 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
       editarObjetivo(objetivoEditando.id, {
         nombre: nombre.trim(),
         descripcion: descripcion.trim(),
+        elementos_a_cargo: elementosACargo.trim(),
         direccion: direccion.trim(),
         localidad: localidad.trim(),
         provincia: provincia.trim()
@@ -89,6 +93,7 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
         id_empresa: idEmpresaActiva,
         nombre: nombre.trim(),
         descripcion: descripcion.trim(),
+        elementos_a_cargo: elementosACargo.trim(),
         direccion: direccion.trim(),
         localidad: localidad.trim(),
         provincia: provincia.trim()
@@ -257,6 +262,18 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
                 placeholder="Córdoba"
               />
             </div>
+          </div>
+
+          <div>
+            <Etiqueta>Elementos a Cargo del Puesto</Etiqueta>
+            <textarea
+              value={elementosACargo}
+              onChange={(e) => setElementosACargo(e.target.value)}
+              rows={3}
+              placeholder="Ej: Handy Motorola VHF #12, linterna LED, llaves de acceso, libro de novedades..."
+              className="w-full rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700/80 p-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none"
+            />
+            <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Estos elementos quedarán registrados en el objetivo y serán visibles para los vigiladores.</p>
           </div>
 
           <div>
