@@ -6,7 +6,7 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 
 export const MiTurno: React.FC = () => {
-  const { turnos, objetivos, asignaciones, novedades, supervisores } = useOperativo()
+  const { turnos, objetivos, asignaciones, supervisores } = useOperativo()
   const { usuario } = useAutenticacion()
 
   const idVig = usuario?.id || 'usr-vig-01'
@@ -25,8 +25,6 @@ export const MiTurno: React.FC = () => {
   const supervisorActivo = supervisores.find((s) => s.id === objetivoActivo?.id_supervisor)
 
   // Última novedad registrada
-  const ultimaNovedad = novedades.find((n) => n.id_vigilador === idVig)
-
   return (
     <div className="space-y-6">
       <div>
