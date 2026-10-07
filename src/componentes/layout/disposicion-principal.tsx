@@ -49,9 +49,6 @@ export const DisposicionPrincipal: React.FC<PropiedadesDisposicionPrincipal> = (
         abierto={subVista === 'acercaDe'}
         alCerrar={() => setSubVista('ninguna')}
       />
-      <VistaPerfil
-        alAbrirCambioContrasena={false}
-      />
     </div>
   )
 }
