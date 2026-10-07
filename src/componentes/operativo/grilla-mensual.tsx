@@ -6,7 +6,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Wand2,
+  Settings2,
 } from 'lucide-react'
+import { GestionTiposTurno } from '@/componentes/operativo/gestion-tipos-turno'
 import { Tarjeta } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Dialogo } from '@/componentes/ui/dialogo'
