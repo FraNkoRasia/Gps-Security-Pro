@@ -107,7 +107,7 @@ export const LibroNovedades: React.FC = () => {
     setModalEditarAbierto(false)
   }
 
-  const esAutorNovedad = (nov: NovedadLibro) => nov.id_vigilador === vigiladores.find(v => v.id_usuario === usuario?.id)?.id
+  const esAutorNovedad = (nov: NovedadLibro) => nov.id_vigilador === vigiladores.find(v => v.id === usuario?.id)?.id || nov.nombre_vigilante === `${usuario?.nombre} ${usuario?.apellido}`
 
   const novedadesFiltradas = novedades.filter((nov) => {
     const coincideObj = filtroObjetivo === 'todos' || nov.id_objetivo === filtroObjetivo
