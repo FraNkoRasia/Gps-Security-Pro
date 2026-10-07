@@ -532,7 +532,9 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
         </div>
       </Dialogo>
 
-      {modalTiposTurnoAbierto && <GestionTiposTurno objetivoId={objetivoSeleccionado} alCerrar={()=>setModalTiposTurnoAbierto(false)} />}\n\n      {/* Modal Generador Automático de Diagramas (Sección 28) */}
+      {modalTiposTurnoAbierto && <GestionTiposTurno objetivoId={objetivoSeleccionado} alCerrar={()=>setModalTiposTurnoAbierto(false)} />}
+
+      {/* Modal Generador Automático de Diagramas (Sección 28) */}
       <Dialogo
         abierto={modalGeneradorAbierto}
         alCerrar={() => setModalGeneradorAbierto(false)}
