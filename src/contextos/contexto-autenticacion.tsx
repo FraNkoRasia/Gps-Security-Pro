@@ -11,6 +11,7 @@ interface ContextoAutenticacionTipo {
   iniciarSesion: (email: string, contrasena: string, recordarme: boolean) => Promise<{ exito: boolean; error?: string }>
   cerrarSesion: () => Promise<void>
   solicitarRecuperacion: (email: string) => Promise<{ exito: boolean; error?: string }>
+  cambiarContrasena: (contrasenaActual: string, nuevaContrasena: string) => Promise<{ exito: boolean; error?: string }>
 }
 
 const ContextoAutenticacion = createContext<ContextoAutenticacionTipo | undefined>(undefined)
@@ -186,6 +187,38 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
     }
   }
 
+  const cambiarContrasena = async (contrasenaActual: string, nuevaContrasena: string) => {
+    try {
+      if (!hayConexionSupabase || !supabase || !usuario) {
+        return { exito: false, error: 'No hay una sesión activa.' }
+      }
+
+      const { error: errorReautenticacion } = await supabase.auth.signInWithPassword({
+        email: usuario.email,
+        password: contrasenaActual
+      })
+
+      if (errorReautenticacion) {
+        return { exito: false, error: 'La contraseña actual no es correcta.' }
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        password: nuevaContrasena
+      })
+
+      if (error) {
+        return { exito: false, error: error.message }
+      }
+
+      return { exito: true }
+    } catch (err: unknown) {
+      return {
+        exito: false,
+        error: err instanceof Error ? err.message : 'No se pudo actualizar la contraseña.'
+      }
+    }
+  }
+
   const cerrarSesion = async () => {
     setCargando(true)
     try {
@@ -227,7 +260,8 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
         errorAuth,
         iniciarSesion,
         cerrarSesion,
-        solicitarRecuperacion
+        solicitarRecuperacion,
+        cambiarContrasena
       }}
     >
       {children}
