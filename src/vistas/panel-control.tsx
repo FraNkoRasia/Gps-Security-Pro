@@ -38,9 +38,11 @@ export const VistaPanelControl: React.FC = () => {
   const esSuperAdmin = usuario.rol === 'super_administrador'
   const esAdmin = usuario.rol === 'administrador'
   const esVigilador = usuario.rol === 'vigilador'
-  const { asignaciones, solicitudesHorasExtra } = useOperativo()
+  const { asignaciones, solicitudesHorasExtra, avisos, novedades, novedadesLeidas } = useOperativo()
   const asignacionActiva = asignaciones.find((a) => a.id_vigilador === usuario.id && a.activa)
   const objetivoVigiladorId = asignacionActiva?.id_objetivo || null
+  const avisosNoLeidos = avisos.filter((a) => !a.leido).length
+  const novedadesNoLeidas = novedades.filter((n) => !novedadesLeidas.includes(n.id)).length
 
   // Lista de pestañas según rol
   const pestanas = esVigilador
@@ -48,9 +50,9 @@ export const VistaPanelControl: React.FC = () => {
         { id: 'miTurno', label: 'Mi Turno', icono: <Clock className="w-4 h-4" /> },
         { id: 'grilla', label: 'Grilla', icono: <Calendar className="w-4 h-4" /> },
         { id: 'miMes', label: 'Mi Mes (204 hs)', icono: <Calendar className="w-4 h-4" /> },
-        { id: 'novedades', label: 'Libro de Novedades', icono: <BookOpen className="w-4 h-4" /> },
+        { id: 'novedades', label: 'Libro de Novedades', contador: novedadesNoLeidas, icono: <BookOpen className="w-4 h-4" /> },
         { id: 'cambios', label: 'Cambios de Turno', icono: <ArrowRightLeft className="w-4 h-4" /> },
-        { id: 'avisos', label: 'Avisos', icono: <Bell className="w-4 h-4" /> }
+        { id: 'avisos', label: 'Avisos', contador: avisosNoLeidos, icono: <Bell className="w-4 h-4" /> }
       ]
     : esSuperAdmin
     ? []
@@ -58,9 +60,9 @@ export const VistaPanelControl: React.FC = () => {
     ? [
         { id: 'objetivos', label: 'Objetivos', icono: <MapPin className="w-4 h-4" /> },
         { id: 'vigiladores', label: 'Vigiladores', icono: <Users className="w-4 h-4" /> },
-        { id: 'novedades', label: 'Libro de Novedades', icono: <BookOpen className="w-4 h-4" /> },
+        { id: 'novedades', label: 'Libro de Novedades', contador: novedadesNoLeidas, icono: <BookOpen className="w-4 h-4" /> },
         { id: 'cambios', label: 'Cambios y Reemplazos', icono: <ArrowRightLeft className="w-4 h-4" /> },
-        { id: 'avisos', label: 'Avisos', icono: <Bell className="w-4 h-4" /> },
+        { id: 'avisos', label: 'Avisos', contador: avisosNoLeidos, icono: <Bell className="w-4 h-4" /> },
         { id: 'horasExtra', label: `Horas Extra${solicitudesHorasExtra.filter(s => s.estado === 'pendiente').length ? ` (${solicitudesHorasExtra.filter(s => s.estado === 'pendiente').length})` : ''}`, icono: <Clock className="w-4 h-4" /> }
       ]
     : []
@@ -176,7 +178,7 @@ export const VistaPanelControl: React.FC = () => {
                   }`}
                 >
                   {p.icono}
-                  <span className="truncate">{p.label}</span>
+                  <span className="truncate">{p.label}</span>{p.contador ? <span className="min-w-5 h-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-black leading-5 text-center shadow-sm">{p.contador}</span> : null}
                 </button>
               )
             })}
