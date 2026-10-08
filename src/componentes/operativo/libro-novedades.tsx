@@ -411,7 +411,7 @@ export const LibroNovedades: React.FC = () => {
             </div>
 
             <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 pt-2">
-              {novedadSeleccionada.id_vigilador !== usuario?.id && !novedadesLeidas.includes(novedadSeleccionada.id) && (
+              {(usuario?.rol === 'administrador' || usuario?.rol === 'supervisor' || novedadSeleccionada.id_vigilador !== usuario?.id) && !novedadesLeidas.includes(novedadSeleccionada.id) && (
                 <Boton variante="primario" onClick={() => marcarNovedadLeida(novedadSeleccionada.id)} icono={<Check className="w-4 h-4" />}>
                   Marcar como leído
                 </Boton>
