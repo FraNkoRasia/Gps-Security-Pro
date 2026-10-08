@@ -123,7 +123,11 @@ export const AvisosComunicacion: React.FC = () => {
                     {new Date(av.creado_en).toLocaleString()}
                   </span>
 
-                  {!av.leido && (
+                  {av.leido ? (
+                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <span>Leído ✓</span>
+                    </span>
+                  ) : (
                     <button
                       type="button"
                       onClick={() => marcarAvisoLeido(av.id)}
