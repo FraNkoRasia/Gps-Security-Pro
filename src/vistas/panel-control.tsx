@@ -42,7 +42,7 @@ export const VistaPanelControl: React.FC = () => {
   const asignacionActiva = asignaciones.find((a) => a.id_vigilador === usuario.id && a.activa)
   const objetivoVigiladorId = asignacionActiva?.id_objetivo || null
   const avisosNoLeidos = avisos.filter((a) => !a.leido).length
-  const novedadesNoLeidas = novedades.filter((n) => !novedadesLeidas.includes(n.id)).length
+  const novedadesNoLeidas = novedades.filter((n) => n.id_vigilador !== usuario?.id && !novedadesLeidas.includes(n.id)).length
 
   // Lista de pestañas según rol
   const pestanas = esVigilador
