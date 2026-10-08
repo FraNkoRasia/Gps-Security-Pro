@@ -21,8 +21,6 @@ export const AvisosComunicacion: React.FC = () => {
   const [prioridad, setPrioridad] = useState<Aviso['prioridad']>('media')
   const [error, setError] = useState<string | null>(null)
 
-  const avisosVisibles = avisos.filter((av) => usuario?.rol === 'administrador' || usuario?.rol === 'super_administrador' ? true : true)
-
   const esAdmin = usuario?.rol === 'super_administrador' || usuario?.rol === 'administrador'
 
   const manejarCrear = (e: React.FormEvent) => {
