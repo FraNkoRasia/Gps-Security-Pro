@@ -100,13 +100,23 @@ export const LibroNovedades: React.FC = () => {
     setModalEditarAbierto(false)
   }
 
-  const novedadesFiltradas = novedades.filter((nov) => {
-    const coincideObj = filtroObjetivo === 'todos' || nov.id_objetivo === filtroObjetivo
-    const coincideTexto =
-      nov.informe_novedades.toLowerCase().includes(busqueda.toLowerCase()) ||
-      nov.nombre_vigilante.toLowerCase().includes(busqueda.toLowerCase())
-    return coincideObj && coincideTexto
-  })
+  const novedadesFiltradas = [...novedades]
+    .filter((nov) => {
+      const coincideObj = filtroObjetivo === 'todos' || nov.id_objetivo === filtroObjetivo
+      const coincideTexto =
+        nov.informe_novedades.toLowerCase().includes(busqueda.toLowerCase()) ||
+        nov.nombre_vigilante.toLowerCase().includes(busqueda.toLowerCase())
+      return coincideObj && coincideTexto
+    })
+    .sort((a, b) => {
+      const aNoLeida = a.id_vigilador !== usuario?.id && !novedadesLeidas.includes(a.id)
+      const bNoLeida = b.id_vigilador !== usuario?.id && !novedadesLeidas.includes(b.id)
+      if (aNoLeida !== bNoLeida) return aNoLeida ? -1 : 1
+
+      const fechaA = new Date(`${a.fecha}T${a.hora || '00:00'}`).getTime()
+      const fechaB = new Date(`${b.fecha}T${b.hora || '00:00'}`).getTime()
+      return fechaB - fechaA
+    })
 
   return (
     <div className="space-y-6">
