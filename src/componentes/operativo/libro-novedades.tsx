@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { BookOpen, Plus, Search, Eye, Edit2 } from 'lucide-react'
+import { BookOpen, Plus, Search, Eye, Edit2, Check } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -11,7 +11,7 @@ import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { NovedadLibro } from '@/tipos'
 
 export const LibroNovedades: React.FC = () => {
-  const { novedades, objetivos, crearNovedad, editarNovedad, marcarNovedadLeida } = useOperativo()
+  const { novedades, objetivos, crearNovedad, editarNovedad, marcarNovedadLeida, novedadesLeidas } = useOperativo()
   const { usuario } = useAutenticacion()
 
   const [modalNuevoAbierto, setModalNuevoAbierto] = useState(false)
@@ -50,7 +50,6 @@ export const LibroNovedades: React.FC = () => {
   }
 
   const abrirDetalle = (nov: NovedadLibro) => {
-    marcarNovedadLeida(nov.id)
     setNovedadSeleccionada(nov)
     setModalDetalleAbierto(true)
   }
@@ -181,7 +180,7 @@ export const LibroNovedades: React.FC = () => {
                       <span className="font-bold text-slate-900 dark:text-white text-sm">
                         {obj?.nombre || 'Objetivo'}
                       </span>
-                      <Insignia variante="azul">{nov.turno}</Insignia>
+                      <Insignia variante="azul">{nov.turno}</Insignia>{nov.id_vigilador !== usuario?.id && !novedadesLeidas.includes(nov.id) ? <Insignia variante="verde">Nueva</Insignia> : null}
                     </div>
 
                     <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
@@ -411,7 +410,12 @@ export const LibroNovedades: React.FC = () => {
               </p>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 pt-2">
+              {novedadSeleccionada.id_vigilador !== usuario?.id && !novedadesLeidas.includes(novedadSeleccionada.id) && (
+                <Boton variante="primario" onClick={() => marcarNovedadLeida(novedadSeleccionada.id)} icono={<Check className="w-4 h-4" />}>
+                  Marcar como leído
+                </Boton>
+              )}
               <Boton variante="secundario" onClick={() => setModalDetalleAbierto(false)}>
                 Cerrar
               </Boton>
