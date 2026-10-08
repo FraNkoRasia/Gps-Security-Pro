@@ -34,6 +34,16 @@ export const CambiosTurnos: React.FC = () => {
 
   const esAdmin = usuario?.rol === 'super_administrador' || usuario?.rol === 'administrador'
 
+  const solicitudesVisibles = solicitudesCambio.filter((sol) =>
+    esAdmin || sol.id_solicitante === usuario?.id || sol.id_destinatario === usuario?.id
+  )
+
+  const notificacionesCambio = solicitudesCambio.filter((sol) =>
+    usuario?.rol === 'vigilador'
+      ? sol.id_destinatario === usuario.id && sol.estado === 'pendiente'
+      : esAdmin && sol.estado === 'aceptada_vigilador'
+  )
+
   const abrirSolicitud = () => {
     setIdDestinatario(vigiladores[1]?.id || '')
     setFechaTurno('2026-10-15')
@@ -113,16 +123,44 @@ export const CambiosTurnos: React.FC = () => {
         )}
       </div>
 
+      {notificacionesCambio.length > 0 && (
+        <div className="space-y-2">
+          {notificacionesCambio.map((sol) => {
+            const solicitante = vigiladores.find((v) => v.id === sol.id_solicitante)
+            const destinatario = vigiladores.find((v) => v.id === sol.id_destinatario)
+            const esPedidoVigilador = usuario?.rol === 'vigilador'
+            return (
+              <Tarjeta key={'notificacion-' + sol.id} className="border-l-4 border-l-blue-500 bg-blue-50/60 dark:bg-blue-950/20">
+                <TarjetaContenido className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-blue-500" />
+                      <span className="text-sm font-bold text-slate-900 dark:text-white">Nueva solicitud de cambio de turno</span>
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                      {esPedidoVigilador
+                        ? `${solicitante?.nombre || 'Un vigilador'} ${solicitante?.apellido || ''} te solicita un cambio para el ${sol.fecha_turno}.`
+                        : `${solicitante?.nombre || 'Un vigilador'} ${solicitante?.apellido || ''} y ${destinatario?.nombre || 'otro vigilador'} ${destinatario?.apellido || ''} acordaron el cambio para el ${sol.fecha_turno}. Requiere tu aprobación.`}
+                    </p>
+                  </div>
+                  <Insignia variante="azul">Nuevo</Insignia>
+                </TarjetaContenido>
+              </Tarjeta>
+            )
+          })}
+        </div>
+      )}
+
       {/* Listado de Solicitudes */}
       <div className="space-y-3">
-        {solicitudesCambio.length === 0 ? (
+        {solicitudesVisibles.length === 0 ? (
           <Tarjeta>
             <TarjetaContenido className="p-8 text-center text-slate-500">
               No hay solicitudes de cambio de turno registradas en este período.
             </TarjetaContenido>
           </Tarjeta>
         ) : (
-          solicitudesCambio.map((sol) => {
+          solicitudesVisibles.map((sol) => {
             const solicitante = vigiladores.find((v) => v.id === sol.id_solicitante)
             const destinatario = vigiladores.find((v) => v.id === sol.id_destinatario)
 
