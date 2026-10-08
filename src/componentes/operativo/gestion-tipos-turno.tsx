@@ -1,14 +1,15 @@
 import React,{useState} from 'react'
-import {Plus,Edit3,Power,Clock3} from 'lucide-react'
+import {Plus,Edit3,Power,Clock3,Trash2} from 'lucide-react'
 import {Dialogo} from '@/componentes/ui/dialogo'
 import {Boton} from '@/componentes/ui/boton'
 import {Entrada} from '@/componentes/ui/entrada'
 import {Etiqueta} from '@/componentes/ui/etiqueta'
 import {useOperativo} from '@/contextos/contexto-operativo'
+import {useAutenticacion} from '@/contextos/contexto-autenticacion'
 import type {TipoTurnoPersonalizado} from '@/tipos'
 
 export const GestionTiposTurno:React.FC<{objetivoId:string;alCerrar:()=>void}>=({objetivoId,alCerrar})=>{
- const {tiposTurno,crearTipoTurno,editarTipoTurno,cambiarEstadoTipoTurno}=useOperativo()
+ const {usuario}=useAutenticacion(); const {tiposTurno,crearTipoTurno,editarTipoTurno,cambiarEstadoTipoTurno,eliminarTipoTurno}=useOperativo()
  const [editando,setEditando]=useState<TipoTurnoPersonalizado|null>(null); const [modal,setModal]=useState(false)
  const [horas,setHoras]=useState(''); const [tipo,setTipo]=useState<TipoTurnoPersonalizado['tipo']>('especial'); const [inicio,setInicio]=useState(''); const [fin,setFin]=useState(''); const [error,setError]=useState('')
  const disponibles=tiposTurno.filter(t=>t.id_objetivo===objetivoId||t.id_objetivo===null)
