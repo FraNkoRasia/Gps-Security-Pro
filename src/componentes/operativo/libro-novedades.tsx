@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { BookOpen, Plus, Search, Eye, Edit2 } from 'lucide-react'
+import { BookOpen, Plus, Search, Edit2 } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -15,7 +15,6 @@ export const LibroNovedades: React.FC = () => {
   const { usuario } = useAutenticacion()
 
   const [modalNuevoAbierto, setModalNuevoAbierto] = useState(false)
-  const [modalDetalleAbierto, setModalDetalleAbierto] = useState(false)
   const [modalEditarAbierto, setModalEditarAbierto] = useState(false)
 
   const [novedadSeleccionada, setNovedadSeleccionada] = useState<NovedadLibro | null>(null)
@@ -47,12 +46,6 @@ export const LibroNovedades: React.FC = () => {
     setInformeNovedades('')
     setError(null)
     setModalNuevoAbierto(true)
-  }
-
-  const abrirDetalle = (nov: NovedadLibro) => {
-    marcarNovedadLeida(nov.id)
-    setNovedadSeleccionada(nov)
-    setModalDetalleAbierto(true)
   }
 
   const abrirEditar = (nov: NovedadLibro) => {
@@ -187,14 +180,7 @@ export const LibroNovedades: React.FC = () => {
                     <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                       <span className="font-mono">{nov.fecha} — {nov.hora} hs</span>
                       <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => abrirDetalle(nov)}
-                          className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-blue-500 transition-colors"
-                          title="Ver detalle"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
+/button>
                         <button
                           type="button"
                           onClick={() => abrirEditar(nov)}
@@ -219,6 +205,11 @@ export const LibroNovedades: React.FC = () => {
                     <div>
                       <span className="font-semibold text-slate-700 dark:text-slate-300">Supervisor:</span>{' '}
                       {nov.nombre_supervisor}
+                      {usuario && (usuario.rol === 'administrador' || usuario.rol === 'supervisor' || nov.id_vigilador !== usuario.id) && (
+                        <button type="button" onClick={() => marcarNovedadLeida(nov.id)} disabled={novedadesLeidas.includes(nov.id)} className={`ml-2 text-[11px] font-semibold ${novedadesLeidas.includes(nov.id) ? 'text-emerald-600 dark:text-emerald-400' : 'text-blue-600 dark:text-blue-400 hover:underline'}`}>
+                          {novedadesLeidas.includes(nov.id) ? 'Leído ✓' : 'Marcar como leído'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </TarjetaContenido>
@@ -368,53 +359,6 @@ export const LibroNovedades: React.FC = () => {
         </form>
       </Dialogo>
 
-      {/* Modal Ver Detalle */}
-      <Dialogo
-        abierto={modalDetalleAbierto}
-        alCerrar={() => setModalDetalleAbierto(false)}
-        titulo="Detalle del Registro de Guardia"
-        subtitulo={`Asiento Oficial ID: ${novedadSeleccionada?.id}`}
-        icono={<BookOpen className="w-5 h-5 text-blue-500" />}
-      >
-        {novedadSeleccionada && (
-          <div className="space-y-4 text-xs">
-            <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-              <div>
-                <span className="text-slate-500 dark:text-slate-400 block text-[10px]">Fecha y Hora:</span>
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {novedadSeleccionada.fecha} a las {novedadSeleccionada.hora} hs
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-500 dark:text-slate-400 block text-[10px]">Turno:</span>
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {novedadSeleccionada.turno}
-                </span>
-              </div>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-              <span className="text-slate-500 dark:text-slate-400 block text-[10px] mb-1">
-                Elementos a Cargo:
-              </span>
-              <span className="text-slate-800 dark:text-slate-200">
-                {novedadSeleccionada.elementos_a_cargo}
-              </span>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700">
-              <span className="text-slate-500 dark:text-slate-400 block text-[10px] mb-1 font-bold uppercase">
-                Informe del Vigilador:
-              </span>
-              <p className="text-sm text-slate-900 dark:text-slate-100 whitespace-pre-line leading-relaxed">
-                {novedadSeleccionada.informe_novedades}
-              </p>
-            </div>
-
-            </div>
-          </div>
-        )}
-      </Dialogo>
     </div>
   )
 }
