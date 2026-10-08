@@ -192,7 +192,7 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
                     className="w-fit mt-1 px-3"
                     onClick={() => onSeleccionarObjetivo(obj.id)}
                   >
-                    Vigiladores
+                    Grilla de Vigiladores
                   </Boton>
                 )}
               </TarjetaContenido>
