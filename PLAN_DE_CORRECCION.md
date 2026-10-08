@@ -9,17 +9,28 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 
 ## Estado general
 
-- [ ] Paso 1 — Bloquear cambios propios de campos de seguridad del perfil. **En curso; falta aplicar y verificar en Supabase.**
+- [x] Paso 1 — Bloquear cambios propios de campos de seguridad del perfil. **Aplicado en Supabase y verificado con pruebas transaccionales.**
 - [ ] Pasos 2–58 — Pendientes; se abordarán de a uno después de cerrar el paso anterior.
 
-## Registro de cada paso
+## Registro de pasos ejecutados
 
-Para cada tarea se anotará: cambio realizado, motivo, archivos/migraciones afectados, pruebas realizadas, resultado y cualquier limitación. Una tarea solo pasa a completada después de verificarla.
+### Paso 1 — Bloquear auto-modificación de campos de seguridad del perfil
+
+- **Estado:** completado.
+- **Base afectada:** Supabase, tabla `public.perfiles`.
+- **Migración versionada:** `supabase/migrations/20261008203600_bloquear_autocambio_campos_seguridad.sql`.
+- **Cambio:** trigger `perfiles_proteger_campos_seguridad` y función `public.proteger_campos_seguridad_perfil()`.
+- **Protección:** un usuario autenticado no puede cambiar en su propio registro `id`, `rol`, `id_empresa` ni `activo`.
+- **Funcionalidad preservada:** cambios ordinarios de perfil siguen permitidos. Los permisos de administradores sobre perfiles ajenos permanecen bajo las políticas RLS existentes.
+- **Pruebas realizadas:** se intentó modificar el rol propio dentro de una transacción con el rol `authenticated`; la excepción de permisos fue interceptada por la prueba y la transacción se revirtió. También se probó una actualización de campo de perfil dentro de una transacción revertida. Se verificó la presencia del trigger y que la función no tenga permiso de ejecución directa para `anon` ni `authenticated`.
+- **Resultado:** pruebas SQL superadas; no se alteró permanentemente el perfil de prueba.
+- **Limitación pendiente:** no se probó todavía desde la interfaz de la aplicación la edición de vigiladores por un administrador; se verificará en la fase correspondiente.
+- **Motivo/impacto funcional:** evita la elevación de privilegios y el cambio propio de empresa o estado. Los cambios de esos campos deben gestionarse por un flujo administrativo autorizado.
 
 ## Lista maestra
 
 ### Fase 1 — Seguridad de Supabase
-- [ ] **1.** Impedir que un usuario cambie su propio rol, empresa o estado de acceso.
+- [x] **1.** Impedir que un usuario cambie su propio rol, empresa o estado de acceso.
 - [ ] **2.** Restringir qué campos puede editar un administrador en perfiles.
 - [ ] **3.** Corregir la aceptación de solicitudes de cambio de turno.
 - [ ] **4.** Revisar y endurecer la RPC `aprobar_cambio_turno`.
@@ -88,12 +99,6 @@ Para cada tarea se anotará: cambio realizado, motivo, archivos/migraciones afec
 - [ ] **57.** Revisar experiencia móvil y permisos de pantalla.
 - [ ] **58.** Ejecutar checklist de preproducción.
 
-## Paso 1 — Detalle
+## Regla de trabajo
 
-**Motivo:** la política RLS existente permite que el usuario actualice su propio registro de `perfiles` sin restringir columnas. Eso puede permitir cambiar `rol` y elevar privilegios, además de alterar `id_empresa` o `activo`.
-
-**Cambio planeado:** un trigger en base de datos bloquea únicamente los cambios que el propio usuario intenta hacer sobre sus campos de seguridad (`id`, `rol`, `id_empresa`, `activo`). Los cambios de nombre, apellido, teléfono y otros campos de perfil no afectados siguen disponibles. Los administradores pueden seguir administrando perfiles ajenos según las políticas existentes.
-
-**Impacto funcional explicado:** el usuario ya no podrá cambiar por sí mismo su rol, empresa ni estado de acceso; esos cambios deberán realizarlos mediante el flujo administrativo autorizado. Es intencional para impedir la elevación de privilegios y no elimina la administración de otros vigiladores.
-
-**Estado de verificación:** pendiente hasta confirmar el trigger en Supabase y probar tanto el bloqueo de auto-modificación como la conservación de actualizaciones permitidas.
+No comenzar el siguiente paso hasta que el usuario lo indique. Antes de cada cambio se revisará el código o la configuración relacionada, se explicará cualquier impacto funcional y se probará la corrección. No se mezclarán tareas.
