@@ -43,6 +43,11 @@ export const VistaPanelControl: React.FC = () => {
   const objetivoVigiladorId = asignacionActiva?.id_objetivo || null
   const avisosNoLeidos = avisos.filter((a) => !a.leido).length
   const novedadesNoLeidas = novedades.filter((n) => n.id_vigilador !== usuario?.id && !novedadesLeidas.includes(n.id)).length
+  const solicitudesCambioNoLeidas = useOperativo().solicitudesCambio.filter((s) =>
+    esVigilador
+      ? s.id_destinatario === usuario.id && s.estado === 'pendiente'
+      : esAdmin && s.estado === 'aceptada_vigilador'
+  ).length
 
   // Lista de pestañas según rol
   const pestanas = esVigilador
@@ -51,7 +56,7 @@ export const VistaPanelControl: React.FC = () => {
         { id: 'grilla', label: 'Grilla', icono: <Calendar className="w-4 h-4" /> },
         { id: 'miMes', label: 'Mi Mes (204 hs)', icono: <Calendar className="w-4 h-4" /> },
         { id: 'novedades', label: 'Libro de Novedades', contador: novedadesNoLeidas, icono: <BookOpen className="w-4 h-4" /> },
-        { id: 'cambios', label: 'Cambios de Turno', icono: <ArrowRightLeft className="w-4 h-4" /> },
+        { id: 'cambios', label: 'Cambios de Turno', contador: solicitudesCambioNoLeidas, icono: <ArrowRightLeft className="w-4 h-4" /> },
         { id: 'avisos', label: 'Avisos', contador: avisosNoLeidos, icono: <Bell className="w-4 h-4" /> }
       ]
     : esSuperAdmin
@@ -61,7 +66,7 @@ export const VistaPanelControl: React.FC = () => {
         { id: 'objetivos', label: 'Objetivos', icono: <MapPin className="w-4 h-4" /> },
         { id: 'vigiladores', label: 'Vigiladores', icono: <Users className="w-4 h-4" /> },
         { id: 'novedades', label: 'Libro de Novedades', contador: novedadesNoLeidas, icono: <BookOpen className="w-4 h-4" /> },
-        { id: 'cambios', label: 'Cambios y Reemplazos', icono: <ArrowRightLeft className="w-4 h-4" /> },
+        { id: 'cambios', label: 'Cambios y Reemplazos', contador: solicitudesCambioNoLeidas, icono: <ArrowRightLeft className="w-4 h-4" /> },
         { id: 'avisos', label: 'Avisos', contador: avisosNoLeidos, icono: <Bell className="w-4 h-4" /> },
         { id: 'horasExtra', label: `Horas Extra${solicitudesHorasExtra.filter(s => s.estado === 'pendiente').length ? ` (${solicitudesHorasExtra.filter(s => s.estado === 'pendiente').length})` : ''}`, icono: <Clock className="w-4 h-4" /> }
       ]
