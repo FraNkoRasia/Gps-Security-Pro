@@ -11,7 +11,7 @@ import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { NovedadLibro } from '@/tipos'
 
 export const LibroNovedades: React.FC = () => {
-  const { novedades, objetivos, crearNovedad, editarNovedad } = useOperativo()
+  const { novedades, objetivos, crearNovedad, editarNovedad, marcarNovedadLeida } = useOperativo()
   const { usuario } = useAutenticacion()
 
   const [modalNuevoAbierto, setModalNuevoAbierto] = useState(false)
@@ -50,6 +50,7 @@ export const LibroNovedades: React.FC = () => {
   }
 
   const abrirDetalle = (nov: NovedadLibro) => {
+    marcarNovedadLeida(nov.id)
     setNovedadSeleccionada(nov)
     setModalDetalleAbierto(true)
   }
