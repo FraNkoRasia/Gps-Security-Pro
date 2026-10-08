@@ -214,13 +214,30 @@ export const LibroNovedades: React.FC = () => {
                     <div>
                       <span className="font-semibold text-slate-700 dark:text-slate-300">Supervisor:</span>{' '}
                       {nov.nombre_supervisor}
-                      {usuario && (usuario.rol === 'administrador' || usuario.rol === 'supervisor' || nov.id_vigilador !== usuario.id) && (
-                        <button type="button" onClick={() => marcarNovedadLeida(nov.id)} disabled={novedadesLeidas.includes(nov.id)} className={`ml-2 text-[11px] font-semibold ${novedadesLeidas.includes(nov.id) ? 'text-emerald-600 dark:text-emerald-400' : 'text-blue-600 dark:text-blue-400 hover:underline'}`}>
-                          {novedadesLeidas.includes(nov.id) ? 'Leído ✓' : 'Marcar como leído'}
+                    </div>
+                  </div>
+
+                  {usuario && (usuario.rol === 'administrador' || usuario.rol === 'supervisor' || nov.id_vigilador !== usuario.id) && (
+                    <div className="pt-2 flex items-center justify-between text-xs border-t border-slate-200 dark:border-slate-800">
+                      <span className="text-[11px] text-slate-400 font-mono">
+                        {nov.fecha} — {nov.hora} hs
+                      </span>
+
+                      {novedadesLeidas.includes(nov.id) ? (
+                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <span>Leído ✓</span>
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => marcarNovedadLeida(nov.id)}
+                          className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <span>Marcar como leído</span>
                         </button>
                       )}
                     </div>
-                  </div>
+                  )}
                 </TarjetaContenido>
               </Tarjeta>
             )
