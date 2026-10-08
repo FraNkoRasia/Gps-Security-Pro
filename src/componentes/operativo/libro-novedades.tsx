@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { BookOpen, Plus, Search, Eye, Edit2, Check } from 'lucide-react'
+import { BookOpen, Plus, Search, Eye, Edit2 } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -410,15 +410,22 @@ export const LibroNovedades: React.FC = () => {
               </p>
             </div>
 
-            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 pt-2">
-              {(usuario?.rol === 'administrador' || usuario?.rol === 'supervisor' || novedadSeleccionada.id_vigilador !== usuario?.id) && !novedadesLeidas.includes(novedadSeleccionada.id) && (
-                <Boton variante="primario" onClick={() => marcarNovedadLeida(novedadSeleccionada.id)} icono={<Check className="w-4 h-4" />}>
-                  Marcar como leído
-                </Boton>
+            <div className="flex items-center justify-between gap-3 pt-2">
+              {(usuario?.rol === 'administrador' || usuario?.rol === 'supervisor' || novedadSeleccionada.id_vigilador !== usuario?.id) && (
+                <button
+                  type="button"
+                  onClick={() => marcarNovedadLeida(novedadSeleccionada.id)}
+                  disabled={novedadesLeidas.includes(novedadSeleccionada.id)}
+                  className={`text-xs font-semibold transition-colors ${novedadesLeidas.includes(novedadSeleccionada.id) ? 'text-emerald-600 dark:text-emerald-400 cursor-default' : 'text-blue-600 dark:text-blue-400 hover:underline'}`}
+                >
+                  {novedadesLeidas.includes(novedadSeleccionada.id) ? 'Leído ✓' : 'Marcar como leído'}
+                </button>
               )}
-              <Boton variante="secundario" onClick={() => setModalDetalleAbierto(false)}>
-                Cerrar
-              </Boton>
+              <div className="ml-auto">
+                <Boton variante="secundario" onClick={() => setModalDetalleAbierto(false)}>
+                  Cerrar
+                </Boton>
+              </div>
             </div>
           </div>
         )}
