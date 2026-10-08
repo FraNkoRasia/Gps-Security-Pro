@@ -11,14 +11,17 @@ import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { Aviso } from '@/tipos'
 
 export const AvisosComunicacion: React.FC = () => {
-  const { avisos, crearAviso, marcarAvisoLeido } = useOperativo()
+  const { avisos, objetivos, crearAviso, marcarAvisoLeido } = useOperativo()
   const { usuario } = useAutenticacion()
 
   const [modalAbierto, setModalAbierto] = useState(false)
   const [titulo, setTitulo] = useState('')
+  const [idObjetivo, setIdObjetivo] = useState('')
   const [contenido, setContenido] = useState('')
   const [prioridad, setPrioridad] = useState<Aviso['prioridad']>('media')
   const [error, setError] = useState<string | null>(null)
+
+  const avisosVisibles = avisos.filter((av) => usuario?.rol === 'administrador' || usuario?.rol === 'super_administrador' ? true : true)
 
   const esAdmin = usuario?.rol === 'super_administrador' || usuario?.rol === 'administrador'
 
@@ -31,13 +34,20 @@ export const AvisosComunicacion: React.FC = () => {
       return
     }
 
+    if (!idObjetivo) {
+      setError('Seleccioná el objetivo al que se enviará el aviso.')
+      return
+    }
+
     crearAviso({
+      id_objetivo: idObjetivo,
       titulo: titulo.trim(),
       contenido: contenido.trim(),
       prioridad
     })
 
     setTitulo('')
+    setIdObjetivo('')
     setContenido('')
     setPrioridad('media')
     setModalAbierto(false)
@@ -141,6 +151,14 @@ export const AvisosComunicacion: React.FC = () => {
         icono={<Bell className="w-5 h-5 text-blue-500" />}
       >
         <form onSubmit={manejarCrear} className="space-y-4">
+          <div>
+            <Etiqueta requerido>Objetivo destinatario</Etiqueta>
+            <select value={idObjetivo} onChange={(e) => setIdObjetivo(e.target.value)} className="w-full min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700/80 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer">
+              <option value="">Seleccionar objetivo...</option>
+              {objetivos.map((o) => <option key={o.id} value={o.id}>{o.nombre}</option>)}
+            </select>
+          </div>
+
           <div>
             <Etiqueta requerido>Título del Comunicado</Etiqueta>
             <Entrada
