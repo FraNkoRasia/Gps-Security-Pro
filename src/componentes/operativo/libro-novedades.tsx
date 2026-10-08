@@ -180,7 +180,6 @@ export const LibroNovedades: React.FC = () => {
                     <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                       <span className="font-mono">{nov.fecha} — {nov.hora} hs</span>
                       <div className="flex items-center gap-1">
-/button>
                         <button
                           type="button"
                           onClick={() => abrirEditar(nov)}
