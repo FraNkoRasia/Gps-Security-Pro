@@ -93,22 +93,24 @@ export const CambiosTurnos: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Boton
-            variante="secundario"
-            onClick={() => setModalBuscadorReemplazos(true)}
-            icono={<Search className="w-4 h-4 text-blue-500" />}
-          >
-            Buscar Reemplazos
-          </Boton>
-          <Boton
-            variante="primario"
-            onClick={abrirSolicitud}
-            icono={<ArrowRightLeft className="w-4 h-4" />}
-          >
-            Solicitar Cambio
-          </Boton>
-        </div>
+        {!esAdmin && (
+          <div className="flex items-center gap-2">
+            <Boton
+              variante="secundario"
+              onClick={() => setModalBuscadorReemplazos(true)}
+              icono={<Search className="w-4 h-4 text-blue-500" />}
+            >
+              Buscar Reemplazos
+            </Boton>
+            <Boton
+              variante="primario"
+              onClick={abrirSolicitud}
+              icono={<ArrowRightLeft className="w-4 h-4" />}
+            >
+              Solicitar Cambio
+            </Boton>
+          </div>
+        )}
       </div>
 
       {/* Listado de Solicitudes */}
