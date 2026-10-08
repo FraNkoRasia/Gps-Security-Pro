@@ -119,6 +119,7 @@ export interface SolicitudCambio {
 export interface Aviso {
   id: string
   id_empresa: string
+  id_objetivo: string
   autor_nombre: string
   titulo: string
   contenido: string
