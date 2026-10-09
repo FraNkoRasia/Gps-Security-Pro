@@ -9,6 +9,14 @@ import { Etiqueta } from '@/componentes/ui/etiqueta'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 
+const fechaLocalHoy = () => {
+  const fecha = new Date()
+  const anio = fecha.getFullYear()
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0')
+  const dia = String(fecha.getDate()).padStart(2, '0')
+  return `${anio}-${mes}-${dia}`
+}
+
 export const CambiosTurnos: React.FC = () => {
   const {
     solicitudesCambio,
@@ -25,14 +33,14 @@ export const CambiosTurnos: React.FC = () => {
 
   // Formulario solicitud
   const [idDestinatario, setIdDestinatario] = useState('')
-  const [fechaTurno, setFechaTurno] = useState('2026-10-15')
+  const [fechaTurno, setFechaTurno] = useState(fechaLocalHoy())
   const [motivo, setMotivo] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   // Buscador de Reemplazos (Sección 30)
-  const [fechaReemplazo, setFechaReemplazo] = useState('2026-10-15')
+  const [fechaReemplazo, setFechaReemplazo] = useState(fechaLocalHoy())
 
-  const esAdmin = usuario?.rol === 'super_administrador' || usuario?.rol === 'administrador'
+  const esAdmin = usuario?.rol === 'super_administrador' || usuario?.rol === 'administrador' || usuario?.rol === 'supervisor'
 
   const solicitudesVisibles = solicitudesCambio.filter((sol) =>
     esAdmin || sol.id_solicitante === usuario?.id || sol.id_destinatario === usuario?.id
@@ -45,8 +53,9 @@ export const CambiosTurnos: React.FC = () => {
   )
 
   const abrirSolicitud = () => {
-    setIdDestinatario(vigiladores[1]?.id || '')
-    setFechaTurno('2026-10-15')
+    const colegasActivos = vigiladores.filter((v) => v.activo && v.id !== usuario?.id)
+    setIdDestinatario(colegasActivos[0]?.id || '')
+    setFechaTurno(fechaLocalHoy())
     setMotivo('')
     setError(null)
     setModalNuevaSolicitud(true)
@@ -65,14 +74,29 @@ export const CambiosTurnos: React.FC = () => {
       return
     }
 
+    if (!usuario?.id || usuario.rol !== 'vigilador') {
+      setError('Solo un vigilador con sesión activa puede solicitar un cambio.')
+      return
+    }
+
+    if (idDestinatario === usuario.id) {
+      setError('Debes seleccionar a otro vigilador para solicitar el cambio.')
+      return
+    }
+
     const turnoOrigen = turnos.find(
-      (t) => t.id_vigilador === usuario?.id && t.fecha === fechaTurno
+      (t) => t.id_vigilador === usuario.id && t.fecha === fechaTurno && t.estado !== 'reemplazado'
     )
 
+    if (!turnoOrigen || !turnoOrigen.id || turnoOrigen.id.startsWith('trn-temp-')) {
+      setError('No tenés un turno real asignado para esa fecha. Seleccioná una fecha en la que tengas un turno programado.')
+      return
+    }
+
     solicitarCambioTurno({
-      id_solicitante: usuario?.id || 'usr-vig-01',
+      id_solicitante: usuario.id,
       id_destinatario: idDestinatario,
-      id_turno_origen: turnoOrigen?.id || `trn-temp-${Date.now()}`,
+      id_turno_origen: turnoOrigen.id,
       fecha_turno: fechaTurno,
       motivo: motivo.trim()
     })
@@ -81,7 +105,7 @@ export const CambiosTurnos: React.FC = () => {
   }
 
   // Detectar vigiladores disponibles para reemplazo (Sección 30)
-  const vigiladoresDisponibles = vigiladores.map((v) => {
+  const vigiladoresDisponibles = vigiladores.filter((v) => v.activo && v.id !== usuario?.id).map((v) => {
     const turnoEnFecha = turnos.find((t) => t.id_vigilador === v.id && t.fecha === fechaReemplazo)
     const tieneConflicto = turnoEnFecha && turnoEnFecha.tipo !== 'franco' && turnoEnFecha.horas_totales > 0
     return {
@@ -278,7 +302,7 @@ export const CambiosTurnos: React.FC = () => {
             >
               <option value="">Seleccioná un vigilador...</option>
               {vigiladores
-                .filter((v) => v.id !== usuario?.id)
+                .filter((v) => v.activo && v.id !== usuario?.id)
                 .map((v) => (
                   <option key={v.id} value={v.id}>
                     {v.nombre} {v.apellido} ({v.email})

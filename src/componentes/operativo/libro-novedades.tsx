@@ -10,6 +10,11 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { NovedadLibro } from '@/tipos'
 
+const fechaLocalISO = () => {
+  const ahora = new Date()
+  return `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}`
+}
+
 export const LibroNovedades: React.FC = () => {
   const { novedades, objetivos, crearNovedad, editarNovedad, marcarNovedadLeida, novedadesLeidas } = useOperativo()
   const { usuario } = useAutenticacion()
@@ -23,15 +28,13 @@ export const LibroNovedades: React.FC = () => {
 
   // Formulario nueva novedad (Sección 32)
   const [idObjetivo, setIdObjetivo] = useState(objetivos[0]?.id || '')
-  const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0])
+  const [fecha, setFecha] = useState(fechaLocalISO())
   const [hora, setHora] = useState(
     new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   )
   const [turno, setTurno] = useState('12🌙 Nocturno (19:00 - 07:00)')
-  const [nombreSupervisor, setNombreSupervisor] = useState('Carlos Méndez')
-  const [elementosACargo, setElementosACargo] = useState(
-    'Handy Motorola VHF #12, Linterna LED táctica, Libro Tomo IV'
-  )
+  const [nombreSupervisor, setNombreSupervisor] = useState('')
+  const [elementosACargo, setElementosACargo] = useState('')
   const [informeNovedades, setInformeNovedades] = useState('')
   const [error, setError] = useState<string | null>(null)
 
@@ -41,9 +44,11 @@ export const LibroNovedades: React.FC = () => {
 
   const abrirCrear = () => {
     setIdObjetivo(objetivos[0]?.id || '')
-    setFecha(new Date().toISOString().split('T')[0])
+    setFecha(fechaLocalISO())
     setHora(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
     setInformeNovedades('')
+    setNombreSupervisor('')
+    setElementosACargo('')
     setError(null)
     setModalNuevoAbierto(true)
   }
@@ -60,18 +65,26 @@ export const LibroNovedades: React.FC = () => {
     e.preventDefault()
     setError(null)
 
+    if (!usuario?.id) {
+      setError('Tu sesión no está disponible. Iniciá sesión nuevamente antes de asentar una novedad.')
+      return
+    }
+
+    if (!idObjetivo) {
+      setError('Seleccioná un objetivo antes de asentar la novedad.')
+      return
+    }
+
     if (!informeNovedades.trim()) {
       setError('El informe de novedades no puede estar vacío.')
       return
     }
 
-    const nombreVigilante = usuario
-      ? `${usuario.nombre} ${usuario.apellido}`
-      : 'Franco Rasia'
+    const nombreVigilante = `${usuario.nombre} ${usuario.apellido}`
 
     crearNovedad({
       id_objetivo: idObjetivo,
-      id_vigilador: usuario?.id || 'usr-vig-01',
+      id_vigilador: usuario.id,
       nombre_vigilante: nombreVigilante,
       nombre_supervisor: nombreSupervisor,
       fecha,
@@ -86,6 +99,13 @@ export const LibroNovedades: React.FC = () => {
 
   const manejarGuardarCorreccion = (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Solo administración y supervisión pueden registrar correcciones auditadas.
+    if (!usuario || !['administrador', 'super_administrador', 'supervisor'].includes(usuario.rol)) {
+      setError('No tenés permisos para corregir novedades.')
+      return
+    }
+
     if (!motivoCorreccion.trim()) {
       setError('El motivo de la corrección es obligatorio para preservar la trazabilidad.')
       return
@@ -191,16 +211,19 @@ export const LibroNovedades: React.FC = () => {
 
                     <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                       <span className="font-mono">{nov.fecha} — {nov.hora} hs</span>
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => abrirEditar(nov)}
-                          className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-amber-500 transition-colors"
-                          title="Corregir novedad (asienta auditoría)"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      {usuario && ['administrador', 'super_administrador', 'supervisor'].includes(usuario.rol) && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => abrirEditar(nov)}
+                            className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-amber-500 transition-colors"
+                            title="Corregir novedad (asienta auditoría)"
+                            aria-label="Corregir novedad"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -307,7 +330,7 @@ export const LibroNovedades: React.FC = () => {
             <Entrada
               value={nombreSupervisor}
               onChange={(e) => setNombreSupervisor(e.target.value)}
-              placeholder="Carlos Méndez"
+              placeholder="Nombre del supervisor a cargo"
             />
           </div>
 
