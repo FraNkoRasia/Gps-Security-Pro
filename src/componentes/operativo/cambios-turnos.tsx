@@ -73,14 +73,29 @@ export const CambiosTurnos: React.FC = () => {
       return
     }
 
+    if (!usuario?.id || usuario.rol !== 'vigilador') {
+      setError('Solo un vigilador con sesión activa puede solicitar un cambio.')
+      return
+    }
+
+    if (idDestinatario === usuario.id) {
+      setError('Debes seleccionar a otro vigilador para solicitar el cambio.')
+      return
+    }
+
     const turnoOrigen = turnos.find(
-      (t) => t.id_vigilador === usuario?.id && t.fecha === fechaTurno
+      (t) => t.id_vigilador === usuario.id && t.fecha === fechaTurno && t.estado !== 'reemplazado'
     )
 
+    if (!turnoOrigen || !turnoOrigen.id || turnoOrigen.id.startsWith('trn-temp-')) {
+      setError('No tenés un turno real asignado para esa fecha. Seleccioná una fecha en la que tengas un turno programado.')
+      return
+    }
+
     solicitarCambioTurno({
-      id_solicitante: usuario?.id || 'usr-vig-01',
+      id_solicitante: usuario.id,
       id_destinatario: idDestinatario,
-      id_turno_origen: turnoOrigen?.id || `trn-temp-${Date.now()}`,
+      id_turno_origen: turnoOrigen.id,
       fecha_turno: fechaTurno,
       motivo: motivo.trim()
     })
