@@ -9,6 +9,14 @@ import { Etiqueta } from '@/componentes/ui/etiqueta'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 
+const fechaLocalHoy = () => {
+  const fecha = new Date()
+  const anio = fecha.getFullYear()
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0')
+  const dia = String(fecha.getDate()).padStart(2, '0')
+  return `${anio}-${mes}-${dia}`
+}
+
 export const CambiosTurnos: React.FC = () => {
   const {
     solicitudesCambio,
@@ -25,12 +33,12 @@ export const CambiosTurnos: React.FC = () => {
 
   // Formulario solicitud
   const [idDestinatario, setIdDestinatario] = useState('')
-  const [fechaTurno, setFechaTurno] = useState('2026-10-15')
+  const [fechaTurno, setFechaTurno] = useState(fechaLocalHoy())
   const [motivo, setMotivo] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   // Buscador de Reemplazos (Sección 30)
-  const [fechaReemplazo, setFechaReemplazo] = useState('2026-10-15')
+  const [fechaReemplazo, setFechaReemplazo] = useState(fechaLocalHoy())
 
   const esAdmin = usuario?.rol === 'super_administrador' || usuario?.rol === 'administrador' || usuario?.rol === 'supervisor'
 
@@ -46,7 +54,7 @@ export const CambiosTurnos: React.FC = () => {
 
   const abrirSolicitud = () => {
     setIdDestinatario(vigiladores[1]?.id || '')
-    setFechaTurno('2026-10-15')
+    setFechaTurno(fechaLocalHoy())
     setMotivo('')
     setError(null)
     setModalNuevaSolicitud(true)
