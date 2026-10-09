@@ -65,18 +65,26 @@ export const LibroNovedades: React.FC = () => {
     e.preventDefault()
     setError(null)
 
+    if (!usuario?.id) {
+      setError('Tu sesión no está disponible. Iniciá sesión nuevamente antes de asentar una novedad.')
+      return
+    }
+
+    if (!idObjetivo) {
+      setError('Seleccioná un objetivo antes de asentar la novedad.')
+      return
+    }
+
     if (!informeNovedades.trim()) {
       setError('El informe de novedades no puede estar vacío.')
       return
     }
 
-    const nombreVigilante = usuario
-      ? `${usuario.nombre} ${usuario.apellido}`
-      : 'Franco Rasia'
+    const nombreVigilante = `${usuario.nombre} ${usuario.apellido}`
 
     crearNovedad({
       id_objetivo: idObjetivo,
-      id_vigilador: usuario?.id || 'usr-vig-01',
+      id_vigilador: usuario.id,
       nombre_vigilante: nombreVigilante,
       nombre_supervisor: nombreSupervisor,
       fecha,
