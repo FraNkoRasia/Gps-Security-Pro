@@ -12,7 +12,8 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 - [x] Paso 1 — Bloquear cambios propios de campos de seguridad del perfil. **Aplicado en Supabase y verificado con pruebas transaccionales.**
 - [x] Paso 2 — Limitar los campos que puede modificar un administrador en perfiles ajenos. **Aplicado en Supabase y verificado con pruebas transaccionales.**
 - [x] Paso 3 — Corregir la aceptación de solicitudes de cambio de turno. **Aplicado en Supabase y verificado con pruebas transaccionales.**
-- [ ] Pasos 4–58 — Pendientes; se abordarán de a uno después de cerrar el paso anterior.
+- [x] Paso 4 — Endurecer la RPC `aprobar_cambio_turno`. **Aplicado en Supabase y verificado.**
+- [ ] Pasos 5–58 — Pendientes; se abordarán de a uno después de cerrar el paso anterior.
 
 ## Registro de pasos ejecutados
 
@@ -55,13 +56,27 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 - **Observación:** al revisar la tabla había 7 solicitudes existentes: 6 `aprobada_admin` y 1 `cancelada`; no había solicitudes pendientes reales para probar sin preparar una transacción temporal.
 - **Motivo/impacto funcional:** la aceptación debe representar la decisión del vigilador destinatario, no un cambio de estado enviado por cualquier usuario autorizado a ver la solicitud. No se modifica el recorrido funcional: solicitud → respuesta del colega → aprobación administrativa.
 
+### Paso 4 — Endurecer la RPC `aprobar_cambio_turno`
+
+- **Estado:** aplicado en Supabase; permisos y configuración verificados. Prueba negativa con usuario vigilador ejecutada dentro de una transacción revertida.
+- **Base afectada:** función `public.aprobar_cambio_turno(uuid, boolean)`.
+- **Migración versionada:** `supabase/migrations/20261008220000_endurecer_aprobar_cambio_turno.sql`.
+- **Cambio:** `SECURITY DEFINER` conserva su uso por la necesidad del flujo privilegiado, pero ahora tiene `search_path = ''`, referencias de objetos calificadas y comprobación explícita de `auth.uid()`. Se revocó `EXECUTE` a `PUBLIC` y `anon`; se concedió explícitamente a `authenticated`.
+- **Validaciones agregadas:** solicitud y decisión obligatorias; administrador/supervisor/superadministrador activo de la misma empresa; estado `aceptada_vigilador`; solicitante y destinatario distintos; turno de origen de la misma empresa y fecha; turno perteneciente al solicitante; destinatario activo de la misma empresa; constraint de intercambio referenciada con esquema explícito.
+- **Funcionalidad preservada:** rechazo/cancelación administrativa, reemplazo cuando el destinatario no tiene turno ese día e intercambio cuando ya tiene uno. La operación sigue siendo transaccional.
+- **Pruebas realizadas:** verificación SQL confirmó `search_path=""`, `anon_exec=false`, `auth_exec=true` y constraint calificada. Se ejecutó prueba negativa con una cuenta de vigilador; la RPC rechaza la operación por falta de rol administrativo. La transacción se revirtió.
+- **Resultado:** la función no se puede invocar con el rol `anon`; solo usuarios autenticados pueden invocarla y la función valida el rol antes de operar.
+- **Advertencia pendiente:** Supabase Advisor mantiene el aviso de función `SECURITY DEFINER` invocable por `authenticated`. Es esperado para esta RPC pública que la app llama, pero hay que evaluar una alternativa más aislada (p. ej. wrapper en esquema no expuesto) sin romper la llamada PostgREST. La protección de contraseñas filtradas también sigue pendiente y corresponde al paso 21.
+- **Prueba funcional pendiente:** confirmar desde la aplicación tanto un reemplazo como un intercambio real con cuentas de prueba; no se alteraron solicitudes ni turnos reales durante esta verificación.
+- **Motivo/impacto funcional:** mantiene el flujo actual, pero impide acceso anónimo y comprueba que la aprobación sea de una persona autorizada, dentro de la empresa correcta y sobre turnos consistentes.
+
 ## Lista maestra
 
 ### Fase 1 — Seguridad de Supabase
 - [x] **1.** Impedir que un usuario cambie su propio rol, empresa o estado de acceso.
 - [x] **2.** Restringir qué campos puede editar un administrador en perfiles.
 - [x] **3.** Corregir la aceptación de solicitudes de cambio de turno.
-- [ ] **4.** Revisar y endurecer la RPC `aprobar_cambio_turno`.
+- [x] **4.** Revisar y endurecer la RPC `aprobar_cambio_turno`.
 - [ ] **5.** Retirar ejecución anónima de RPC administrativas.
 - [ ] **6.** Verificar permisos de la RPC de horas extra.
 - [ ] **7.** Auditar políticas RLS de todas las tablas.
