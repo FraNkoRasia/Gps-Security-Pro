@@ -122,7 +122,7 @@ BEGIN
   FOR UPDATE;
 
   IF FOUND THEN
-    SET CONSTRAINTS turnos_id_vigilador_fecha_key DEFERRED;
+    SET CONSTRAINTS public.turnos_id_vigilador_fecha_key DEFERRED;
 
     UPDATE public.turnos
     SET id_vigilador = v_origen.id_vigilador,
@@ -136,7 +136,7 @@ BEGIN
         actualizado_en = now()
     WHERE id = v_s.id_turno_origen;
 
-    SET CONSTRAINTS turnos_id_vigilador_fecha_key IMMEDIATE;
+    SET CONSTRAINTS public.turnos_id_vigilador_fecha_key IMMEDIATE;
   ELSE
     UPDATE public.turnos
     SET id_vigilador = v_dest.id,
