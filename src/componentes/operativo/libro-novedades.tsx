@@ -99,6 +99,13 @@ export const LibroNovedades: React.FC = () => {
 
   const manejarGuardarCorreccion = (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Solo administración y supervisión pueden registrar correcciones auditadas.
+    if (!usuario || !['administrador', 'super_administrador', 'supervisor'].includes(usuario.rol)) {
+      setError('No tenés permisos para corregir novedades.')
+      return
+    }
+
     if (!motivoCorreccion.trim()) {
       setError('El motivo de la corrección es obligatorio para preservar la trazabilidad.')
       return
@@ -204,16 +211,19 @@ export const LibroNovedades: React.FC = () => {
 
                     <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                       <span className="font-mono">{nov.fecha} — {nov.hora} hs</span>
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => abrirEditar(nov)}
-                          className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-amber-500 transition-colors"
-                          title="Corregir novedad (asienta auditoría)"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      {usuario && ['administrador', 'super_administrador', 'supervisor'].includes(usuario.rol) && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => abrirEditar(nov)}
+                            className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-amber-500 transition-colors"
+                            title="Corregir novedad (asienta auditoría)"
+                            aria-label="Corregir novedad"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
