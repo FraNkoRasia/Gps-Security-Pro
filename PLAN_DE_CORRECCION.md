@@ -105,6 +105,9 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 - **Segundo cambio aplicado:** `REVOKE TRUNCATE, REFERENCES, TRIGGER ON ALL TABLES IN SCHEMA public FROM authenticated;` aplicado mediante migración Supabase y versionado en `supabase/migrations/20261009004000_revocar_privilegios_ddl_authenticated_tablas_public.sql`.
 - **Verificación posterior:** la consulta de privilegios no devuelve concesiones de `TRUNCATE`, `REFERENCES` ni `TRIGGER` para `anon` o `authenticated`; las 16 tablas siguen concediendo a `authenticated` solamente `SELECT`, `INSERT`, `UPDATE` y `DELETE`. Las RLS no se modificaron.
 - **Observación adicional:** `objetivos` y `novedades_libro` tienen políticas declaradas para `public`, pero las tablas no conceden acceso de tabla a `anon`; no se modificaron.
+- **Tercer hallazgo:** la función trigger `public.actualizar_actualizado_en()` tenía `EXECUTE` concedido a `PUBLIC`, `anon` y `authenticated`, aunque su cuerpo solo actualiza `NEW.actualizado_en` y devuelve `NEW` para los triggers `perfiles_actualizado_en`, `solicitudes_actualizado_en` y `turnos_actualizado_en`.
+- **Tercer cambio aplicado:** revocado `EXECUTE` directo a `PUBLIC`, `anon` y `authenticated` para esa función. Migración versionada: `supabase/migrations/20261009005000_revocar_ejecucion_directa_funcion_trigger_actualizado_en.sql`.
+- **Verificación posterior:** `routine_privileges` ya no muestra concesiones a esos roles; los tres triggers que usan la función siguen presentes.
 - **Resultado:** no se detectaron tablas del esquema `public` con RLS deshabilitado. La auditoría de privilegios y alcance multiempresa continúa antes de marcar el paso completo.
 
 ## Lista maestra
