@@ -10,6 +10,11 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { NovedadLibro } from '@/tipos'
 
+const fechaLocalISO = () => {
+  const ahora = new Date()
+  return `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}`
+}
+
 export const LibroNovedades: React.FC = () => {
   const { novedades, objetivos, crearNovedad, editarNovedad, marcarNovedadLeida, novedadesLeidas } = useOperativo()
   const { usuario } = useAutenticacion()
@@ -23,7 +28,7 @@ export const LibroNovedades: React.FC = () => {
 
   // Formulario nueva novedad (Sección 32)
   const [idObjetivo, setIdObjetivo] = useState(objetivos[0]?.id || '')
-  const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0])
+  const [fecha, setFecha] = useState(fechaLocalISO())
   const [hora, setHora] = useState(
     new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   )
@@ -41,7 +46,7 @@ export const LibroNovedades: React.FC = () => {
 
   const abrirCrear = () => {
     setIdObjetivo(objetivos[0]?.id || '')
-    setFecha(new Date().toISOString().split('T')[0])
+    setFecha(fechaLocalISO())
     setHora(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
     setInformeNovedades('')
     setError(null)
