@@ -32,7 +32,7 @@ export const CambiosTurnos: React.FC = () => {
   // Buscador de Reemplazos (Sección 30)
   const [fechaReemplazo, setFechaReemplazo] = useState('2026-10-15')
 
-  const esAdmin = usuario?.rol === 'super_administrador' || usuario?.rol === 'administrador'
+  const esAdmin = usuario?.rol === 'super_administrador' || usuario?.rol === 'administrador' || usuario?.rol === 'supervisor'
 
   const solicitudesVisibles = solicitudesCambio.filter((sol) =>
     esAdmin || sol.id_solicitante === usuario?.id || sol.id_destinatario === usuario?.id
