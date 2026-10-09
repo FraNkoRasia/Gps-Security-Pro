@@ -1,6 +1,6 @@
 -- PLAN DE CORRECCIÓN - Paso 3
 -- Solo el vigilador destinatario puede aceptar/rechazar una solicitud pendiente.
--- El solicitante no puede falsificar la aceptación mediante UPDATE directo.
+-- El solicitante y la administración no pueden simular la respuesta del colega.
 CREATE OR REPLACE FUNCTION public.validar_respuesta_solicitud_cambio()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -12,22 +12,27 @@ DECLARE
 BEGIN
   v_uid := (SELECT auth.uid());
 
-  -- Las operaciones internas sin usuario JWT (p. ej. service role) conservan
-  -- el comportamiento previo; las RPC administrativas se revisarán en el paso 4.
+  -- Operaciones internas sin JWT conservan su comportamiento.
   IF v_uid IS NULL THEN
     RETURN NEW;
   END IF;
 
-  -- Los administradores/supervisores siguen usando el flujo administrativo
-  -- existente. El endurecimiento de ese flujo corresponde al paso 4.
+  -- Administración conserva sus transiciones de gestión, pero no puede
+  -- registrar en nombre del colega una aceptación/rechazo desde pendiente.
   IF (SELECT private.is_admin_or_supervisor())
      AND OLD.id_empresa = (SELECT private.current_company_id())
   THEN
+    IF OLD.estado = 'pendiente'
+       AND NEW.estado IN ('aceptada_vigilador', 'rechazada_vigilador')
+    THEN
+      RAISE EXCEPTION 'La aceptación o el rechazo del colega solo puede registrarlo el vigilador destinatario.'
+        USING ERRCODE = '42501';
+    END IF;
     RETURN NEW;
   END IF;
 
-  -- El destinatario solo puede responder una solicitud que sigue pendiente,
-  -- y únicamente puede cambiar el estado y la fecha de actualización.
+  -- El destinatario solo puede responder una solicitud pendiente, sin cambiar
+  -- sus datos ni reemplazar la identidad de las partes.
   IF OLD.id_destinatario = v_uid
      AND OLD.estado = 'pendiente'
      AND NEW.estado IN ('aceptada_vigilador', 'rechazada_vigilador')
@@ -56,9 +61,9 @@ BEFORE UPDATE ON public.solicitudes_cambio
 FOR EACH ROW
 EXECUTE FUNCTION public.validar_respuesta_solicitud_cambio();
 
--- Retira al solicitante la posibilidad de modificar el estado de su propia
--- solicitud por UPDATE directo. El destinatario responde desde la app y la
--- administración continúa mediante su flujo existente/RPC.
+-- Solo el destinatario puede hacer UPDATE directo mientras está pendiente.
+-- La administración conserva su flujo de gestión y la RPC se endurecerá
+-- en el paso 4.
 DROP POLICY IF EXISTS "solicitudes modificacion autorizada" ON public.solicitudes_cambio;
 
 CREATE POLICY "solicitudes modificacion autorizada"
