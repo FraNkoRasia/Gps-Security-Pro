@@ -26,7 +26,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   const nombreMes = fechaActual.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
   const nombreMesVisible = nombreMes.charAt(0).toLocaleUpperCase('es-AR') + nombreMes.slice(1)
 
-  // Selector de Modo: 'semana' (7 días a simple vista) o 'mes' (31 días completo)
+  // Selector de Modo: 'semana' (7 días a simple vista) o 'mes' (mes completo)
   const [modoVista, setModoVista] = useState<'semana' | 'mes'>('semana')
   const [semanaActiva, setSemanaActiva] = useState<number>(1) // 1 a 5
 
@@ -265,7 +265,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              Mes Completo (31 días)
+              Mes Completo ({totalDiasMes} días)
             </button>
           </div>
 
@@ -297,7 +297,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
             </button>
 
             <span className="text-xs font-bold text-slate-800 dark:text-slate-200 min-w-[150px] text-center">
-              Semana {semanaActiva} de Octubre 2026 ({semanaActualData.inicio} al {semanaActualData.fin})
+              Semana {semanaActiva} de {nombreMesVisible} ({semanaActualData.inicio} al {semanaActualData.fin})
             </span>
 
             <button
@@ -501,7 +501,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
         titulo="Asignación Rápida de Turno"
         subtitulo={
           celdaEditando
-            ? `${celdaEditando.nombreVigilador} — Día ${celdaEditando.dia} de Octubre 2026`
+            ? `${celdaEditando.nombreVigilador} — Día ${celdaEditando.dia} de ${nombreMesVisible}`
             : ''
         }
         icono={<Edit3 className="w-5 h-5 text-blue-500" />}
