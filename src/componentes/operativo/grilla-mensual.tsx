@@ -343,7 +343,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                 {diasVisibles.map((dia) => {
                   const dateObj = new Date(anioSeleccionado, numeroMesSeleccionado, dia)
                   const esFinDeSemana = dateObj.getDay() === 0 || dateObj.getDay() === 6
-                  const esFeriado = false
+                  const fechaISO = `${anioSeleccionado}-${String(numeroMesSeleccionado + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
+                  const esFeriado = turnos.some((turno) => turno.fecha === fechaISO && turno.es_feriado)
                   return (
                     <th
                       key={dia}
