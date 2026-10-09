@@ -76,7 +76,7 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 
 - **Estado:** aplicado en Supabase y verificado; migración versionada en la rama de corrección.
 - **Función:** `public.aprobar_solicitud_horas_extra(uuid, boolean, integer)`.
-- **Migración versionada:** `supabase/migrations/20261009002200_retirar_ejecucion_anonima_aprobar_horas_extra.sql`.
+- **Migración versionada:** `supabase/migrations/20261009002310_retirar_ejecucion_anonima_aprobar_horas_extra.sql`.
 - **Cambio:** revocado `EXECUTE` para `PUBLIC` y `anon`; concedido explícitamente a `authenticated`.
 - **Verificación posterior:** `anon_exec=false`, `public_exec=false`, `authenticated_exec=true`. La función sigue siendo `SECURITY INVOKER` y conserva `search_path=public`.
 - **Funcionalidad preservada:** no se cambió el cuerpo de la función, las reglas de aprobación, ni las tablas de solicitudes/turnos. La función sigue validando rol, empresa, estado pendiente y límites de minutos.
@@ -84,10 +84,11 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 
 ### Paso 6 — Verificar permisos y autorización de la RPC de horas extra
 
-- **Estado:** revisión estática y verificación de privilegios completadas; pruebas negativas/positivas con identidades de prueba y prueba funcional desde la aplicación pendientes.
+- **Estado:** revisión estática, verificación de privilegios y pruebas SQL de autorización completadas; prueba funcional desde la aplicación pendiente.
 - **Comprobado:** el cuerpo de la función verifica `private.is_company_admin()`, limita la solicitud a `private.current_company_id()`, exige estado `pendiente`, verifica el turno asociado y restringe los minutos aprobados a un valor positivo no superior al solicitado.
 - **Comprobado en permisos:** solo `authenticated` tiene permiso explícito de ejecución; `anon` y `PUBLIC` no.
-- **Pendiente:** probar con una sesión de vigilador que la RPC rechace la aprobación; probar con una sesión administrativa de prueba el flujo permitido sin afectar datos reales (transacción revertida o datos de prueba controlados); probar desde la interfaz que aprobar/rechazar horas extra siga funcionando.
+- **Pruebas SQL realizadas en transacciones sin cambios persistentes:** (1) con rol `authenticated` y perfil de vigilador, la RPC rechazó la llamada con `Solo un administrador de empresa puede aprobar horas extra`; (2) con perfil administrador, la llamada pasó la comprobación de rol y rechazó el UUID inexistente con `Solicitud de horas extra no encontrada`. No se tocaron solicitudes ni turnos reales.
+- **Pendiente:** probar desde la interfaz que aprobar/rechazar horas extra siga funcionando con una solicitud de prueba controlada.
 - **Criterio de cierre:** completar esas pruebas y confirmar que no hubo cambios persistentes inesperados.
 
 ## Lista maestra
