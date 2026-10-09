@@ -15,7 +15,7 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 - [x] Paso 4 — Endurecer la RPC `aprobar_cambio_turno`. **Aplicado en Supabase y verificado.**
 - [x] Paso 5 — Retirar ejecución anónima de la RPC de horas extra. **Aplicado en Supabase, permisos verificados y migración guardada en esta rama.**
 - [x] Paso 6 — Verificar permisos y controles de autorización de la RPC de horas extra. **Permisos y pruebas SQL negativas/positivas verificados; prueba funcional de interfaz queda para el paso 31.**
-- [ ] Paso 7 — Auditoría RLS en curso; se detectaron privilegios `anon` innecesarios por revisar.
+- [ ] Paso 7 — Auditoría RLS en curso; se revocaron privilegios DDL innecesarios de `authenticated`; sigue pendiente revisar alcance de políticas y relaciones multiempresa.
 - [ ] Pasos 8–58 — Pendientes; se abordarán de a uno después de cerrar el paso anterior.
 
 ## Registro de pasos ejecutados
@@ -94,13 +94,16 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 
 ### Paso 7 — Auditoría RLS de tablas públicas (primera revisión)
 
-- **Estado:** en curso; primer ajuste de privilegios aplicado y verificado; auditoría global continúa.
+- **Estado:** en curso; dos ajustes de privilegios aplicados y verificados; auditoría global continúa.
 - **Cobertura inicial:** las 16 tablas del esquema `public` tienen RLS habilitado. Se revisaron las políticas de esas tablas y los privilegios de tabla de `anon` y `authenticated`.
 - **Hallazgo confirmado:** `anon` tenía privilegios de tabla (`SELECT/INSERT/UPDATE/DELETE`) en `public.novedades_lecturas`, `public.solicitudes_horas_extra` y `public.tipos_turno`, mientras que las políticas RLS relevantes estaban dirigidas a `authenticated`. La lectura con rol `anon` devolvió 0 filas en las tres tablas; no se intentaron escrituras.
 - **Cambio aplicado:** revocados todos los privilegios de tabla para `anon` en esas tres tablas. No se modificaron las políticas RLS ni los privilegios de `authenticated`.
 - **Migración versionada:** `supabase/migrations/20261009002730_revocar_acceso_anon_tablas_internas.sql`.
 - **Verificación posterior:** las tres tablas siguen con RLS habilitado y ahora `anon_select`, `anon_insert`, `anon_update` y `anon_delete` son `false` en las tres.
-- **Impacto funcional esperado:** elimina acceso de tabla anónimo a datos internos; la aplicación autenticada conserva sus permisos. No se tocaron filas de datos.
+- **Impacto funcional esperado:** elimina acceso de tabla anónimo a datos internos; la aplicación autenticada conserva SELECT/INSERT/UPDATE/DELETE. No se tocaron filas de datos.
+- **Segundo hallazgo:** `authenticated` tenía también privilegios `TRUNCATE`, `REFERENCES` y `TRIGGER` en las 16 tablas públicas. No son necesarios para las operaciones CRUD habituales del cliente y amplían innecesariamente sus capacidades de DDL/DML estructural.
+- **Segundo cambio aplicado:** `REVOKE TRUNCATE, REFERENCES, TRIGGER ON ALL TABLES IN SCHEMA public FROM authenticated;` aplicado mediante migración Supabase y versionado en `supabase/migrations/20261009004000_revocar_privilegios_ddl_authenticated_tablas_public.sql`.
+- **Verificación posterior:** la consulta de privilegios no devuelve concesiones de `TRUNCATE`, `REFERENCES` ni `TRIGGER` para `anon` o `authenticated`; las 16 tablas siguen concediendo a `authenticated` solamente `SELECT`, `INSERT`, `UPDATE` y `DELETE`. Las RLS no se modificaron.
 - **Observación adicional:** `objetivos` y `novedades_libro` tienen políticas declaradas para `public`, pero las tablas no conceden acceso de tabla a `anon`; no se modificaron.
 - **Resultado:** no se detectaron tablas del esquema `public` con RLS deshabilitado. La auditoría de privilegios y alcance multiempresa continúa antes de marcar el paso completo.
 
