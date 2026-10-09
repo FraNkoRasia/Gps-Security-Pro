@@ -10,7 +10,8 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 ## Estado general
 
 - [x] Paso 1 — Bloquear cambios propios de campos de seguridad del perfil. **Aplicado en Supabase y verificado con pruebas transaccionales.**
-- [ ] Pasos 2–58 — Pendientes; se abordarán de a uno después de cerrar el paso anterior.
+- [x] Paso 2 — Limitar los campos que puede modificar un administrador en perfiles ajenos. **Aplicado en Supabase y verificado con pruebas transaccionales.**
+- [ ] Pasos 3–58 — Pendientes; se abordarán de a uno después de cerrar el paso anterior.
 
 ## Registro de pasos ejecutados
 
@@ -24,14 +25,27 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 - **Funcionalidad preservada:** cambios ordinarios de perfil siguen permitidos. Los permisos de administradores sobre perfiles ajenos permanecen bajo las políticas RLS existentes.
 - **Pruebas realizadas:** se intentó modificar el rol propio dentro de una transacción con el rol `authenticated`; la excepción de permisos fue interceptada por la prueba y la transacción se revirtió. También se probó una actualización de campo de perfil dentro de una transacción revertida. Se verificó la presencia del trigger y que la función no tenga permiso de ejecución directa para `anon` ni `authenticated`.
 - **Resultado:** pruebas SQL superadas; no se alteró permanentemente el perfil de prueba.
-- **Limitación pendiente:** no se probó todavía desde la interfaz de la aplicación la edición de vigiladores por un administrador; se verificará en la fase correspondiente.
+- **Limitación pendiente:** la edición de vigiladores desde la interfaz administrativa se verificará en la fase de pruebas funcionales.
 - **Motivo/impacto funcional:** evita la elevación de privilegios y el cambio propio de empresa o estado. Los cambios de esos campos deben gestionarse por un flujo administrativo autorizado.
+
+### Paso 2 — Limitar edición de perfiles por administradores
+
+- **Estado:** completado en base de datos; pendiente de prueba funcional desde la interfaz.
+- **Base afectada:** Supabase, tabla `public.perfiles`.
+- **Migración versionada:** `supabase/migrations/20261008210000_limitar_edicion_perfiles_administrador.sql`.
+- **Cambio:** trigger `perfiles_limitar_edicion_administrador` y función `public.limitar_edicion_perfiles_administrador()`.
+- **Protección aplicada:** usuarios autenticados no pueden modificar el identificador ni la fecha de creación del perfil. El administrador de empresa no puede cambiar el rol, la empresa asignada ni la configuración `debe_cambiar_contrasena` de otro perfil.
+- **Funcionalidad preservada:** el administrador puede seguir modificando nombre, apellido, correo, teléfono y estado activo de los perfiles que las políticas RLS ya le permiten administrar. El superadministrador conserva el alcance de sus políticas existentes. Las Edge Functions que usan service role no se bloquean por este trigger.
+- **Pruebas realizadas:** transacciones con rol `authenticated` y un administrador de prueba: la actualización ordinaria del teléfono fue permitida; el intento de cambiar el rol de un vigilador fue bloqueado; el intento de quitarle la empresa también fue bloqueado. Todas las pruebas terminaron con `ROLLBACK`, sin conservar cambios de datos.
+- **Resultado:** las tres pruebas devolvieron PASS.
+- **Limitación pendiente:** la prueba de edición desde la interfaz y el flujo real de alta/edición quedan para la fase de pruebas funcionales. La base consultada solo tiene una empresa registrada, por lo que no se pudo probar contra una segunda empresa real; se comprobó el bloqueo intentando quitar la empresa del perfil.
+- **Motivo/impacto funcional:** limita cambios sensibles por API directa sin quitar las operaciones que la pantalla de gestión de vigiladores usa actualmente.
 
 ## Lista maestra
 
 ### Fase 1 — Seguridad de Supabase
 - [x] **1.** Impedir que un usuario cambie su propio rol, empresa o estado de acceso.
-- [ ] **2.** Restringir qué campos puede editar un administrador en perfiles.
+- [x] **2.** Restringir qué campos puede editar un administrador en perfiles.
 - [ ] **3.** Corregir la aceptación de solicitudes de cambio de turno.
 - [ ] **4.** Revisar y endurecer la RPC `aprobar_cambio_turno`.
 - [ ] **5.** Retirar ejecución anónima de RPC administrativas.
