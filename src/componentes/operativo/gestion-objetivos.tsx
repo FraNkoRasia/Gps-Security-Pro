@@ -28,9 +28,13 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
   const [provincia, setProvincia] = useState('Córdoba')
   const [error, setError] = useState<string | null>(null)
 
-  // Filtrar objetivos si es admin de empresa
-  const idEmpresaActiva = idEmpresaSeleccionada || usuario?.id_empresa || empresas[0]?.id || 'emp-wall-01'
-  const objetivosMostrados = usuario?.rol === 'super_administrador' && !idEmpresaSeleccionada
+  // Nunca asignar objetivos a una empresa de respaldo fija.
+  // El superadministrador debe seleccionar la empresa si administra varias.
+  const esSuperAdministrador = usuario?.rol === 'super_administrador'
+  const idEmpresaActiva = esSuperAdministrador
+    ? (idEmpresaSeleccionada || (empresas.length === 1 ? empresas[0].id : ''))
+    : (usuario?.id_empresa || '')
+  const objetivosMostrados = esSuperAdministrador && !idEmpresaSeleccionada
     ? objetivos
     : objetivos.filter((o) => o.id_empresa === idEmpresaActiva)
 
@@ -79,6 +83,11 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
 
     if (!nombre.trim() || !direccion.trim()) {
       setError('El nombre y la dirección son obligatorios.')
+      return
+    }
+
+    if (!objetivoEditando && !idEmpresaActiva) {
+      setError('Seleccioná una empresa antes de crear el objetivo.')
       return
     }
 
