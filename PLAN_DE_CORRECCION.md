@@ -14,8 +14,9 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 - [x] Paso 3 — Corregir la aceptación de solicitudes de cambio de turno. **Aplicado en Supabase y verificado con pruebas transaccionales.**
 - [x] Paso 4 — Endurecer la RPC `aprobar_cambio_turno`. **Aplicado en Supabase y verificado.**
 - [x] Paso 5 — Retirar ejecución anónima de la RPC de horas extra. **Aplicado en Supabase, permisos verificados y migración guardada en esta rama.**
-- [ ] Paso 6 — Completar pruebas de autorización de la RPC de horas extra; revisión estática realizada, prueba funcional todavía pendiente.
-- [ ] Pasos 7–58 — Pendientes; se abordarán de a uno después de cerrar el paso anterior.
+- [x] Paso 6 — Verificar permisos y controles de autorización de la RPC de horas extra. **Permisos y pruebas SQL negativas/positivas verificados; prueba funcional de interfaz queda para el paso 31.**
+- [ ] Paso 7 — Auditoría RLS en curso; se detectaron privilegios `anon` innecesarios por revisar.
+- [ ] Pasos 8–58 — Pendientes; se abordarán de a uno después de cerrar el paso anterior.
 
 ## Registro de pasos ejecutados
 
@@ -84,12 +85,21 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 
 ### Paso 6 — Verificar permisos y autorización de la RPC de horas extra
 
-- **Estado:** revisión estática, verificación de privilegios y pruebas SQL de autorización completadas; prueba funcional desde la aplicación pendiente.
+- **Estado:** completado en base de datos; la prueba funcional de aprobación/rechazo desde la interfaz se realizará junto al paso 31.
 - **Comprobado:** el cuerpo de la función verifica `private.is_company_admin()`, limita la solicitud a `private.current_company_id()`, exige estado `pendiente`, verifica el turno asociado y restringe los minutos aprobados a un valor positivo no superior al solicitado.
 - **Comprobado en permisos:** solo `authenticated` tiene permiso explícito de ejecución; `anon` y `PUBLIC` no.
 - **Pruebas SQL realizadas en transacciones sin cambios persistentes:** (1) con rol `authenticated` y perfil de vigilador, la RPC rechazó la llamada con `Solo un administrador de empresa puede aprobar horas extra`; (2) con perfil administrador, la llamada pasó la comprobación de rol y rechazó el UUID inexistente con `Solicitud de horas extra no encontrada`. No se tocaron solicitudes ni turnos reales.
-- **Pendiente:** probar desde la interfaz que aprobar/rechazar horas extra siga funcionando con una solicitud de prueba controlada.
+- **Prueba funcional pendiente (paso 31):** probar desde la interfaz que aprobar/rechazar horas extra siga funcionando con una solicitud de prueba controlada.
 - **Criterio de cierre:** completar esas pruebas y confirmar que no hubo cambios persistentes inesperados.
+
+### Paso 7 — Auditoría RLS de tablas públicas (primera revisión)
+
+- **Estado:** en curso; revisión de solo lectura, no se modificaron permisos ni políticas.
+- **Cobertura inicial:** las 16 tablas del esquema `public` tienen RLS habilitado. Se revisaron las políticas de esas tablas y los privilegios de tabla de `anon` y `authenticated`.
+- **Hallazgo para revisar:** `anon` tiene privilegios de tabla (`SELECT/INSERT/UPDATE/DELETE`) en `public.novedades_lecturas`, `public.solicitudes_horas_extra` y `public.tipos_turno`, mientras que sus políticas RLS observadas están dirigidas a `authenticated`. Prueba de lectura con rol `anon` devolvió 0 filas en las tres tablas. No se intentaron escrituras.
+- **Acción pendiente:** verificar si existen dependencias legítimas de la app sin sesión y, si no las hay, revocar los privilegios innecesarios de `anon` en una migración aislada. No se retiraron todavía para no romper un flujo sin revisar.
+- **Observación adicional:** `objetivos` y `novedades_libro` tienen políticas declaradas para `public`, pero las tablas no conceden acceso de tabla a `anon`; no se modificaron.
+- **Resultado:** no se detectaron tablas del esquema `public` con RLS deshabilitado. La auditoría de privilegios y alcance multiempresa continúa antes de marcar el paso completo.
 
 ## Lista maestra
 
@@ -99,7 +109,7 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 - [x] **3.** Corregir la aceptación de solicitudes de cambio de turno.
 - [x] **4.** Revisar y endurecer la RPC `aprobar_cambio_turno`.
 - [x] **5.** Retirar ejecución anónima de RPC administrativas (RPC de horas extra revisada y corregida).
-- [ ] **6.** Verificar permisos de la RPC de horas extra.
+- [x] **6.** Verificar permisos de la RPC de horas extra (SQL verificado; UI queda en paso 31).
 - [ ] **7.** Auditar políticas RLS de todas las tablas.
 - [ ] **8.** Evitar relaciones cruzadas entre empresas.
 - [ ] **9.** Revisar la asociación entre vigiladores y cuentas.
