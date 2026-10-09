@@ -18,8 +18,13 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   const { vigiladores, asignaciones, turnos, tiposTurno, asignarTurnoGrilla } = useOperativo()
   const [objetivoSeleccionado] = useState(objetivoInicial)
 
-  const mesSeleccionado = '2026-10'
-  const totalDiasMes = 31
+  const fechaActual = new Date()
+  const anioSeleccionado = fechaActual.getFullYear()
+  const numeroMesSeleccionado = fechaActual.getMonth()
+  const mesSeleccionado = `${anioSeleccionado}-${String(numeroMesSeleccionado + 1).padStart(2, '0')}`
+  const totalDiasMes = new Date(anioSeleccionado, numeroMesSeleccionado + 1, 0).getDate()
+  const nombreMes = fechaActual.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
+  const nombreMesVisible = nombreMes.charAt(0).toLocaleUpperCase('es-AR') + nombreMes.slice(1)
 
   // Selector de Modo: 'semana' (7 días a simple vista) o 'mes' (31 días completo)
   const [modoVista, setModoVista] = useState<'semana' | 'mes'>('semana')
@@ -43,14 +48,12 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   const [patronDiagrama, setPatronDiagrama] = useState<'4x3' | '4x2' | '2x2' | '6x1'>('4x3')
   const [tipoTurnoDiagrama, setTipoTurnoDiagrama] = useState('')
 
-  // Definición de las 5 semanas de Octubre 2026
-  const semanas = [
-    { numero: 1, inicio: 1, fin: 7, label: 'Sem 1 (1 - 7)' },
-    { numero: 2, inicio: 8, fin: 14, label: 'Sem 2 (8 - 14)' },
-    { numero: 3, inicio: 15, fin: 21, label: 'Sem 3 (15 - 21)' },
-    { numero: 4, inicio: 22, fin: 28, label: 'Sem 4 (22 - 28)' },
-    { numero: 5, inicio: 29, fin: 31, label: 'Sem 5 (29 - 31)' }
-  ]
+  // Agrupa los días del mes actual en bloques consecutivos de hasta siete días.
+  const semanas = Array.from({ length: Math.ceil(totalDiasMes / 7) }, (_, i) => {
+    const inicio = i * 7 + 1
+    const fin = Math.min(inicio + 6, totalDiasMes)
+    return { numero: i + 1, inicio, fin, label: `Sem ${i + 1} (${inicio} - ${fin})` }
+  })
 
   const semanaActualData = semanas.find((s) => s.numero === semanaActiva) || semanas[0]
 
@@ -338,7 +341,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                   Vigilador
                 </th>
                 {diasVisibles.map((dia) => {
-                  const dateObj = new Date(2026, 9, dia)
+                  const dateObj = new Date(anioSeleccionado, numeroMesSeleccionado, dia)
                   const esFinDeSemana = dateObj.getDay() === 0 || dateObj.getDay() === 6
                   const esFeriado = dia === 12
                   return (
