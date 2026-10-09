@@ -1,7 +1,7 @@
--- Impide que una actualización directa desde PostgREST marque una solicitud como aprobada.
--- La aprobación efectiva debe pasar por public.aprobar_cambio_turno(), que también actualiza
--- el/los turnos dentro de la misma transacción.
--- Esta migración no modifica solicitudes históricas.
+-- PLAN DE CORRECCIÓN - Paso 8
+-- Las respuestas del destinatario se permiten por UPDATE directo; toda gestión administrativa
+-- (aprobar, rechazar/cancelar o cambiar datos) debe pasar por la RPC transaccional.
+-- La migración no modifica solicitudes históricas ni turnos existentes.
 
 CREATE OR REPLACE FUNCTION public.validar_respuesta_solicitud_cambio()
 RETURNS trigger
@@ -14,33 +14,16 @@ DECLARE
 BEGIN
   v_uid := (SELECT auth.uid());
 
-  -- Una sesión autenticada no puede simular la aprobación administrativa mediante UPDATE directo.
-  -- La RPC SECURITY DEFINER realiza esta transición con el rol propietario de la función.
-  IF NEW.estado = 'aprobada_admin'
-     AND OLD.estado IS DISTINCT FROM NEW.estado
-     AND current_user IN ('anon', 'authenticated')
-  THEN
-    RAISE EXCEPTION 'La aprobación debe procesarse mediante aprobar_cambio_turno.'
-      USING ERRCODE = '42501';
-  END IF;
-
+  -- Operaciones internas sin identidad JWT conservan su comportamiento.
   IF v_uid IS NULL THEN
     RETURN NEW;
   END IF;
 
-  IF (SELECT private.is_admin_or_supervisor())
-     AND OLD.id_empresa = (SELECT private.current_company_id())
-  THEN
-    IF OLD.estado = 'pendiente'
-       AND NEW.estado IN ('aceptada_vigilador', 'rechazada_vigilador')
-    THEN
-      RAISE EXCEPTION 'La aceptación o el rechazo del colega solo puede registrarlo el vigilador destinatario.'
-        USING ERRCODE = '42501';
-    END IF;
-    RETURN NEW;
-  END IF;
-
-  IF OLD.id_destinatario = v_uid
+  -- Una sesión PostgREST autenticada solo puede responder como destinatario una solicitud
+  -- pendiente, sin cambiar ningún dato de la solicitud. Las transiciones administrativas
+  -- deben ejecutarse por aprobar_cambio_turno(), cuyo contexto SECURITY DEFINER es el owner.
+  IF current_user IN ('anon', 'authenticated')
+     AND OLD.id_destinatario = v_uid
      AND OLD.estado = 'pendiente'
      AND NEW.estado IN ('aceptada_vigilador', 'rechazada_vigilador')
      AND NEW.id IS NOT DISTINCT FROM OLD.id
@@ -55,11 +38,16 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  RAISE EXCEPTION 'Solo el vigilador destinatario puede aceptar o rechazar una solicitud pendiente, sin modificar sus datos.'
-    USING ERRCODE = '42501';
+  IF current_user IN ('anon', 'authenticated') THEN
+    RAISE EXCEPTION 'Solo el destinatario puede responder una solicitud pendiente; la gestión administrativa debe pasar por aprobar_cambio_turno.'
+      USING ERRCODE = '42501';
+  END IF;
+
+  RETURN NEW;
 END;
 $function$;
 
 REVOKE ALL ON FUNCTION public.validar_respuesta_solicitud_cambio() FROM PUBLIC, anon, authenticated;
 
--- El trigger existente se mantiene; CREATE OR REPLACE actualiza su función asociada.
+-- El trigger solicitudes_cambio_validar_respuesta ya existe; CREATE OR REPLACE actualiza
+-- la función asociada sin necesidad de recrear el trigger.
