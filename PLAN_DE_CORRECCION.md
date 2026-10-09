@@ -4,7 +4,7 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 
 - **Punto de resguardo:** `SALVADO` — commit `04a26bf307e07c8b2fdd32bda89b5662509c3a1e`.
 - **Rama de trabajo:** `plan-correccion/01-bloquear-autocambio-rol`.
-- **Última actualización:** 2026-10-08.
+- **Última actualización:** 2026-10-09.
 - **Regla:** no mezclar tareas ni modificar funciones ajenas a la corrección en curso.
 
 ## Estado general
@@ -13,7 +13,9 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 - [x] Paso 2 — Limitar los campos que puede modificar un administrador en perfiles ajenos. **Aplicado en Supabase y verificado con pruebas transaccionales.**
 - [x] Paso 3 — Corregir la aceptación de solicitudes de cambio de turno. **Aplicado en Supabase y verificado con pruebas transaccionales.**
 - [x] Paso 4 — Endurecer la RPC `aprobar_cambio_turno`. **Aplicado en Supabase y verificado.**
-- [ ] Pasos 5–58 — Pendientes; se abordarán de a uno después de cerrar el paso anterior.
+- [x] Paso 5 — Retirar ejecución anónima de la RPC de horas extra. **Aplicado en Supabase, permisos verificados y migración guardada en esta rama.**
+- [ ] Paso 6 — Completar pruebas de autorización de la RPC de horas extra; revisión estática realizada, prueba funcional todavía pendiente.
+- [ ] Pasos 7–58 — Pendientes; se abordarán de a uno después de cerrar el paso anterior.
 
 ## Registro de pasos ejecutados
 
@@ -70,6 +72,24 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 - **Prueba funcional pendiente:** confirmar desde la aplicación tanto un reemplazo como un intercambio real con cuentas de prueba; no se alteraron solicitudes ni turnos reales durante esta verificación.
 - **Motivo/impacto funcional:** mantiene el flujo actual, pero impide acceso anónimo y comprueba que la aprobación sea de una persona autorizada, dentro de la empresa correcta y sobre turnos consistentes.
 
+### Paso 5 — Retirar ejecución anónima de la RPC de horas extra
+
+- **Estado:** aplicado en Supabase y verificado; migración versionada en la rama de corrección.
+- **Función:** `public.aprobar_solicitud_horas_extra(uuid, boolean, integer)`.
+- **Migración versionada:** `supabase/migrations/20261009002200_retirar_ejecucion_anonima_aprobar_horas_extra.sql`.
+- **Cambio:** revocado `EXECUTE` para `PUBLIC` y `anon`; concedido explícitamente a `authenticated`.
+- **Verificación posterior:** `anon_exec=false`, `public_exec=false`, `authenticated_exec=true`. La función sigue siendo `SECURITY INVOKER` y conserva `search_path=public`.
+- **Funcionalidad preservada:** no se cambió el cuerpo de la función, las reglas de aprobación, ni las tablas de solicitudes/turnos. La función sigue validando rol, empresa, estado pendiente y límites de minutos.
+- **Impacto funcional esperado:** usuarios anónimos ya no pueden llamar la RPC; las sesiones autenticadas de la aplicación mantienen el permiso y deben pasar la validación interna de administrador.
+
+### Paso 6 — Verificar permisos y autorización de la RPC de horas extra
+
+- **Estado:** revisión estática y verificación de privilegios completadas; pruebas negativas/positivas con identidades de prueba y prueba funcional desde la aplicación pendientes.
+- **Comprobado:** el cuerpo de la función verifica `private.is_company_admin()`, limita la solicitud a `private.current_company_id()`, exige estado `pendiente`, verifica el turno asociado y restringe los minutos aprobados a un valor positivo no superior al solicitado.
+- **Comprobado en permisos:** solo `authenticated` tiene permiso explícito de ejecución; `anon` y `PUBLIC` no.
+- **Pendiente:** probar con una sesión de vigilador que la RPC rechace la aprobación; probar con una sesión administrativa de prueba el flujo permitido sin afectar datos reales (transacción revertida o datos de prueba controlados); probar desde la interfaz que aprobar/rechazar horas extra siga funcionando.
+- **Criterio de cierre:** completar esas pruebas y confirmar que no hubo cambios persistentes inesperados.
+
 ## Lista maestra
 
 ### Fase 1 — Seguridad de Supabase
@@ -77,7 +97,7 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 - [x] **2.** Restringir qué campos puede editar un administrador en perfiles.
 - [x] **3.** Corregir la aceptación de solicitudes de cambio de turno.
 - [x] **4.** Revisar y endurecer la RPC `aprobar_cambio_turno`.
-- [ ] **5.** Retirar ejecución anónima de RPC administrativas.
+- [x] **5.** Retirar ejecución anónima de RPC administrativas (RPC de horas extra revisada y corregida).
 - [ ] **6.** Verificar permisos de la RPC de horas extra.
 - [ ] **7.** Auditar políticas RLS de todas las tablas.
 - [ ] **8.** Evitar relaciones cruzadas entre empresas.
