@@ -10,7 +10,10 @@ export const MiMes: React.FC = () => {
   const { usuario } = useAutenticacion()
 
   const idVig = usuario?.id || 'usr-vig-01'
-  const mesActual = '2026-10'
+  const fechaActual = new Date()
+  const mesActual = `${fechaActual.getFullYear()}-${String(fechaActual.getMonth() + 1).padStart(2, '0')}`
+  const tituloMes = fechaActual.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
+  const tituloMesVisible = tituloMes.charAt(0).toLocaleUpperCase('es-AR') + tituloMes.slice(1)
 
   // Turnos del mes para este vigilador
   const turnosMes = turnos.filter(
@@ -45,7 +48,7 @@ export const MiMes: React.FC = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h3 className="text-xl font-black text-slate-900 dark:text-white font-['Outfit']">
-            Mi Mes — Octubre 2026
+            Mi Mes — {tituloMesVisible}
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Cálculo consolidado de horas de servicio, nocturnidad y objetivo laboral (Sección 34).
