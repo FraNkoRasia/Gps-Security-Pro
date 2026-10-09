@@ -11,7 +11,8 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 
 - [x] Paso 1 — Bloquear cambios propios de campos de seguridad del perfil. **Aplicado en Supabase y verificado con pruebas transaccionales.**
 - [x] Paso 2 — Limitar los campos que puede modificar un administrador en perfiles ajenos. **Aplicado en Supabase y verificado con pruebas transaccionales.**
-- [ ] Pasos 3–58 — Pendientes; se abordarán de a uno después de cerrar el paso anterior.
+- [x] Paso 3 — Corregir la aceptación de solicitudes de cambio de turno. **Aplicado en Supabase y verificado con pruebas transaccionales.**
+- [ ] Pasos 4–58 — Pendientes; se abordarán de a uno después de cerrar el paso anterior.
 
 ## Registro de pasos ejecutados
 
@@ -41,12 +42,25 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 - **Limitación pendiente:** la prueba de edición desde la interfaz y el flujo real de alta/edición quedan para la fase de pruebas funcionales. La base consultada solo tiene una empresa registrada, por lo que no se pudo probar contra una segunda empresa real; se comprobó el bloqueo intentando quitar la empresa del perfil.
 - **Motivo/impacto funcional:** limita cambios sensibles por API directa sin quitar las operaciones que la pantalla de gestión de vigiladores usa actualmente.
 
+### Paso 3 — Validar la aceptación de solicitudes de cambio de turno
+
+- **Estado:** aplicado en Supabase; pruebas SQL realizadas. La interfaz completa queda para la fase de pruebas funcionales.
+- **Base afectada:** Supabase, tabla `public.solicitudes_cambio`.
+- **Migración versionada:** `supabase/migrations/20261008213000_validar_respuesta_solicitud_cambio.sql`.
+- **Cambio:** trigger `solicitudes_cambio_validar_respuesta`, función `public.validar_respuesta_solicitud_cambio()` y política RLS de actualización más restrictiva.
+- **Protección aplicada:** el solicitante ya no puede modificar directamente el estado para simular que el destinatario aceptó. El destinatario solo puede responder una solicitud pendiente como `aceptada_vigilador` o `rechazada_vigilador`, sin alterar el resto de los datos. Administración tampoco puede registrar directamente una aceptación/rechazo en nombre del colega.
+- **Funcionalidad preservada:** el botón del destinatario sigue usando el mismo cambio de estado y la aprobación administrativa en grilla continúa usando la RPC existente. El endurecimiento de esa RPC es el paso 4.
+- **Pruebas realizadas:** (1) intento del solicitante de aceptar su propia solicitud, sin cambios persistidos; (2) actualización de aceptación por el destinatario dentro de una transacción revertida; (3) intento administrativo de simular aceptación, bloqueado por el trigger. Todas las pruebas fueron transaccionales o fallaron de forma controlada; no se modificaron permanentemente solicitudes.
+- **Resultado:** se confirmó el bloqueo al solicitante por RLS y la protección del trigger ante la aceptación simulada. La prueba del destinatario no devolvió error y se revirtió.
+- **Observación:** al revisar la tabla había 7 solicitudes existentes: 6 `aprobada_admin` y 1 `cancelada`; no había solicitudes pendientes reales para probar sin preparar una transacción temporal.
+- **Motivo/impacto funcional:** la aceptación debe representar la decisión del vigilador destinatario, no un cambio de estado enviado por cualquier usuario autorizado a ver la solicitud. No se modifica el recorrido funcional: solicitud → respuesta del colega → aprobación administrativa.
+
 ## Lista maestra
 
 ### Fase 1 — Seguridad de Supabase
 - [x] **1.** Impedir que un usuario cambie su propio rol, empresa o estado de acceso.
 - [x] **2.** Restringir qué campos puede editar un administrador en perfiles.
-- [ ] **3.** Corregir la aceptación de solicitudes de cambio de turno.
+- [x] **3.** Corregir la aceptación de solicitudes de cambio de turno.
 - [ ] **4.** Revisar y endurecer la RPC `aprobar_cambio_turno`.
 - [ ] **5.** Retirar ejecución anónima de RPC administrativas.
 - [ ] **6.** Verificar permisos de la RPC de horas extra.
