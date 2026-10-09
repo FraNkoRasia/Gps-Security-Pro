@@ -33,10 +33,8 @@ export const LibroNovedades: React.FC = () => {
     new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   )
   const [turno, setTurno] = useState('12🌙 Nocturno (19:00 - 07:00)')
-  const [nombreSupervisor, setNombreSupervisor] = useState('Carlos Méndez')
-  const [elementosACargo, setElementosACargo] = useState(
-    'Handy Motorola VHF #12, Linterna LED táctica, Libro Tomo IV'
-  )
+  const [nombreSupervisor, setNombreSupervisor] = useState('')
+  const [elementosACargo, setElementosACargo] = useState('')
   const [informeNovedades, setInformeNovedades] = useState('')
   const [error, setError] = useState<string | null>(null)
 
@@ -49,6 +47,8 @@ export const LibroNovedades: React.FC = () => {
     setFecha(fechaLocalISO())
     setHora(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
     setInformeNovedades('')
+    setNombreSupervisor('')
+    setElementosACargo('')
     setError(null)
     setModalNuevoAbierto(true)
   }
@@ -320,7 +320,7 @@ export const LibroNovedades: React.FC = () => {
             <Entrada
               value={nombreSupervisor}
               onChange={(e) => setNombreSupervisor(e.target.value)}
-              placeholder="Carlos Méndez"
+              placeholder="Nombre del supervisor a cargo"
             />
           </div>
 
