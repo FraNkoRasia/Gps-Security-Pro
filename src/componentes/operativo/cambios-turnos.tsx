@@ -53,7 +53,8 @@ export const CambiosTurnos: React.FC = () => {
   )
 
   const abrirSolicitud = () => {
-    setIdDestinatario(vigiladores[1]?.id || '')
+    const colegasActivos = vigiladores.filter((v) => v.activo && v.id !== usuario?.id)
+    setIdDestinatario(colegasActivos[0]?.id || '')
     setFechaTurno(fechaLocalHoy())
     setMotivo('')
     setError(null)
@@ -104,7 +105,7 @@ export const CambiosTurnos: React.FC = () => {
   }
 
   // Detectar vigiladores disponibles para reemplazo (Sección 30)
-  const vigiladoresDisponibles = vigiladores.map((v) => {
+  const vigiladoresDisponibles = vigiladores.filter((v) => v.activo && v.id !== usuario?.id).map((v) => {
     const turnoEnFecha = turnos.find((t) => t.id_vigilador === v.id && t.fecha === fechaReemplazo)
     const tieneConflicto = turnoEnFecha && turnoEnFecha.tipo !== 'franco' && turnoEnFecha.horas_totales > 0
     return {
@@ -301,7 +302,7 @@ export const CambiosTurnos: React.FC = () => {
             >
               <option value="">Seleccioná un vigilador...</option>
               {vigiladores
-                .filter((v) => v.id !== usuario?.id)
+                .filter((v) => v.activo && v.id !== usuario?.id)
                 .map((v) => (
                   <option key={v.id} value={v.id}>
                     {v.nombre} {v.apellido} ({v.email})
