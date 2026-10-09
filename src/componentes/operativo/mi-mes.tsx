@@ -9,7 +9,7 @@ export const MiMes: React.FC = () => {
   const { turnos } = useOperativo()
   const { usuario } = useAutenticacion()
 
-  const idVig = usuario?.id || 'usr-vig-01'
+  const idVig = usuario?.id || ''
   const fechaActual = new Date()
   const mesActual = `${fechaActual.getFullYear()}-${String(fechaActual.getMonth() + 1).padStart(2, '0')}`
   const tituloMes = fechaActual.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
