@@ -94,10 +94,13 @@ Seguimiento de correcciones de seguridad, integridad y funcionamiento. Se trabaj
 
 ### Paso 7 — Auditoría RLS de tablas públicas (primera revisión)
 
-- **Estado:** en curso; revisión de solo lectura, no se modificaron permisos ni políticas.
+- **Estado:** en curso; primer ajuste de privilegios aplicado y verificado; auditoría global continúa.
 - **Cobertura inicial:** las 16 tablas del esquema `public` tienen RLS habilitado. Se revisaron las políticas de esas tablas y los privilegios de tabla de `anon` y `authenticated`.
-- **Hallazgo para revisar:** `anon` tiene privilegios de tabla (`SELECT/INSERT/UPDATE/DELETE`) en `public.novedades_lecturas`, `public.solicitudes_horas_extra` y `public.tipos_turno`, mientras que sus políticas RLS observadas están dirigidas a `authenticated`. Prueba de lectura con rol `anon` devolvió 0 filas en las tres tablas. No se intentaron escrituras.
-- **Acción pendiente:** verificar si existen dependencias legítimas de la app sin sesión y, si no las hay, revocar los privilegios innecesarios de `anon` en una migración aislada. No se retiraron todavía para no romper un flujo sin revisar.
+- **Hallazgo confirmado:** `anon` tenía privilegios de tabla (`SELECT/INSERT/UPDATE/DELETE`) en `public.novedades_lecturas`, `public.solicitudes_horas_extra` y `public.tipos_turno`, mientras que las políticas RLS relevantes estaban dirigidas a `authenticated`. La lectura con rol `anon` devolvió 0 filas en las tres tablas; no se intentaron escrituras.
+- **Cambio aplicado:** revocados todos los privilegios de tabla para `anon` en esas tres tablas. No se modificaron las políticas RLS ni los privilegios de `authenticated`.
+- **Migración versionada:** `supabase/migrations/20261009002730_revocar_acceso_anon_tablas_internas.sql`.
+- **Verificación posterior:** las tres tablas siguen con RLS habilitado y ahora `anon_select`, `anon_insert`, `anon_update` y `anon_delete` son `false` en las tres.
+- **Impacto funcional esperado:** elimina acceso de tabla anónimo a datos internos; la aplicación autenticada conserva sus permisos. No se tocaron filas de datos.
 - **Observación adicional:** `objetivos` y `novedades_libro` tienen políticas declaradas para `public`, pero las tablas no conceden acceso de tabla a `anon`; no se modificaron.
 - **Resultado:** no se detectaron tablas del esquema `public` con RLS deshabilitado. La auditoría de privilegios y alcance multiempresa continúa antes de marcar el paso completo.
 
