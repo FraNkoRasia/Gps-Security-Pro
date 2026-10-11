@@ -652,9 +652,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                         (t) => t.id_vigilador === vig.id && t.id_objetivo === objetivoSeleccionado && t.fecha === fecha
                       )
                       const horasExtra = turno?.horas_extra ?? 0
-
-                      return (
-                        const fechaCelda = fecha
+                      const fechaCelda = fecha
                       const feriadoCelda = nombreFeriadoEnFecha(fechaCelda)
 
                       return (
