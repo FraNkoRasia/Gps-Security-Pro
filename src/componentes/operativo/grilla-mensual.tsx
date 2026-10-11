@@ -259,7 +259,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
       const encabezados = dias.map((dia) => {
         const fecha = new Date(anio, numeroMes - 1, dia)
         const diaSemana = new Intl.DateTimeFormat('es-AR', { weekday: 'short' }).format(fecha)
-        return `<th><span>${escaparHtml(diaSemana)}</span><strong>${dia}</strong></th>`
+        const finDeSemana = fecha.getDay() === 0 || fecha.getDay() === 6
+        return `<th class="${finDeSemana ? 'fin-de-semana' : ''}"><span>${escaparHtml(diaSemana)}</span><strong>${dia}</strong></th>`
       }).join('')
       const filas = vigiladoresMostrados.map((vigilador) => {
         const celdas = dias.map((dia) => {
@@ -276,11 +277,14 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
             : undefined
           const codigo = turno.tipo === 'franco'
             ? 'F'
-            : tipoPersonalizado?.abreviatura || (turno.tipo === 'nocturno'
-              ? `${turno.horas_totales}h 🌙`
-              : turno.tipo === 'diurno'
-                ? `${turno.horas_totales}h ☀️`
-                : `${turno.horas_totales}h`)
+            : tipoPersonalizado?.abreviatura || `${turno.horas_totales}h`
+          const iconoTurno = turno.tipo === 'diurno'
+            ? '☀️'
+            : turno.tipo === 'nocturno'
+              ? '🌙'
+              : turno.tipo === 'franco'
+                ? ''
+                : '◆'
           const extra = turno.horas_extra > 0 ? `<small>+${turno.horas_extra}h extra</small>` : ''
           const claseTurno = turno.tipo === 'diurno'
             ? 'turno-diurno'
@@ -289,7 +293,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
               : turno.tipo === 'franco'
                 ? 'turno-franco'
                 : 'turno-especial'
-          return `<td class="${claseTurno}">${escaparHtml(codigo)}${extra}</td>`
+          const icono = iconoTurno ? `<span class="icono-turno">${iconoTurno}</span>` : ''
+          return `<td><span class="turno-casillero ${claseTurno}"><strong>${escaparHtml(codigo)}</strong>${icono}</span>${extra}</td>`
         }).join('')
         const horasQuincena = turnos
           .filter((turno) => {
@@ -306,47 +311,60 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
       const filasVacias = vigiladoresMostrados.length === 0
         ? `<tr><td colspan="${dias.length + 2}" class="vacio">No hay vigiladores asignados a este objetivo.</td></tr>`
         : filas
+      const totalesDiarios = dias.map((dia) => `<td>${calcularTotalDiario(dia)}h</td>`).join('')
 
-      return `<section class="quincena"><header><h2>${quincena.titulo}</h2><p>${quincena.inicio} al ${quincena.fin} de ${escaparHtml(nombreMes)}</p></header><table><thead><tr><th>Vigilador</th>${encabezados}<th>Horas</th></tr></thead><tbody>${filasVacias}</tbody></table></section>`
+      return `<section class="quincena"><header><h2>${quincena.titulo}</h2><p>${quincena.inicio} al ${quincena.fin} de ${escaparHtml(nombreMes)}</p></header><table><thead><tr><th>Vigilador</th>${encabezados}<th>Horas</th></tr></thead><tbody>${filasVacias}</tbody><tfoot><tr><th>Total Día</th>${totalesDiarios}<td>Total</td></tr></tfoot></table></section>`
     }).join('')
 
     ventana.opener = null
     ventana.document.open()
     ventana.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Grilla ${escaparHtml(objetivoActual?.nombre || 'objetivo')} - ${escaparHtml(nombreMes)}</title><style>
-      @page { size: A4 landscape; margin: 10mm; }
+      @page { size: 297mm 210mm; margin: 8mm; }
       * { box-sizing: border-box; }
-      body { margin: 0; color: #111827; font-family: Arial, sans-serif; }
-      body { height: 190mm; display: flex; flex-direction: column; }
-      .titulo { flex: none; margin: 0 0 2mm; text-align: center; }
-      .titulo h1 { margin: 0; font-size: 17px; }
-      .titulo p { margin: 1px 0 0; font-size: 10px; }
+      body { margin: 0; color: #0f172a; font-family: Arial, sans-serif; }
+      body { height: 194mm; display: flex; flex-direction: column; }
+      .titulo { flex: none; display: flex; justify-content: space-between; align-items: center; margin: 0 0 2mm; padding: 0 1mm 2mm; border-bottom: 2px solid #2563eb; }
+      .titulo h1 { margin: 1px 0; font-size: 17px; font-weight: 800; }
+      .marca { color: #2563eb; font-size: 7px; font-weight: 800; letter-spacing: 1px; }
+      .titulo p { margin: 0; font-size: 9px; color: #475569; }
+      .mes { padding: 5px 9px; border: 1px solid #93c5fd; border-radius: 7px; color: #1d4ed8; background: #eff6ff; font-size: 10px; text-transform: capitalize; }
       .quincena { flex: 1 1 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
       .quincena + .quincena { margin-top: 2mm; }
-      header { flex: none; margin-bottom: 1mm; text-align: center; }
-      h2 { margin: 0; font-size: 12px; }
-      header p { margin: 0; font-size: 8px; }
-      table { flex: 1 1 auto; width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; font-size: 9px; }
-      th, td { border: 1px solid #475569; padding: 2px 1px; text-align: center; overflow-wrap: anywhere; line-height: 1.1; }
-      thead th { background: #cbd5e1; }
+      .quincena header { flex: none; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1mm; padding: 1mm 2mm; border-left: 3px solid #2563eb; border-radius: 0 5px 5px 0; background: #eff6ff; }
+      h2 { margin: 0; color: #1e3a8a; font-size: 11px; font-weight: 800; }
+      .quincena header p { margin: 0; color: #475569; font-size: 8px; }
+      table { flex: 1 1 auto; width: 100%; height: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 8px; }
+      th, td { border-right: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 1px; text-align: center; overflow-wrap: anywhere; line-height: 1.1; }
+      thead th { border-top: 1px solid #94a3b8; background: #e2e8f0; color: #334155; }
+      thead th:first-child, tbody th:first-child, tfoot th:first-child { border-left: 1px solid #94a3b8; }
+      thead th:first-child { border-radius: 6px 0 0 0; }
+      thead th:last-child { border-radius: 0 6px 0 0; }
       thead th:first-child, tbody th { width: 20%; text-align: left; }
-      thead th:last-child, td.total { width: 7%; font-weight: 700; }
+      thead th:last-child, tbody td:last-child, tfoot td:last-child { width: 7%; font-weight: 700; }
       thead th span, thead th strong { display: block; }
-      thead th span { font-size: 7px; }
+      thead th span { font-size: 7px; font-weight: 600; }
       thead th strong { font-size: 10px; }
-      tbody th { font-size: 9px; font-weight: 700; }
-      td small { display: block; margin-top: 1px; font-size: 6px; color: #1e293b; }
-      td.sin-turno { color: #94a3b8; }
-      td.turno-diurno { background: #facc15 !important; font-weight: 700; }
-      td.turno-nocturno { background: #38bdf8 !important; font-weight: 700; }
-      td.turno-franco { background: #4ade80 !important; font-weight: 700; }
-      td.turno-especial { background: #c084fc !important; font-weight: 700; }
+      thead th.fin-de-semana { background: #dbeafe; color: #1e40af; }
+      tbody th { padding-left: 2mm; background: #f8fafc; font-size: 8px; font-weight: 700; }
+      .turno-casillero { min-height: 23px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; border: 1.5px solid; border-radius: 6px; font-size: 8px; line-height: 1; }
+      .turno-casillero strong { font-size: 8px; }
+      .icono-turno { font-size: 9px; }
+      td small { display: block; margin-top: 1px; color: #047857; font-size: 6px; font-weight: 700; }
+      .turno-casillero.turno-diurno { border-color: #f59e0b; background: #fef3c7; color: #92400e; }
+      .turno-casillero.turno-nocturno { border-color: #3b82f6; background: #dbeafe; color: #1e40af; }
+      .turno-casillero.turno-franco { border-color: #22c55e; background: #dcfce7; color: #166534; }
+      .turno-casillero.turno-especial { border-color: #8b5cf6; background: #ede9fe; color: #5b21b6; }
+      tfoot th, tfoot td { border-top: 2px solid #64748b; background: #f1f5f9; color: #1e293b; font-weight: 800; }
+      tfoot th { border-radius: 0 0 0 5px; text-align: left; }
+      tfoot td { color: #1d4ed8; font-family: Arial, sans-serif; }
+      tfoot td:last-child { border-radius: 0 0 5px 0; }
       .vacio { padding: 3px; color: #475569; }
       @media print {
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         thead { display: table-header-group; }
         tr { break-inside: avoid; }
       }
-    </style></head><body><header class="titulo"><h1>Grilla de turnos</h1><p>${escaparHtml(objetivoActual?.nombre || 'Objetivo')} · ${escaparHtml(nombreMes)}</p></header>${paginas}</body></html>`)
+    </style></head><body><header class="titulo"><div><span class="marca">GPS SECURITY PRO</span><h1>Grilla de turnos</h1><p>${escaparHtml(objetivoActual?.nombre || 'Objetivo')}</p></div><strong class="mes">${escaparHtml(nombreMes)}</strong></header>${paginas}</body></html>`)
     ventana.document.close()
     ventana.focus()
     window.setTimeout(() => ventana.print(), 250)
