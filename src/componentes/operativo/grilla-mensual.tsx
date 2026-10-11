@@ -282,7 +282,14 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                 ? `${turno.horas_totales}h ☀️`
                 : `${turno.horas_totales}h`)
           const extra = turno.horas_extra > 0 ? `<small>+${turno.horas_extra}h extra</small>` : ''
-          return `<td>${escaparHtml(codigo)}${extra}</td>`
+          const claseTurno = turno.tipo === 'diurno'
+            ? 'turno-diurno'
+            : turno.tipo === 'nocturno'
+              ? 'turno-nocturno'
+              : turno.tipo === 'franco'
+                ? 'turno-franco'
+                : 'turno-especial'
+          return `<td class="${claseTurno}">${escaparHtml(codigo)}${extra}</td>`
         }).join('')
         const horasQuincena = turnos
           .filter((turno) => {
@@ -300,7 +307,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
         ? `<tr><td colspan="${dias.length + 2}" class="vacio">No hay vigiladores asignados a este objetivo.</td></tr>`
         : filas
 
-      return `<section class="quincena"><header><h1>Grilla de turnos</h1><p>${escaparHtml(objetivoActual?.nombre || 'Objetivo')}</p><h2>${quincena.titulo}</h2><p>${quincena.inicio} al ${quincena.fin} de ${escaparHtml(nombreMes)}</p></header><table><thead><tr><th>Vigilador</th>${encabezados}<th>Horas</th></tr></thead><tbody>${filasVacias}</tbody></table></section>`
+      return `<section class="quincena"><header><h2>${quincena.titulo}</h2><p>${quincena.inicio} al ${quincena.fin} de ${escaparHtml(nombreMes)}</p></header><table><thead><tr><th>Vigilador</th>${encabezados}<th>Horas</th></tr></thead><tbody>${filasVacias}</tbody></table></section>`
     }).join('')
 
     ventana.opener = null
@@ -309,25 +316,36 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
       @page { size: A4 landscape; margin: 10mm; }
       * { box-sizing: border-box; }
       body { margin: 0; color: #111827; font-family: Arial, sans-serif; }
-      .quincena { break-after: page; page-break-after: always; }
-      .quincena:last-child { break-after: auto; page-break-after: auto; }
-      header { margin-bottom: 10px; text-align: center; }
-      h1 { margin: 0; font-size: 18px; }
-      h2 { margin: 5px 0 2px; font-size: 15px; }
-      header p { margin: 3px 0; font-size: 11px; }
-      table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 8px; }
-      th, td { border: 1px solid #64748b; padding: 4px 2px; text-align: center; overflow-wrap: anywhere; }
+      body { height: 190mm; display: flex; flex-direction: column; }
+      .titulo { flex: none; margin: 0 0 2mm; text-align: center; }
+      .titulo h1 { margin: 0; font-size: 15px; }
+      .titulo p { margin: 1px 0 0; font-size: 9px; }
+      .quincena { flex: 1 1 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+      .quincena + .quincena { margin-top: 2mm; }
+      header { flex: none; margin-bottom: 1mm; text-align: center; }
+      h2 { margin: 0; font-size: 10px; }
+      header p { margin: 0; font-size: 7px; }
+      table { flex: 1 1 auto; width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; font-size: 6px; }
+      th, td { border: 1px solid #64748b; padding: 1px; text-align: center; overflow-wrap: anywhere; }
       thead th { background: #e2e8f0; }
-      thead th:first-child, tbody th { width: 22%; text-align: left; }
+      thead th:first-child, tbody th { width: 20%; text-align: left; }
       thead th:last-child, td.total { width: 7%; font-weight: 700; }
       thead th span, thead th strong { display: block; }
-      thead th strong { font-size: 10px; }
+      thead th strong { font-size: 7px; }
       tbody th { font-weight: 600; }
-      td small { display: block; font-size: 6px; color: #475569; }
+      td small { display: block; font-size: 5px; color: #334155; }
       td.sin-turno { color: #94a3b8; }
-      .vacio { padding: 16px; color: #475569; }
-      @media print { thead { display: table-header-group; } tr { break-inside: avoid; } }
-    </style></head><body>${paginas}</body></html>`)
+      td.turno-diurno { background: #fef08a !important; }
+      td.turno-nocturno { background: #bae6fd !important; }
+      td.turno-franco { background: #bbf7d0 !important; }
+      td.turno-especial { background: #e9d5ff !important; }
+      .vacio { padding: 3px; color: #475569; }
+      @media print {
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        thead { display: table-header-group; }
+        tr { break-inside: avoid; }
+      }
+    </style></head><body><header class="titulo"><h1>Grilla de turnos</h1><p>${escaparHtml(objetivoActual?.nombre || 'Objetivo')} · ${escaparHtml(nombreMes)}</p></header>${paginas}</body></html>`)
     ventana.document.close()
     ventana.focus()
     window.setTimeout(() => ventana.print(), 250)
