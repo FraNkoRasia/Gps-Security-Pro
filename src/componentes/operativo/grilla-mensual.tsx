@@ -639,8 +639,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                         {vig.apellido}, {vig.nombre.charAt(0)}.
                       </div>
                       <div className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold truncate max-w-[105px]">
-                        <span className="sm:hidden">{totales.horasSemana}h sem</span>
-                        <span className="hidden sm:inline text-slate-400 font-normal">{totales.horasSemana}h sem</span>
+                        {totales.horasSemana}h sem
                       </div>
                     </td>
 
