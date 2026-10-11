@@ -272,20 +272,15 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
           )
           if (!turno) return '<td class="sin-turno">—</td>'
 
-          const tipoPersonalizado = turno.id_tipo_turno
-            ? tiposTurno.find((tipo) => tipo.id === turno.id_tipo_turno)
-            : undefined
-          const codigoBase = turno.tipo === 'franco'
+          const codigo = turno.tipo === 'franco'
             ? 'F'
-            : tipoPersonalizado?.abreviatura || `${turno.horas_totales}h`
-          const codigoSinIconos = codigoBase.replace(/[☀🌙]/g, '').replace(/\uFE0F/g, '').trim()
-          const codigo = codigoSinIconos || `${turno.horas_totales}h`
+            : `${turno.horas_totales}h`
           const iconoTurno = turno.tipo === 'diurno'
             ? '☀️'
             : turno.tipo === 'nocturno'
               ? '🌙'
               : turno.tipo === 'franco'
-                ? '🛌'
+                ? ''
                 : '◆'
           const extra = turno.horas_extra > 0 ? `<small>+${turno.horas_extra}h extra</small>` : ''
           const claseTurno = turno.tipo === 'diurno'
@@ -295,7 +290,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
               : turno.tipo === 'franco'
                 ? 'turno-franco'
                 : 'turno-especial'
-          return `<td><span class="turno-casillero ${claseTurno}"><strong>${escaparHtml(codigo)}</strong><span class="icono-turno">${iconoTurno}</span></span>${extra}</td>`
+          const icono = iconoTurno ? `<span class="icono-turno">${iconoTurno}</span>` : ''
+          return `<td><span class="turno-casillero ${claseTurno}"><strong>${escaparHtml(codigo)}</strong>${icono}</span>${extra}</td>`
         }).join('')
         const horasQuincena = turnos
           .filter((turno) => {
