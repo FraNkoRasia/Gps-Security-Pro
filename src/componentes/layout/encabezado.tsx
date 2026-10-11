@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { LogOut, Menu, X, Globe, Sun, Moon, UserRound, Download } from 'lucide-react'
 import { Insignia } from '@/componentes/ui/insignia'
 import { Boton } from '@/componentes/ui/boton'
@@ -122,7 +123,7 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbr
       </header>
 
       {/* Drawer / Menú Desplegable Lateral */}
-      {menuMovilAbierto && (
+      {menuMovilAbierto && createPortal(
         <div className="fixed inset-0 z-50 flex justify-end animate-fadeIn">
           {/* Backdrop oscuro */}
           <div
@@ -329,7 +330,8 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbr
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )
