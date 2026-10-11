@@ -318,27 +318,28 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
       body { margin: 0; color: #111827; font-family: Arial, sans-serif; }
       body { height: 190mm; display: flex; flex-direction: column; }
       .titulo { flex: none; margin: 0 0 2mm; text-align: center; }
-      .titulo h1 { margin: 0; font-size: 15px; }
-      .titulo p { margin: 1px 0 0; font-size: 9px; }
+      .titulo h1 { margin: 0; font-size: 17px; }
+      .titulo p { margin: 1px 0 0; font-size: 10px; }
       .quincena { flex: 1 1 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
       .quincena + .quincena { margin-top: 2mm; }
       header { flex: none; margin-bottom: 1mm; text-align: center; }
-      h2 { margin: 0; font-size: 10px; }
-      header p { margin: 0; font-size: 7px; }
-      table { flex: 1 1 auto; width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; font-size: 6px; }
-      th, td { border: 1px solid #64748b; padding: 1px; text-align: center; overflow-wrap: anywhere; }
-      thead th { background: #e2e8f0; }
+      h2 { margin: 0; font-size: 12px; }
+      header p { margin: 0; font-size: 8px; }
+      table { flex: 1 1 auto; width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; font-size: 9px; }
+      th, td { border: 1px solid #475569; padding: 2px 1px; text-align: center; overflow-wrap: anywhere; line-height: 1.1; }
+      thead th { background: #cbd5e1; }
       thead th:first-child, tbody th { width: 20%; text-align: left; }
       thead th:last-child, td.total { width: 7%; font-weight: 700; }
       thead th span, thead th strong { display: block; }
-      thead th strong { font-size: 7px; }
-      tbody th { font-weight: 600; }
-      td small { display: block; font-size: 5px; color: #334155; }
+      thead th span { font-size: 7px; }
+      thead th strong { font-size: 10px; }
+      tbody th { font-size: 9px; font-weight: 700; }
+      td small { display: block; margin-top: 1px; font-size: 6px; color: #1e293b; }
       td.sin-turno { color: #94a3b8; }
-      td.turno-diurno { background: #fef08a !important; }
-      td.turno-nocturno { background: #bae6fd !important; }
-      td.turno-franco { background: #bbf7d0 !important; }
-      td.turno-especial { background: #e9d5ff !important; }
+      td.turno-diurno { background: #facc15 !important; font-weight: 700; }
+      td.turno-nocturno { background: #38bdf8 !important; font-weight: 700; }
+      td.turno-franco { background: #4ade80 !important; font-weight: 700; }
+      td.turno-especial { background: #c084fc !important; font-weight: 700; }
       .vacio { padding: 3px; color: #475569; }
       @media print {
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
