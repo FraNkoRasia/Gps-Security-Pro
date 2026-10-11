@@ -72,6 +72,37 @@ html, body {
   background: linear-gradient(135deg, #00D2FF 0%, #0070F3 60%, #0051C6 100%);
 }
 
+/* Corrección de la grilla mensual en tema claro.
+   Estas reglas están limitadas al componente y no alteran el tema oscuro ni otros módulos. */
+html.light .grilla-mensual table {
+  background-color: #ffffff !important;
+  color: #0f172a;
+}
+html.light .grilla-mensual table thead th {
+  background-color: #f1f5f9 !important;
+  color: #334155;
+  border-color: #cbd5e1 !important;
+}
+html.light .grilla-mensual table tbody td,
+html.light .grilla-mensual table tbody th {
+  background-color: #ffffff !important;
+  color: #0f172a;
+  border-color: #e2e8f0 !important;
+}
+html.light .grilla-mensual table tbody tr:last-child td,
+html.light .grilla-mensual table tbody tr:last-child th {
+  background-color: #f1f5f9 !important;
+}
+html.light .grilla-mensual table tbody td > div[class*="rounded-lg"][class*="border"] {
+  color: #0f172a;
+}
+html.light .grilla-mensual table tfoot th,
+html.light .grilla-mensual table tfoot td {
+  background-color: #f1f5f9 !important;
+  color: #334155;
+  border-color: #cbd5e1 !important;
+}
+
 /* Scrollbar estilizada */
 ::-webkit-scrollbar {
   width: 6px;
