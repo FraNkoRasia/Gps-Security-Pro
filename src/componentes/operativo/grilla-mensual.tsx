@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import {
+  Download,
   Edit3,
   ChevronLeft,
   ChevronRight,
@@ -15,8 +16,9 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import type { Turno } from '@/tipos'
 
 export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: boolean }> = ({ objetivoInicial = '', soloLectura = false }) => {
-  const { vigiladores, asignaciones, turnos, tiposTurno, asignarTurnoGrilla } = useOperativo()
+  const { objetivos, vigiladores, asignaciones, turnos, tiposTurno, asignarTurnoGrilla } = useOperativo()
   const [objetivoSeleccionado] = useState(objetivoInicial)
+  const objetivoActual = objetivos.find((objetivo) => objetivo.id === objetivoSeleccionado)
 
   const mesSeleccionado = '2026-10'
   const totalDiasMes = 31
@@ -226,6 +228,111 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
     return <span className="text-emerald-400 font-extrabold flex flex-col items-center justify-center leading-none gap-0.5"><span className="text-[10px]">{personalizado?.abreviatura || t.horas_totales}</span><span className="text-[8px] text-slate-400">{personalizado?.nombre || 'Especial'}</span></span>
   }
 
+  const descargarGrilla = () => {
+    if (!objetivoSeleccionado) return
+
+    const ventana = window.open('', '_blank')
+    if (!ventana) {
+      window.alert('El navegador bloqueó la ventana de impresión. Permití las ventanas emergentes e intentá nuevamente.')
+      return
+    }
+
+    const escaparHtml = (valor: string) => valor
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+    const [anio, numeroMes] = mesSeleccionado.split('-').map(Number)
+    const fechaMes = new Date(anio, numeroMes - 1, 1)
+    const nombreMes = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(fechaMes)
+    const quincenas = [
+      { titulo: 'Primera quincena', inicio: 1, fin: 15 },
+      { titulo: 'Segunda quincena', inicio: 16, fin: totalDiasMes }
+    ]
+
+    const paginas = quincenas.map((quincena) => {
+      const dias = Array.from(
+        { length: quincena.fin - quincena.inicio + 1 },
+        (_, indice) => quincena.inicio + indice
+      )
+      const encabezados = dias.map((dia) => {
+        const fecha = new Date(anio, numeroMes - 1, dia)
+        const diaSemana = new Intl.DateTimeFormat('es-AR', { weekday: 'short' }).format(fecha)
+        return `<th><span>${escaparHtml(diaSemana)}</span><strong>${dia}</strong></th>`
+      }).join('')
+      const filas = vigiladoresMostrados.map((vigilador) => {
+        const celdas = dias.map((dia) => {
+          const fecha = `${mesSeleccionado}-${String(dia).padStart(2, '0')}`
+          const turno = turnos.find((item) =>
+            item.id_vigilador === vigilador.id &&
+            item.id_objetivo === objetivoSeleccionado &&
+            item.fecha === fecha
+          )
+          if (!turno) return '<td class="sin-turno">—</td>'
+
+          const tipoPersonalizado = turno.id_tipo_turno
+            ? tiposTurno.find((tipo) => tipo.id === turno.id_tipo_turno)
+            : undefined
+          const codigo = turno.tipo === 'franco'
+            ? 'F'
+            : tipoPersonalizado?.abreviatura || (turno.tipo === 'nocturno'
+              ? `${turno.horas_totales}h 🌙`
+              : turno.tipo === 'diurno'
+                ? `${turno.horas_totales}h ☀️`
+                : `${turno.horas_totales}h`)
+          const extra = turno.horas_extra > 0 ? `<small>+${turno.horas_extra}h extra</small>` : ''
+          return `<td>${escaparHtml(codigo)}${extra}</td>`
+        }).join('')
+        const horasQuincena = turnos
+          .filter((turno) => {
+            const dia = Number(turno.fecha.slice(8, 10))
+            return turno.id_vigilador === vigilador.id &&
+              turno.id_objetivo === objetivoSeleccionado &&
+              turno.fecha.startsWith(mesSeleccionado) &&
+              dia >= quincena.inicio && dia <= quincena.fin
+          })
+          .reduce((total, turno) => total + turno.horas_totales + turno.horas_extra, 0)
+
+        return `<tr><th scope="row">${escaparHtml(`${vigilador.apellido}, ${vigilador.nombre}`)}</th>${celdas}<td class="total">${horasQuincena} hs</td></tr>`
+      }).join('')
+      const filasVacias = vigiladoresMostrados.length === 0
+        ? `<tr><td colspan="${dias.length + 2}" class="vacio">No hay vigiladores asignados a este objetivo.</td></tr>`
+        : filas
+
+      return `<section class="quincena"><header><h1>Grilla de turnos</h1><p>${escaparHtml(objetivoActual?.nombre || 'Objetivo')}</p><h2>${quincena.titulo}</h2><p>${quincena.inicio} al ${quincena.fin} de ${escaparHtml(nombreMes)}</p></header><table><thead><tr><th>Vigilador</th>${encabezados}<th>Horas</th></tr></thead><tbody>${filasVacias}</tbody></table></section>`
+    }).join('')
+
+    ventana.opener = null
+    ventana.document.open()
+    ventana.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Grilla ${escaparHtml(objetivoActual?.nombre || 'objetivo')} - ${escaparHtml(nombreMes)}</title><style>
+      @page { size: A4 landscape; margin: 10mm; }
+      * { box-sizing: border-box; }
+      body { margin: 0; color: #111827; font-family: Arial, sans-serif; }
+      .quincena { break-after: page; page-break-after: always; }
+      .quincena:last-child { break-after: auto; page-break-after: auto; }
+      header { margin-bottom: 10px; text-align: center; }
+      h1 { margin: 0; font-size: 18px; }
+      h2 { margin: 5px 0 2px; font-size: 15px; }
+      header p { margin: 3px 0; font-size: 11px; }
+      table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 8px; }
+      th, td { border: 1px solid #64748b; padding: 4px 2px; text-align: center; overflow-wrap: anywhere; }
+      thead th { background: #e2e8f0; }
+      thead th:first-child, tbody th { width: 22%; text-align: left; }
+      thead th:last-child, td.total { width: 7%; font-weight: 700; }
+      thead th span, thead th strong { display: block; }
+      thead th strong { font-size: 10px; }
+      tbody th { font-weight: 600; }
+      td small { display: block; font-size: 6px; color: #475569; }
+      td.sin-turno { color: #94a3b8; }
+      .vacio { padding: 16px; color: #475569; }
+      @media print { thead { display: table-header-group; } tr { break-inside: avoid; } }
+    </style></head><body>${paginas}</body></html>`)
+    ventana.document.close()
+    ventana.focus()
+    window.setTimeout(() => ventana.print(), 250)
+  }
+
   return (
     <div className="space-y-5">
       {/* Barra de Controles y Selector Intuitivo de Semanas */}
@@ -267,14 +374,26 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
           </div>
 
           {!soloLectura && (
-            <Boton
-              variante="secundario"
-              tamano="chico"
-              onClick={() => { const primero = tiposTurno.find(t => (t.id_objetivo === objetivoSeleccionado || t.id_objetivo === null) && t.activo); setTipoTurnoDiagrama(primero?.id || ''); setModalGeneradorAbierto(true)  }}
-              icono={<Wand2 className="w-3.5 h-3.5 text-blue-500" />}
-            >
-              Generar Diagrama
-            </Boton>
+            <div className="flex items-center gap-2">
+              <Boton
+                type="button"
+                variante="secundario"
+                tamano="chico"
+                onClick={() => { const primero = tiposTurno.find(t => (t.id_objetivo === objetivoSeleccionado || t.id_objetivo === null) && t.activo); setTipoTurnoDiagrama(primero?.id || ''); setModalGeneradorAbierto(true)  }}
+                icono={<Wand2 className="w-3.5 h-3.5 text-blue-500" />}
+              >
+                Generar Diagrama
+              </Boton>
+              <Boton
+                type="button"
+                variante="secundario"
+                tamano="chico"
+                onClick={descargarGrilla}
+                icono={<Download className="w-3.5 h-3.5 text-blue-500" />}
+              >
+                Descargar Grilla
+              </Boton>
+            </div>
           )}
         </div>
       </div>
