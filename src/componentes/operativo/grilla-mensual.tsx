@@ -14,6 +14,7 @@ import { Dialogo } from '@/componentes/ui/dialogo'
 import { Etiqueta } from '@/componentes/ui/etiqueta'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { cargarFeriadosManuales, guardarFeriadosManuales } from '@/utilidades/feriados-manuales'
+import { cargarFeriadosArgentina } from '@/utilidades/feriados-argentina'
 import type { Turno } from '@/tipos'
 
 const fechaClave = (fecha: Date) =>
@@ -34,6 +35,15 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   const totalDiasMes = new Date(anioSeleccionado, numeroMesSeleccionado, 0).getDate()
   const claveFeriadosManuales = `${objetivoActual?.id_empresa || 'sin-empresa'}:${objetivoSeleccionado || 'sin-objetivo'}`
   const [feriadosManuales, setFeriadosManuales] = useState<string[]>([])
+  const [feriadosNacionales, setFeriadosNacionales] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    let cancelado = false
+    cargarFeriadosArgentina(anioSeleccionado).then((feriados) => {
+      if (!cancelado) setFeriadosNacionales(feriados)
+    })
+    return () => { cancelado = true }
+  }, [anioSeleccionado])
   useEffect(() => {
     if (objetivoActual?.id_empresa && objetivoSeleccionado) {
       setFeriadosManuales(cargarFeriadosManuales(objetivoActual.id_empresa, objetivoSeleccionado))
@@ -54,7 +64,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
     })
   }
 
-  const nombreFeriadoEnFecha = (fecha: string) => feriadosManuales.includes(fecha) ? 'Feriado manual' : undefined
+  const nombreFeriadoEnFecha = (fecha: string) => feriadosNacionales[fecha] || (feriadosManuales.includes(fecha) ? 'Feriado manual' : undefined)
 
   // Selector de modo: una semana o el mes completo.
   const [modoVista, setModoVista] = useState<'semana' | 'mes'>('semana')
@@ -572,14 +582,14 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                       key={dia}
                       title={nombreFeriado}
                       aria-label={`${dia} de ${nombreMesSeleccionado}${nombreFeriado ? `, feriado: ${nombreFeriado}` : ''}`}
-                      className={`p-1.5 text-center border-r border-slate-200 dark:border-slate-800/80 font-semibold bg-slate-100 dark:bg-[#0C121E] ${
+                      className={`p-1.5 text-center border-r border-slate-200 dark:border-slate-800/80 font-semibold ${
                         modoVista === 'semana' ? 'min-w-[36px] max-w-[36px]' : 'min-w-[30px] max-w-[30px]'
                       } ${
                         esFeriado
-                          ? 'text-amber-700 dark:text-amber-300'
+                          ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300'
                           : esFinDeSemana
                           ? 'bg-slate-200/50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300'
-                          : 'text-slate-600 dark:text-slate-400'
+                          : 'bg-slate-100 dark:bg-[#0C121E] text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       <div className="text-[10px] leading-tight opacity-75 font-semibold">
@@ -591,19 +601,19 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                         </span>
                       </div>
                       <div className="font-extrabold text-sm">{dia}</div>
-                      {!soloLectura ? (
+                      {!soloLectura && !feriadosNacionales[claveFecha] ? (
                         <button
                           type="button"
                           onClick={() => alternarFeriadoManual(claveFecha)}
-                          aria-pressed={esFeriado}
-                          aria-label={`${esFeriado ? 'Quitar' : 'Marcar'} feriado el ${dia} de ${nombreMesSeleccionado}`}
-                          title={`${esFeriado ? 'Quitar' : 'Marcar'} feriado`}
-                          className="mt-0.5 rounded px-1 text-[9px] font-bold text-amber-700 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-900/50"
+                          aria-pressed={feriadosManuales.includes(claveFecha)}
+                          aria-label={`${feriadosManuales.includes(claveFecha) ? 'Quitar' : 'Marcar'} feriado el ${dia} de ${nombreMesSeleccionado}`}
+                          title={`${feriadosManuales.includes(claveFecha) ? 'Quitar' : 'Marcar'} feriado`}
+                          className="mt-0.5 rounded px-1 text-[9px] font-bold text-amber-700 hover:bg-amber-200 dark:text-amber-300 dark:hover:bg-amber-900/50"
                         >
-                          {esFeriado ? 'Fer' : '+ Fer'}
+                          {feriadosManuales.includes(claveFecha) ? 'Fer' : '+ Fer'}
                         </button>
                       ) : esFeriado ? (
-                        <div className="text-[9px] text-amber-600 dark:text-amber-400 font-bold">Fer</div>
+                        <div className="text-[9px] text-amber-700 dark:text-amber-300 font-bold" title={nombreFeriado}>Fer</div>
                       ) : null}
                     </th>
                   )
@@ -629,8 +639,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                         {vig.apellido}, {vig.nombre.charAt(0)}.
                       </div>
                       <div className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold truncate max-w-[105px]">
-                        <span className="sm:hidden">{totales.horasSemana}h sem</span>
-                        <span className="hidden sm:inline text-slate-400 font-normal">{vig.email.split('@')[0]}</span>
+                        {totales.horasSemana}h sem
                       </div>
                     </td>
 
@@ -642,13 +651,15 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                         (t) => t.id_vigilador === vig.id && t.id_objetivo === objetivoSeleccionado && t.fecha === fecha
                       )
                       const horasExtra = turno?.horas_extra ?? 0
+                      const fechaCelda = fecha
+                      const feriadoCelda = nombreFeriadoEnFecha(fechaCelda)
 
                       return (
                         <td
                           key={dia}
                           onClick={() => !soloLectura && abrirEditarCelda(vig.id, `${vig.nombre} ${vig.apellido}`, dia)}
-                          className={`p-1 text-center border-r border-slate-200 dark:border-slate-800/70 transition-colors select-none group bg-white dark:bg-[#0C121E] ${soloLectura ? '' : 'cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-800/80'}`}
-                          title={soloLectura ? 'Turno programado' : 'Clic para modificar turno'}
+                          className={`p-1 text-center border-r border-slate-200 dark:border-slate-800/70 transition-colors select-none group ${feriadoCelda ? 'bg-amber-50 dark:bg-amber-950/20' : 'bg-white dark:bg-[#0C121E]'} ${soloLectura ? '' : 'cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-800/80'}`}
+                          title={feriadoCelda ? `${feriadoCelda} · ${fechaCelda}` : soloLectura ? 'Turno programado' : 'Clic para modificar turno'}
                         >
                           <div
                             className={`h-10 sm:h-7 min-w-[38px] sm:min-w-0 flex items-center justify-center rounded-lg border transition-transform group-hover:scale-105 ${
