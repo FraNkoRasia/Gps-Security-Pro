@@ -192,14 +192,16 @@ export const LibroNovedades: React.FC = () => {
                     <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                       <span className="font-mono">{nov.fecha} — {nov.hora} hs</span>
                       <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => abrirEditar(nov)}
-                          className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-amber-500 transition-colors"
-                          title="Corregir novedad (asienta auditoría)"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
+                        {usuario?.rol !== 'administrador' && (
+                          <button
+                            type="button"
+                            onClick={() => abrirEditar(nov)}
+                            className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-amber-500 transition-colors"
+                            title="Corregir novedad (asienta auditoría)"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

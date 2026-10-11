@@ -121,9 +121,9 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbr
         </div>
       </header>
 
-      {/* Drawer / Menú Desplegable Lateral para Móviles */}
+      {/* Drawer / Menú Desplegable Lateral */}
       {menuMovilAbierto && (
-        <div className="fixed inset-0 z-50 md:hidden flex justify-end animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex justify-end animate-fadeIn">
           {/* Backdrop oscuro */}
           <div
             className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"

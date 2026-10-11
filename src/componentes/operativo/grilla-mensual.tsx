@@ -13,19 +13,52 @@ import { Boton } from '@/componentes/ui/boton'
 import { Dialogo } from '@/componentes/ui/dialogo'
 import { Etiqueta } from '@/componentes/ui/etiqueta'
 import { useOperativo } from '@/contextos/contexto-operativo'
+import { cargarFeriadosManuales, guardarFeriadosManuales } from '@/utilidades/feriados-manuales'
 import type { Turno } from '@/tipos'
+
+const fechaClave = (fecha: Date) =>
+  `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`
 
 export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: boolean }> = ({ objetivoInicial = '', soloLectura = false }) => {
   const { objetivos, vigiladores, asignaciones, turnos, tiposTurno, asignarTurnoGrilla } = useOperativo()
   const [objetivoSeleccionado] = useState(objetivoInicial)
   const objetivoActual = objetivos.find((objetivo) => objetivo.id === objetivoSeleccionado)
 
-  const mesSeleccionado = '2026-10'
-  const totalDiasMes = 31
+  const [mesSeleccionado, setMesSeleccionado] = useState(() => {
+    const hoy = new Date()
+    return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`
+  })
+  const [anioSeleccionado, numeroMesSeleccionado] = mesSeleccionado.split('-').map(Number)
+  const fechaMesSeleccionado = new Date(anioSeleccionado, numeroMesSeleccionado - 1, 1)
+  const nombreMesSeleccionado = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(fechaMesSeleccionado)
+  const totalDiasMes = new Date(anioSeleccionado, numeroMesSeleccionado, 0).getDate()
+  const claveFeriadosManuales = `${objetivoActual?.id_empresa || 'sin-empresa'}:${objetivoSeleccionado || 'sin-objetivo'}`
+  const [feriadosManuales, setFeriadosManuales] = useState<string[]>([])
+  useEffect(() => {
+    if (objetivoActual?.id_empresa && objetivoSeleccionado) {
+      setFeriadosManuales(cargarFeriadosManuales(objetivoActual.id_empresa, objetivoSeleccionado))
+    } else {
+      setFeriadosManuales([])
+    }
+  }, [claveFeriadosManuales, objetivoActual?.id_empresa, objetivoSeleccionado])
 
-  // Selector de Modo: 'semana' (7 días a simple vista) o 'mes' (31 días completo)
+  const alternarFeriadoManual = (fecha: string) => {
+    setFeriadosManuales((actuales) => {
+      const nuevasFechas = actuales.includes(fecha)
+        ? actuales.filter((dia) => dia !== fecha)
+        : [...actuales, fecha]
+      if (objetivoActual?.id_empresa && objetivoSeleccionado) {
+        guardarFeriadosManuales(objetivoActual.id_empresa, objetivoSeleccionado, nuevasFechas)
+      }
+      return nuevasFechas
+    })
+  }
+
+  const nombreFeriadoEnFecha = (fecha: string) => feriadosManuales.includes(fecha) ? 'Feriado manual' : undefined
+
+  // Selector de modo: una semana o el mes completo.
   const [modoVista, setModoVista] = useState<'semana' | 'mes'>('semana')
-  const [semanaActiva, setSemanaActiva] = useState<number>(1) // 1 a 5
+  const [semanaActiva, setSemanaActiva] = useState<number>(1)
 
   // Modal para edición interactiva de celda
   const [modalEdicionAbierto, setModalEdicionAbierto] = useState(false)
@@ -45,16 +78,19 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   const [patronDiagrama, setPatronDiagrama] = useState<'4x3' | '4x2' | '2x2' | '6x1'>('4x3')
   const [tipoTurnoDiagrama, setTipoTurnoDiagrama] = useState('')
 
-  // Definición de las 5 semanas de Octubre 2026
-  const semanas = [
-    { numero: 1, inicio: 1, fin: 7, label: 'Sem 1 (1 - 7)' },
-    { numero: 2, inicio: 8, fin: 14, label: 'Sem 2 (8 - 14)' },
-    { numero: 3, inicio: 15, fin: 21, label: 'Sem 3 (15 - 21)' },
-    { numero: 4, inicio: 22, fin: 28, label: 'Sem 4 (22 - 28)' },
-    { numero: 5, inicio: 29, fin: 31, label: 'Sem 5 (29 - 31)' }
-  ]
+  const semanas = Array.from({ length: Math.ceil(totalDiasMes / 7) }, (_, indice) => {
+    const inicio = indice * 7 + 1
+    const fin = Math.min(inicio + 6, totalDiasMes)
+    return { numero: indice + 1, inicio, fin, label: `Sem ${indice + 1} (${inicio} - ${fin})` }
+  })
 
   const semanaActualData = semanas.find((s) => s.numero === semanaActiva) || semanas[0]
+
+  const desplazarMes = (cantidad: number) => {
+    const nuevoMes = new Date(anioSeleccionado, numeroMesSeleccionado - 1 + cantidad, 1)
+    setMesSeleccionado(`${nuevoMes.getFullYear()}-${String(nuevoMes.getMonth() + 1).padStart(2, '0')}`)
+    setSemanaActiva(1)
+  }
 
   // Días a renderizar según el modo
   const diasVisibles =
@@ -260,7 +296,9 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
         const fecha = new Date(anio, numeroMes - 1, dia)
         const diaSemana = new Intl.DateTimeFormat('es-AR', { weekday: 'short' }).format(fecha)
         const finDeSemana = fecha.getDay() === 0 || fecha.getDay() === 6
-        return `<th class="${finDeSemana ? 'fin-de-semana' : ''}"><span>${escaparHtml(diaSemana)}</span><strong>${dia}</strong></th>`
+        const feriado = nombreFeriadoEnFecha(fechaClave(fecha))
+        const clases = [finDeSemana ? 'fin-de-semana' : '', feriado ? 'feriado' : ''].filter(Boolean).join(' ')
+        return `<th class="${clases}"${feriado ? ` title="${escaparHtml(feriado)}"` : ''}><span>${escaparHtml(diaSemana)}</span><strong>${dia}</strong>${feriado ? '<small>Feriado</small>' : ''}</th>`
       }).join('')
       const filas = vigiladoresMostrados.map((vigilador) => {
         const celdas = dias.map((dia) => {
@@ -342,6 +380,9 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
       thead th span { font-size: 7px; font-weight: 600; }
       thead th strong { font-size: 10px; }
       thead th.fin-de-semana { background: #dbeafe; color: #1e40af; }
+      thead th.feriado { background: #fef3c7; color: #92400e; }
+      thead th.feriado.fin-de-semana { background: #fde68a; color: #78350f; }
+      thead th small { display: block; font-size: 5px; font-weight: 700; }
       tbody th { padding-left: 2mm; background: #f8fafc; font-size: 8px; font-weight: 700; }
       .turno-casillero { min-height: 23px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; border: 1.5px solid; border-radius: 6px; font-size: 8px; line-height: 1; }
       .turno-casillero strong { font-size: 8px; }
@@ -403,7 +444,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              Mes Completo (31 días)
+              Mes Completo ({totalDiasMes} días)
             </button>
           </div>
 
@@ -432,6 +473,36 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
         </div>
       </div>
 
+      <div className="flex items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 dark:border-slate-800 dark:bg-[#0C121E]">
+        <button
+          type="button"
+          onClick={() => desplazarMes(-1)}
+          className="rounded-lg border border-slate-300 p-1.5 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+          title="Mes anterior"
+          aria-label="Mes anterior"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <span className="min-w-[160px] text-center text-sm font-bold capitalize text-slate-800 dark:text-slate-200" aria-live="polite">
+          {nombreMesSeleccionado}
+        </span>
+        <button
+          type="button"
+          onClick={() => desplazarMes(1)}
+          className="rounded-lg border border-slate-300 p-1.5 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+          title="Mes siguiente"
+          aria-label="Mes siguiente"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+
+      {!soloLectura && (
+        <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+          Marcá o quitá un feriado con el botón de cada día. Las marcas se guardan en este navegador para este objetivo y no se comparten con otros usuarios.
+        </p>
+      )}
+
       {/* Navegador Intuitivo de Semanas (Visible en modo Semana) */}
       {modoVista === 'semana' && (
         <div className="p-3 rounded-2xl bg-white dark:bg-[#0C121E] border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
@@ -447,7 +518,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
             </button>
 
             <span className="text-xs font-bold text-slate-800 dark:text-slate-200 min-w-[150px] text-center">
-              Semana {semanaActiva} de Octubre 2026 ({semanaActualData.inicio} al {semanaActualData.fin})
+              Semana {semanaActiva} de {nombreMesSeleccionado} ({semanaActualData.inicio} al {semanaActualData.fin})
             </span>
 
             <button
@@ -491,12 +562,16 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                   Vigilador
                 </th>
                 {diasVisibles.map((dia) => {
-                  const dateObj = new Date(2026, 9, dia)
+                  const dateObj = new Date(anioSeleccionado, numeroMesSeleccionado - 1, dia)
                   const esFinDeSemana = dateObj.getDay() === 0 || dateObj.getDay() === 6
-                  const esFeriado = dia === 12
+                  const claveFecha = fechaClave(dateObj)
+                  const nombreFeriado = nombreFeriadoEnFecha(claveFecha)
+                  const esFeriado = Boolean(nombreFeriado)
                   return (
                     <th
                       key={dia}
+                      title={nombreFeriado}
+                      aria-label={`${dia} de ${nombreMesSeleccionado}${nombreFeriado ? `, feriado: ${nombreFeriado}` : ''}`}
                       className={`p-1.5 text-center border-r border-slate-800/80 font-semibold bg-[#0C121E] ${
                         modoVista === 'semana' ? 'min-w-[36px] max-w-[36px]' : 'min-w-[30px] max-w-[30px]'
                       } ${
@@ -516,9 +591,20 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                         </span>
                       </div>
                       <div className="font-extrabold text-sm">{dia}</div>
-                      {esFeriado && (
+                      {!soloLectura ? (
+                        <button
+                          type="button"
+                          onClick={() => alternarFeriadoManual(claveFecha)}
+                          aria-pressed={esFeriado}
+                          aria-label={`${esFeriado ? 'Quitar' : 'Marcar'} feriado el ${dia} de ${nombreMesSeleccionado}`}
+                          title={`${esFeriado ? 'Quitar' : 'Marcar'} feriado`}
+                          className={`mt-0.5 rounded px-1 text-[9px] font-bold ${esFeriado ? 'bg-amber-500 text-white' : 'text-amber-700 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-900/50'}`}
+                        >
+                          {esFeriado ? 'Fer' : '+ Fer'}
+                        </button>
+                      ) : esFeriado ? (
                         <div className="text-[9px] text-amber-600 dark:text-amber-400 font-bold">Fer</div>
-                      )}
+                      ) : null}
                     </th>
                   )
                 })}
@@ -651,7 +737,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
         titulo="Asignación Rápida de Turno"
         subtitulo={
           celdaEditando
-            ? `${celdaEditando.nombreVigilador} — Día ${celdaEditando.dia} de Octubre 2026`
+            ? `${celdaEditando.nombreVigilador} — Día ${celdaEditando.dia} de ${nombreMesSeleccionado}`
             : ''
         }
         icono={<Edit3 className="w-5 h-5 text-blue-500" />}
@@ -758,6 +844,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
           </div>
         </div>
       </Dialogo>
+
     </div>
   )
 }
