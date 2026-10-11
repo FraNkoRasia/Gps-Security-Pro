@@ -409,7 +409,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   }
 
   return (
-    <div className="space-y-5">
+    <div className="grilla-mensual space-y-5">
       {/* Barra de Controles y Selector Intuitivo de Semanas */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div>
