@@ -240,13 +240,13 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   }
 
   const obtenerEtiquetaTurno = (t?: Turno) => {
-    if (!t) return <span className="text-slate-600 dark:text-slate-700">-</span>
+    if (!t) return <span className="text-slate-400 dark:text-slate-600">-</span>
     if (t.tipo === 'franco') {
-      return <span className="text-slate-300 font-extrabold text-xs">F</span>
+      return <span className="text-slate-700 dark:text-slate-300 font-extrabold text-xs">F</span>
     }
     if (t.tipo === 'nocturno') {
       return (
-        <span className="font-extrabold flex flex-col items-center justify-center leading-none gap-0.5 text-blue-400">
+        <span className="font-extrabold flex flex-col items-center justify-center leading-none gap-0.5 text-blue-700 dark:text-blue-400">
           <span className="text-[11px]">{t.horas_totales}</span>
           <span className="text-[11px] leading-none" aria-label="Nocturno">🌙</span>
         </span>
@@ -254,14 +254,14 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
     }
     if (t.tipo === 'diurno') {
       return (
-        <span className="font-extrabold flex flex-col items-center justify-center leading-none gap-0.5 text-amber-400">
+        <span className="font-extrabold flex flex-col items-center justify-center leading-none gap-0.5 text-amber-700 dark:text-amber-400">
           <span className="text-[11px]">{t.horas_totales}</span>
           <span className="text-[11px] leading-none" aria-label="Diurno">☀️</span>
         </span>
       )
     }
     const personalizado = t.id_tipo_turno ? tiposTurno.find((x) => x.id === t.id_tipo_turno) : null
-    return <span className="text-emerald-400 font-extrabold flex flex-col items-center justify-center leading-none gap-0.5"><span className="text-[10px]">{personalizado?.abreviatura || t.horas_totales}</span><span className="text-[8px] text-slate-400">{personalizado?.nombre || 'Especial'}</span></span>
+    return <span className="text-emerald-700 dark:text-emerald-400 font-extrabold flex flex-col items-center justify-center leading-none gap-0.5"><span className="text-[10px]">{personalizado?.abreviatura || t.horas_totales}</span><span className="text-[8px] text-slate-600 dark:text-slate-400">{personalizado?.nombre || 'Especial'}</span></span>
   }
 
   const descargarGrilla = () => {
@@ -558,7 +558,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
           <table className="w-max min-w-full text-xs text-left border-separate border-spacing-0 bg-white dark:bg-[#0C121E]">
             <thead>
               <tr className="bg-slate-100 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px] select-none">
-                <th className="p-2.5 sm:p-3 sticky left-0 z-20 bg-[#0C121E] border-r border-slate-800 font-bold text-white w-[120px] min-w-[120px] sm:w-32 sm:min-w-[128px] rounded-tl-xl">
+                <th className="p-2.5 sm:p-3 sticky left-0 z-20 bg-slate-100 dark:bg-[#0C121E] border-r border-slate-200 dark:border-slate-800 font-bold text-slate-800 dark:text-white w-[120px] min-w-[120px] sm:w-32 sm:min-w-[128px] rounded-tl-xl">
                   Vigilador
                 </th>
                 {diasVisibles.map((dia) => {
@@ -572,11 +572,11 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                       key={dia}
                       title={nombreFeriado}
                       aria-label={`${dia} de ${nombreMesSeleccionado}${nombreFeriado ? `, feriado: ${nombreFeriado}` : ''}`}
-                      className={`p-1.5 text-center border-r border-slate-800/80 font-semibold bg-[#0C121E] ${
+                      className={`p-1.5 text-center border-r border-slate-200 dark:border-slate-800/80 font-semibold bg-slate-100 dark:bg-[#0C121E] ${
                         modoVista === 'semana' ? 'min-w-[36px] max-w-[36px]' : 'min-w-[30px] max-w-[30px]'
                       } ${
                         esFeriado
-                          ? 'bg-amber-100/70 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300'
+                          ? 'text-amber-700 dark:text-amber-300'
                           : esFinDeSemana
                           ? 'bg-slate-200/50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300'
                           : 'text-slate-600 dark:text-slate-400'
@@ -598,7 +598,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                           aria-pressed={esFeriado}
                           aria-label={`${esFeriado ? 'Quitar' : 'Marcar'} feriado el ${dia} de ${nombreMesSeleccionado}`}
                           title={`${esFeriado ? 'Quitar' : 'Marcar'} feriado`}
-                          className={`mt-0.5 rounded px-1 text-[9px] font-bold ${esFeriado ? 'bg-amber-500 text-white' : 'text-amber-700 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-900/50'}`}
+                          className="mt-0.5 rounded px-1 text-[9px] font-bold text-amber-700 hover:bg-amber-100 dark:text-amber-300 dark:hover:bg-amber-900/50"
                         >
                           {esFeriado ? 'Fer' : '+ Fer'}
                         </button>
@@ -624,7 +624,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                     className="hover:bg-blue-50/40 dark:hover:bg-blue-950/20 transition-colors"
                   >
                     {/* Columna Vigilador Sticky */}
-                    <td className="p-2 sm:p-2.5 sticky left-0 z-10 bg-[#0C121E] border-r border-slate-800 shadow-xs">
+                    <td className="p-2 sm:p-2.5 sticky left-0 z-10 bg-white dark:bg-[#0C121E] border-r border-slate-200 dark:border-slate-800 shadow-xs">
                       <div className="font-bold text-slate-900 dark:text-white leading-tight truncate">
                         {vig.apellido}, {vig.nombre.charAt(0)}.
                       </div>
@@ -647,7 +647,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                         <td
                           key={dia}
                           onClick={() => !soloLectura && abrirEditarCelda(vig.id, `${vig.nombre} ${vig.apellido}`, dia)}
-                          className={`p-1 text-center border-r border-slate-800/70 transition-colors select-none group bg-[#0C121E] ${soloLectura ? '' : 'cursor-pointer hover:bg-slate-800/80'}`}
+                          className={`p-1 text-center border-r border-slate-200 dark:border-slate-800/70 transition-colors select-none group bg-white dark:bg-[#0C121E] ${soloLectura ? '' : 'cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-800/80'}`}
                           title={soloLectura ? 'Turno programado' : 'Clic para modificar turno'}
                         >
                           <div
@@ -655,7 +655,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                               !turno
                                 ? 'border-transparent'
                                 : turno.tipo === 'franco'
-                                ? 'bg-slate-800/40 dark:bg-slate-800/70 border-slate-500/40'
+                                ? 'bg-slate-200/80 dark:bg-slate-800/70 border-slate-400/60 dark:border-slate-500/40'
                                 : turno.tipo === 'diurno'
                                 ? 'bg-amber-500/10 border-amber-500/70 dark:bg-amber-950/50'
                                 : turno.tipo === 'nocturno'
@@ -663,7 +663,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                                 : 'bg-emerald-500/10 border-emerald-500/60 dark:bg-emerald-950/40'
                             }`}
                           >
-                            {obtenerEtiquetaTurno(turno)}{horasExtra > 0 && <span className="text-[8px] font-bold text-emerald-400">+{horasExtra}h extra</span>}
+                            {obtenerEtiquetaTurno(turno)}{horasExtra > 0 && <span className="text-[8px] font-bold text-emerald-700 dark:text-emerald-400">+{horasExtra}h extra</span>}
                           </div>
                         </td>
                       )
@@ -707,7 +707,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
 
               {/* Fila Total Diario del Servicio */}
               <tr className="bg-slate-100/90 dark:bg-slate-950/90 font-bold border-t-2 border-slate-300 dark:border-slate-700 text-[11px]">
-                <td className="p-2 sm:p-2.5 sticky left-0 z-10 bg-[#101827] border-r border-slate-800 text-slate-200">
+                <td className="p-2 sm:p-2.5 sticky left-0 z-10 bg-slate-100 dark:bg-[#101827] border-r border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
                   Total Día
                 </td>
                 {diasVisibles.map((dia) => {
@@ -715,7 +715,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                   return (
                     <td
                       key={dia}
-                      className="p-1 text-center border-r border-slate-800/70 text-blue-400 font-mono bg-[#101827]"
+                      className="p-1 text-center border-r border-slate-200 dark:border-slate-800/70 text-blue-700 dark:text-blue-400 font-mono bg-slate-50 dark:bg-[#101827]"
                     >
                       {total}h
                     </td>
