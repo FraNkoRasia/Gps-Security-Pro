@@ -335,7 +335,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
         subtitulo="Registro de personal operativo para diagramación y libros de guardia."
         icono={<UserPlus className="w-5 h-5 text-blue-500" />}
       >
-        <form onSubmit={manejarGuardar} className="space-y-4">
+        <form onSubmit={manejarGuardar} className="space-y-4" autoComplete="off">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Etiqueta requerido>Nombre</Etiqueta>
@@ -360,6 +360,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
             <Etiqueta requerido={!vigiladorEditando}>Correo Electrónico (Acceso Auth)</Etiqueta>
             <Entrada
               type="email"
+              autoComplete={vigiladorEditando ? "email" : "new-username"}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="franco.rasia@empresa.com"
@@ -372,6 +373,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
             </Etiqueta>
             <Entrada
               type="password"
+              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={vigiladorEditando ? 'Dejar vacío para conservar la actual' : 'Mínimo 8 caracteres'}
