@@ -84,7 +84,7 @@ export const AvisosComunicacion: React.FC = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 rounded-xl border border-slate-200 dark:border-slate-800 p-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 rounded-xl border border-slate-200 dark:border-slate-800 p-3">
         <div><label htmlFor="avisos-desde" className="mb-1 block text-[11px] font-semibold text-slate-500">Publicados desde</label><Entrada id="avisos-desde" type="date" value={fechaDesde} onChange={(e) => setFechaDesde(e.target.value)} /></div>
         <div><label htmlFor="avisos-hasta" className="mb-1 block text-[11px] font-semibold text-slate-500">Publicados hasta</label><Entrada id="avisos-hasta" type="date" min={fechaDesde || undefined} value={fechaHasta} onChange={(e) => setFechaHasta(e.target.value)} /></div>
         <div><label htmlFor="avisos-lectura" className="mb-1 block text-[11px] font-semibold text-slate-500">Estado de lectura</label><select id="avisos-lectura" value={filtroLectura} onChange={(e) => setFiltroLectura(e.target.value)} className="w-full min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700 px-3 text-sm text-slate-900 dark:text-slate-100"><option value="todos">Todos los avisos</option><option value="no-leidos">No leídos</option><option value="leidos">Leídos</option></select></div>
