@@ -11,14 +11,20 @@ export const MiTurno: React.FC = () => {
   const { usuario } = useAutenticacion()
 
   const idVig = usuario?.id || 'usr-vig-01'
-  const hoyStr = new Date().toISOString().split('T')[0]
+  const hoy = new Date()
+  const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
 
   // Buscar turno de hoy
   const turnoHoy = turnos.find((t) => t.id_vigilador === idVig && t.fecha === hoyStr)
-  // Próximos turnos
-  const proximosTurnos = turnos
-    .filter((t) => t.id_vigilador === idVig && t.fecha > hoyStr && t.horas_totales > 0)
-    .sort((a, b) => a.fecha.localeCompare(b.fecha))
+  // Mostrar los próximos cinco días calendario, incluso si no hay turno o corresponde franco.
+  const proximosTurnos = Array.from({ length: 5 }, (_, i) => {
+    const fecha = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + i + 1)
+    const fechaStr = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`
+    return {
+      fecha: fechaStr,
+      turno: turnos.find((t) => t.id_vigilador === idVig && t.fecha === fechaStr),
+    }
+  })
 
   // Asignación activa
   const asignacionActiva = asignaciones.find((a) => a.id_vigilador === idVig && a.activa)
@@ -89,9 +95,6 @@ export const MiTurno: React.FC = () => {
                 <span className="font-bold text-slate-900 dark:text-white text-sm break-words">
                   {supervisorNombre || 'Sin supervisor asignado'}
                 </span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                  {supervisorActivo?.telefono || 'Contacto no registrado'}
-                </span>
               </div>
             </div>
 
@@ -122,31 +125,29 @@ export const MiTurno: React.FC = () => {
             </TarjetaTitulo>
           </TarjetaEncabezado>
           <TarjetaContenido>
-            {proximosTurnos.length === 0 ? (
-              <p className="text-xs text-slate-500 text-center py-6">
-                No hay guardias adicionales diagramadas en los próximos días.
-              </p>
-            ) : (
-              <div className="divide-y divide-slate-200 dark:divide-slate-800 text-xs">
-                {proximosTurnos.slice(0, 5).map((trn) => (
-                  <div key={trn.id} className="py-3 flex items-center justify-between gap-3">
+            <div className="divide-y divide-slate-200 dark:divide-slate-800 text-xs">
+              {proximosTurnos.map(({ fecha, turno }) => {
+                const esFranco = !turno || turno.tipo === 'franco' || turno.horas_totales === 0
+                const nombreTurno = turno
+                  ? tiposTurno.find(t => t.id === turno.id_tipo_turno)?.nombre || (turno.tipo === 'nocturno' ? '12🌙 Nocturno' : turno.tipo === 'diurno' ? '12☀️ Diurno' : turno.tipo === 'franco' ? 'Franco' : turno.tipo)
+                  : 'Franco'
+                return (
+                  <div key={fecha} className="py-3 flex items-center justify-between gap-3">
                     <div>
-                      <div className="font-bold text-slate-900 dark:text-white">
-                        {trn.fecha}
-                      </div>
+                      <div className="font-bold text-slate-900 dark:text-white">{fecha}</div>
                       <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {trn.hora_inicio} a {trn.hora_fin} ({trn.horas_totales} hs)
+                        {esFranco ? 'Día de franco' : `${turno.hora_inicio} a ${turno.hora_fin} (${turno.horas_totales} hs)`}
                       </div>
                     </div>
                     <div>
-                      <Insignia variante={trn.tipo === 'nocturno' ? 'azul' : 'dorado'}>
-                        {tiposTurno.find(t => t.id === trn.id_tipo_turno)?.nombre || (trn.tipo === 'nocturno' ? '12🌙 Nocturno' : trn.tipo === 'diurno' ? '12☀️ Diurno' : trn.tipo)}
+                      <Insignia variante={esFranco ? 'gris' : turno.tipo === 'nocturno' ? 'azul' : 'dorado'}>
+                        {esFranco ? 'Franco' : nombreTurno}
                       </Insignia>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+                )
+              })}
+            </div>
           </TarjetaContenido>
         </Tarjeta>
       </div>
