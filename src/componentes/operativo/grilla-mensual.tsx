@@ -458,7 +458,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                             : (feriadosManuales.includes(claveFecha) ? 'Quitar feriado manual' : 'Marcar feriado manual')}
                           className="mt-0.5 rounded px-1 text-[9px] font-bold text-amber-700 hover:bg-amber-200 dark:text-amber-300 dark:hover:bg-amber-900/50"
                         >
-                          {esFeriado ? 'Fer' : '+ Fer'}
+                          {feriadosNacionales[claveFecha] ? (feriadosNacionalesIgnorados.includes(claveFecha) ? 'Rest.' : 'Fer') : (feriadosManuales.includes(claveFecha) ? 'Fer' : '+ Fer')}
                         </button>
                       ) : esFeriado ? (
                         <div className="text-[9px] text-amber-700 dark:text-amber-300 font-bold" title={nombreFeriado}>Fer</div>
