@@ -159,7 +159,7 @@ export const CambiosTurnos: React.FC = () => {
       )}
 
       {/* Filtros del historial de solicitudes */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 rounded-xl border border-slate-200 dark:border-slate-800 p-3">
+      <div className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 dark:border-slate-800 p-3">
         <div>
           <label htmlFor="cambios-desde" className="mb-1 block text-[11px] font-semibold text-slate-500">Turnos desde</label>
           <Entrada id="cambios-desde" type="date" value={historialDesde} onChange={(e) => setHistorialDesde(e.target.value)} />
@@ -168,7 +168,7 @@ export const CambiosTurnos: React.FC = () => {
           <label htmlFor="cambios-hasta" className="mb-1 block text-[11px] font-semibold text-slate-500">Turnos hasta</label>
           <Entrada id="cambios-hasta" type="date" min={historialDesde || undefined} value={historialHasta} onChange={(e) => setHistorialHasta(e.target.value)} />
         </div>
-        <div>
+        <div className="col-span-2">
           <label htmlFor="cambios-estado" className="mb-1 block text-[11px] font-semibold text-slate-500">Estado de solicitud</label>
           <select id="cambios-estado" value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)} className="w-full min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700 px-3 text-sm text-slate-900 dark:text-slate-100">
             <option value="todos">Todos los estados</option>
