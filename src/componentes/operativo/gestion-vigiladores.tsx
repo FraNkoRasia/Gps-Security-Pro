@@ -11,6 +11,22 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { Usuario } from '@/tipos'
 
+const formatearDuracion = (horas: number | null | undefined) => {
+  const minutosTotales = Math.max(0, Math.round(Number(horas || 0) * 60))
+  const horasEnteras = Math.floor(minutosTotales / 60)
+  const minutos = minutosTotales % 60
+  return minutos === 0 ? `${horasEnteras} h` : `${horasEnteras} h ${minutos} min`
+}
+
+const etiquetaEstadoCambio = (estado: string, administrador?: string | null) => {
+  if (estado === 'aprobada_admin') return administrador ? `Aprobada por ${administrador}` : 'Aprobada (administrador no registrado)'
+  if (estado === 'aceptada_vigilador') return 'Aceptada por vigilador · pendiente de administración'
+  if (estado === 'rechazada_vigilador') return 'Rechazada por vigilador'
+  if (estado === 'cancelada') return administrador ? `Rechazada por ${administrador}` : 'Cancelada'
+  if (estado === 'pendiente') return 'Pendiente de respuesta'
+  return estado
+}
+
 export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idObjetivoSeleccionado?: string; modoConsulta?: boolean }> = ({ idEmpresaSeleccionada, idObjetivoSeleccionado, modoConsulta = false }) => {
   const { vigiladores, asignaciones, objetivos, turnos, novedades, solicitudesCambio, avisos, solicitudesHorasExtra, crearVigilador, editarVigilador, cambiarEstadoVigilador } = useOperativo()
   const { usuario } = useAutenticacion()
@@ -145,6 +161,22 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
   const extrasHistorial = solicitudesHorasExtra.filter(s => s.id_vigilador === vigiladorSeleccionado?.id && s.fecha.startsWith(mesHistorialOperativo)).sort((a, b) => b.fecha.localeCompare(a.fecha))
   const cambiosHistorial = solicitudesCambio.filter(s => (s.id_solicitante === vigiladorSeleccionado?.id || s.id_destinatario === vigiladorSeleccionado?.id) && s.fecha_turno.startsWith(mesHistorialOperativo)).sort((a, b) => b.fecha_turno.localeCompare(a.fecha_turno))
   const objetivosDelVigilador = new Set(asignaciones.filter(a => a.id_vigilador === vigiladorSeleccionado?.id).map(a => a.id_objetivo))
+  const nombreVigilador = (id: string | null | undefined) => {
+    const encontrado = vigiladores.find(v => v.id === id)
+    return encontrado ? `${encontrado.nombre} ${encontrado.apellido}`.trim() : 'Vigilador no identificado'
+  }
+  const resumenEstadoTurno = (estado: string) => {
+    if (estado === 'cumplido') return 'Realizado'
+    if (estado === 'programado') return 'Programado'
+    if (estado === 'ausente') return 'Ausencia'
+    if (estado === 'reemplazado') return 'Reemplazado'
+    return estado
+  }
+  const solicitudesAprobadasPorTurno = new Map<string, number>()
+  extrasHistorial.filter(s => s.estado === 'aprobada').forEach(s => {
+    solicitudesAprobadasPorTurno.set(s.id_turno, (solicitudesAprobadasPorTurno.get(s.id_turno) || 0) + Number(s.minutos_aprobados ?? s.minutos_solicitados))
+  })
+
   const avisosHistorial = avisos.filter(a => objetivosDelVigilador.has(a.id_objetivo) && a.creado_en?.startsWith(mesHistorialOperativo)).sort((a, b) => b.creado_en.localeCompare(a.creado_en))
   const mesesHistorial = Array.from(new Set([
     ...turnos.filter(t => t.id_vigilador === vigiladorSeleccionado?.id).map(t => t.fecha.slice(0, 7)),
@@ -257,7 +289,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
                 </div>
 
                 {/* Acciones de Traslado e Historial (Sección 20 y 21) */}
-                {!modoConsulta && <div className="pt-2 flex items-center justify-between gap-2 border-t border-slate-200 dark:border-slate-800">
+                {!modoConsulta && <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-slate-200 dark:border-slate-800">
                   <button
                     type="button"
                     onClick={() => { setVigiladorSeleccionado(vig); setMesHistorialOperativo(`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`); setModalHistorialOperativoAbierto(true) }}
@@ -308,11 +340,19 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
           </div>
           <section className="space-y-2">
             <h4 className="font-bold text-sm text-slate-900 dark:text-white">Turnos ({turnosHistorial.length})</h4>
-            {turnosHistorial.length ? turnosHistorial.map(t => <div key={t.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><div className="flex justify-between gap-2"><strong>{t.fecha} · {t.tipo}</strong><span>{t.horas_totales} h + {t.horas_extra} h extra</span></div><p className="mt-1 text-slate-500">{objetivos.find(o => o.id === t.id_objetivo)?.nombre || 'Objetivo'} · {t.hora_inicio.slice(0, 5)}–{t.hora_fin.slice(0, 5)}</p></div>) : <p className="text-xs text-slate-500">Sin turnos para este mes.</p>}
+            {turnosHistorial.length ? turnosHistorial.map(t => <div key={t.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1"><strong>{t.fecha} · {t.tipo}</strong><span className="font-medium">{formatearDuracion(t.horas_totales)} + {formatearDuracion(t.horas_extra)} extra</span></div><p className="mt-1 text-slate-500">{objetivos.find(o => o.id === t.id_objetivo)?.nombre || 'Objetivo'} · {t.hora_inicio.slice(0, 5)}–{t.hora_fin.slice(0, 5)}</p><p className="mt-1 text-slate-500">Estado: {resumenEstadoTurno(t.estado)}</p></div>) : <p className="text-xs text-slate-500">Sin turnos para este mes.</p>}
           </section>
           <section className="space-y-2">
             <h4 className="font-bold text-sm text-slate-900 dark:text-white">Solicitudes de horas extra ({extrasHistorial.length})</h4>
-            {extrasHistorial.length ? extrasHistorial.map(s => <div key={s.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><strong>{s.fecha}</strong> · {s.estado} · {Math.floor((s.minutos_aprobados ?? s.minutos_solicitados) / 60)} h {String((s.minutos_aprobados ?? s.minutos_solicitados) % 60).padStart(2, '0')} min<p className="mt-1 text-slate-500">{s.motivo}</p></div>) : <p className="text-xs text-slate-500">Sin solicitudes de extras para este mes.</p>}
+            {extrasHistorial.length ? extrasHistorial.map(s => {
+              const turnoAsociado = turnos.find(t => t.id === s.id_turno)
+              const minutosAprobados = Number(s.minutos_aprobados ?? s.minutos_solicitados)
+              const minutosEnGrilla = turnoAsociado ? Math.round(Number(turnoAsociado.horas_extra || 0) * 60) : null
+              const minutosSolicitadosAprobados = solicitudesAprobadasPorTurno.get(s.id_turno) || 0
+              const hayDiferencia = s.estado === 'aprobada' && minutosEnGrilla !== null && Math.abs(minutosEnGrilla - minutosSolicitadosAprobados) > 1
+              const excedeTurno = s.estado === 'aprobada' && turnoAsociado && Number(turnoAsociado.horas_totales || 0) > 0 && minutosAprobados > Number(turnoAsociado.horas_totales) * 60
+              return <div key={s.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><strong>{s.fecha}</strong> · {s.estado === 'aprobada' ? 'Aprobada' : s.estado === 'rechazada' ? 'Rechazada' : 'Pendiente'} · {formatearDuracion(minutosAprobados / 60)}<p className="mt-1 text-slate-500">{s.motivo}</p>{turnoAsociado && <p className="mt-1 text-slate-500">Turno asociado: {turnoAsociado.fecha} · {turnoAsociado.tipo} · {resumenEstadoTurno(turnoAsociado.estado)}</p>}{hayDiferencia && <p className="mt-2 rounded-md bg-amber-50 dark:bg-amber-950/30 p-2 font-medium text-amber-800 dark:text-amber-300">Revisar: las solicitudes aprobadas suman {formatearDuracion(minutosSolicitadosAprobados / 60)}, pero la grilla registra {formatearDuracion((minutosEnGrilla || 0) / 60)} extra.</p>}{excedeTurno && <p className="mt-2 rounded-md bg-amber-50 dark:bg-amber-950/30 p-2 font-medium text-amber-800 dark:text-amber-300">Revisar: el tiempo aprobado supera la duración del turno.</p>}</div>
+            }) : <p className="text-xs text-slate-500">Sin solicitudes de extras para este mes.</p>}
           </section>
           <section className="space-y-2">
             <h4 className="font-bold text-sm text-slate-900 dark:text-white">Libro de Novedades ({novedadesHistorial.length})</h4>
@@ -320,11 +360,11 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
           </section>
           <section className="space-y-2">
             <h4 className="font-bold text-sm text-slate-900 dark:text-white">Cambios de turno ({cambiosHistorial.length})</h4>
-            {cambiosHistorial.length ? cambiosHistorial.map(s => <div key={s.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><strong>{s.fecha_turno}</strong> · {s.estado}<p className="mt-1 text-slate-500">{s.motivo}</p></div>) : <p className="text-xs text-slate-500">Sin cambios para este mes.</p>}
+            {cambiosHistorial.length ? cambiosHistorial.map(s => <div key={s.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><strong>{s.fecha_turno}</strong><p className="mt-1 font-medium text-slate-700 dark:text-slate-200">{etiquetaEstadoCambio(s.estado, (s as typeof s & { revisado_por_nombre?: string | null }).revisado_por_nombre)}</p><p className="mt-1 text-slate-500">Solicitante: {nombreVigilador(s.id_solicitante)} · Destinatario: {nombreVigilador(s.id_destinatario)}</p><p className="mt-1 text-slate-500">Motivo: {s.motivo?.trim() || 'Sin motivo indicado'}</p></div>) : <p className="text-xs text-slate-500">Sin cambios para este mes.</p>}
           </section>
           <section className="space-y-2">
             <h4 className="font-bold text-sm text-slate-900 dark:text-white">Avisos de sus objetivos ({avisosHistorial.length})</h4>
-            {avisosHistorial.length ? avisosHistorial.map(a => <div key={a.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><div className="flex justify-between gap-2"><strong>{a.titulo}</strong><span>{a.prioridad}</span></div><p className="mt-1 text-slate-500">{a.creado_en.slice(0, 10)} · {objetivos.find(o => o.id === a.id_objetivo)?.nombre || 'Objetivo'}</p><p className="mt-1 whitespace-pre-line">{a.contenido}</p></div>) : <p className="text-xs text-slate-500">Sin avisos de esos objetivos para este mes.</p>}
+            {avisosHistorial.length ? avisosHistorial.map(a => <div key={a.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><div className="flex flex-col sm:flex-row sm:justify-between gap-1"><strong>{a.titulo?.trim() || 'Aviso sin título'}</strong><span>Prioridad: {a.prioridad}</span></div><p className="mt-1 text-slate-500">Publicado: {a.creado_en.slice(0, 10)} · {objetivos.find(o => o.id === a.id_objetivo)?.nombre || 'Objetivo'}</p><p className="mt-1 whitespace-pre-line">{a.contenido}</p></div>) : <p className="text-xs text-slate-500">Sin avisos de esos objetivos para este mes.</p>}
           </section>
           <div className="flex justify-end border-t border-slate-200 dark:border-slate-800 pt-3"><Boton variante="secundario" onClick={() => setModalHistorialOperativoAbierto(false)}>Cerrar</Boton></div>
         </div>

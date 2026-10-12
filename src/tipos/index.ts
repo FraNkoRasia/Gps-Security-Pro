@@ -115,6 +115,8 @@ export interface SolicitudCambio {
   estado: EstadoSolicitud
   motivo: string
   creado_en: string
+  revisado_por?: string | null
+  revisado_por_nombre?: string | null
 }
 
 export interface Aviso {
