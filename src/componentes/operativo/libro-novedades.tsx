@@ -20,6 +20,8 @@ export const LibroNovedades: React.FC = () => {
   const [novedadSeleccionada, setNovedadSeleccionada] = useState<NovedadLibro | null>(null)
   const [filtroObjetivo, setFiltroObjetivo] = useState('todos')
   const [busqueda, setBusqueda] = useState('')
+  const [fechaDesde, setFechaDesde] = useState('')
+  const [fechaHasta, setFechaHasta] = useState('')
 
   // Formulario nueva novedad (Sección 32)
   const [idObjetivo, setIdObjetivo] = useState(objetivos[0]?.id || '')
@@ -103,10 +105,12 @@ export const LibroNovedades: React.FC = () => {
   const novedadesFiltradas = [...novedades]
     .filter((nov) => {
       const coincideObj = filtroObjetivo === 'todos' || nov.id_objetivo === filtroObjetivo
+      const coincideDesde = !fechaDesde || nov.fecha >= fechaDesde
+      const coincideHasta = !fechaHasta || nov.fecha <= fechaHasta
       const coincideTexto =
         nov.informe_novedades.toLowerCase().includes(busqueda.toLowerCase()) ||
         nov.nombre_vigilante.toLowerCase().includes(busqueda.toLowerCase())
-      return coincideObj && coincideTexto
+      return coincideObj && coincideDesde && coincideHasta && coincideTexto
     })
     .sort((a, b) => {
       const aNoLeida = a.id_vigilador !== usuario?.id && !novedadesLeidas.includes(a.id)
@@ -149,6 +153,16 @@ export const LibroNovedades: React.FC = () => {
             onChange={(e) => setBusqueda(e.target.value)}
             iconoIzquierda={<Search className="w-4 h-4" />}
           />
+        </div>
+        <div className="grid grid-cols-2 sm:flex gap-3">
+          <div className="min-w-0">
+            <label htmlFor="novedades-desde" className="mb-1 block text-[11px] font-semibold text-slate-500">Desde</label>
+            <Entrada id="novedades-desde" type="date" value={fechaDesde} onChange={(e) => setFechaDesde(e.target.value)} />
+          </div>
+          <div className="min-w-0">
+            <label htmlFor="novedades-hasta" className="mb-1 block text-[11px] font-semibold text-slate-500">Hasta</label>
+            <Entrada id="novedades-hasta" type="date" value={fechaHasta} min={fechaDesde || undefined} onChange={(e) => setFechaHasta(e.target.value)} />
+          </div>
         </div>
         <div className="w-full sm:w-64">
           <select
