@@ -370,7 +370,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
         </div>
 
         <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto justify-between lg:justify-end">
-          {!soloLecturaEfectiva && (
+          {!soloLectura && (
             <div className="flex items-center gap-2">
               <Boton
                 type="button"
