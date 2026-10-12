@@ -12,6 +12,10 @@ export const MiTurno: React.FC = () => {
 
   const idVig = usuario?.id || 'usr-vig-01'
   const hoy = new Date()
+  const formatearFecha = (fecha: string) => {
+    const [anio, mes, dia] = fecha.split('-')
+    return `${dia}-${mes}-${anio}`
+  }
   const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
 
   // Buscar turno de hoy
@@ -51,10 +55,10 @@ export const MiTurno: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <TarjetaTitulo className="flex items-center gap-2">
                 <Clock className="w-5 h-5 text-blue-500" />
-                Guardia de Hoy ({hoyStr})
+                Guardia de Hoy {formatearFecha(hoyStr)}
               </TarjetaTitulo>
               {turnoHoy && turnoHoy.tipo !== 'franco' ? (
-                <Insignia variante="verde">En Servicio</Insignia>
+                <Insignia variante="verde" className="animate-pulse w-fit self-start sm:self-auto">En Servicio</Insignia>
               ) : (
                 <Insignia variante="gris">Franco de Servicio</Insignia>
               )}
@@ -98,8 +102,6 @@ export const MiTurno: React.FC = () => {
               </div>
             </div>
 
-            {turnoHoy && turnoHoy.tipo !== 'franco' && <div className="space-y-2"><div className="flex justify-end"><SolicitarHorasExtra turno={turnoHoy}/></div>{turnoHoy.horas_extra > 0 && <p className="text-right text-xs font-semibold text-emerald-500">Horas extra confirmadas: +{turnoHoy.horas_extra} h</p>}</div>}
-
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs">
               <span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold uppercase mb-1">
                 Elementos a Cargo del Puesto:
@@ -112,6 +114,11 @@ export const MiTurno: React.FC = () => {
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs">
               <span className="text-slate-500 dark:text-slate-400 block text-[10px] font-bold uppercase mb-1">Descripción y Puntos de Cobertura:</span>
               <p className="text-slate-800 dark:text-slate-200 break-words whitespace-pre-line leading-5">{objetivoActivo?.descripcion || 'No hay descripción ni puntos de cobertura registrados para este objetivo.'}</p>
+            </div>
+
+            <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
+              {turnoHoy && turnoHoy.tipo !== 'franco' && turnoHoy.horas_extra > 0 && <p className="text-xs font-semibold text-emerald-500">Horas extra confirmadas: +{turnoHoy.horas_extra} h</p>}
+              <SolicitarHorasExtra turnos={turnos.filter(t => t.id_vigilador === idVig && t.tipo !== 'franco' && t.horas_totales > 0).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 30)} solicitudes={[]}/>
             </div>
           </TarjetaContenido>
         </Tarjeta>
