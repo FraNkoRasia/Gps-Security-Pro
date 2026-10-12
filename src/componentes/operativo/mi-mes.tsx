@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { Sun, Moon } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
-import { Insignia } from '@/componentes/ui/insignia'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 
@@ -49,13 +48,6 @@ export const MiMes: React.FC = () => {
   const metaHoras = 204
   const porcentajeCumplimiento = Math.min(100, Math.round((horasTotales / metaHoras) * 100))
 
-  let estadoCumplimiento: 'verde' | 'amarillo' | 'rojo' = 'amarillo'
-  if (horasTotales >= metaHoras && horasTotales <= 220) {
-    estadoCumplimiento = 'verde'
-  } else if (horasTotales > 220) {
-    estadoCumplimiento = 'rojo'
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -84,7 +76,6 @@ export const MiMes: React.FC = () => {
               .sort((a, b) => b.valor.localeCompare(a.valor))
               .map(m => <option key={m.valor} value={m.valor}>{m.etiqueta}</option>)}
           </select>
-
         </div>
       </div>
 
