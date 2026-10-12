@@ -60,10 +60,9 @@ export const MiMes: React.FC = () => {
     if (ahora.getTime() <= inicio.getTime()) return acc
     if (ahora.getTime() >= fin.getTime()) return acc + t.horas_totales + t.horas_extra
 
-    const minutosTranscurridos = Math.max(0, (ahora.getTime() - inicio.getTime()) / 60_000)
-    const minutosProgramados = Math.max(1, (fin.getTime() - inicio.getTime()) / 60_000)
-    const horasTranscurridas = Math.min(t.horas_totales, t.horas_totales * minutosTranscurridos / minutosProgramados)
-    return acc + horasTranscurridas
+    // La guardia en curso no se suma parcialmente: se contabiliza completa
+    // recién cuando alcanza su hora de finalización.
+    return acc
   }, 0)
 
   const horasDiurnas = turnosContables.reduce((acc, t) => acc + t.horas_diurnas, 0)
