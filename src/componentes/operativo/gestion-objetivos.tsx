@@ -18,6 +18,7 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
   const [objetivoEditando, setObjetivoEditando] = useState<Objetivo | null>(null)
   const [modalEstadoAbierto, setModalEstadoAbierto] = useState(false)
   const [objetivoEstado, setObjetivoEstado] = useState<Objetivo | null>(null)
+  const [filtroEstadoObjetivos, setFiltroEstadoObjetivos] = useState<'activos' | 'inactivos'>('activos')
 
   const [nombre, setNombre] = useState('')
   const [descripcion, setDescripcion] = useState('')
@@ -30,9 +31,12 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
 
   // Filtrar objetivos si es admin de empresa
   const idEmpresaActiva = idEmpresaSeleccionada || usuario?.id_empresa || empresas[0]?.id || 'emp-wall-01'
-  const objetivosMostrados = usuario?.rol === 'super_administrador' && !idEmpresaSeleccionada
+  const objetivosDeEmpresa = usuario?.rol === 'super_administrador' && !idEmpresaSeleccionada
     ? objetivos
     : objetivos.filter((o) => o.id_empresa === idEmpresaActiva)
+  const objetivosMostrados = objetivosDeEmpresa.filter((o) =>
+    (filtroEstadoObjetivos === 'activos') === o.activo
+  )
 
   const abrirCrear = () => {
     setObjetivoEditando(null)
@@ -129,6 +133,15 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
         </Boton>}
       </div>
 
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 p-2">
+        <button type="button" onClick={() => setFiltroEstadoObjetivos('activos')} aria-pressed={filtroEstadoObjetivos === 'activos'} className={`flex-1 min-w-[140px] rounded-lg px-4 py-3 text-sm font-bold transition-colors ${filtroEstadoObjetivos === 'activos' ? 'bg-emerald-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+          <CheckCircle2 className="inline w-4 h-4 mr-2" />Activos ({objetivosDeEmpresa.filter(o => o.activo).length})
+        </button>
+        <button type="button" onClick={() => setFiltroEstadoObjetivos('inactivos')} aria-pressed={filtroEstadoObjetivos === 'inactivos'} className={`flex-1 min-w-[140px] rounded-lg px-4 py-3 text-sm font-bold transition-colors ${filtroEstadoObjetivos === 'inactivos' ? 'bg-slate-700 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+          <XCircle className="inline w-4 h-4 mr-2" />Inactivos ({objetivosDeEmpresa.filter(o => !o.activo).length})
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {objetivosMostrados.map((obj) => {
           const vigiladoresAsignados = new Set(
@@ -201,6 +214,7 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
             </Tarjeta>
           )
         })}
+        {objetivosMostrados.length === 0 && <div className="md:col-span-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-8 text-center text-sm text-slate-500">{filtroEstadoObjetivos === 'activos' ? 'No hay objetivos activos para esta empresa.' : 'No hay objetivos inactivos para esta empresa.'}</div>}
       </div>
 
       <Dialogo
