@@ -180,6 +180,14 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
     solicitudesAprobadasPorTurno.set(s.id_turno, (solicitudesAprobadasPorTurno.get(s.id_turno) || 0) + Number(s.minutos_aprobados ?? s.minutos_solicitados))
   })
 
+  // El resumen contabiliza como trabajados únicamente los turnos cumplidos.
+  const turnosCumplidosHistorial = turnosHistorial.filter(t => t.estado === 'cumplido')
+  const minutosDiurnos = turnosCumplidosHistorial.filter(t => t.tipo.toLowerCase().includes('diurno')).reduce((total, t) => total + Math.round(Number(t.horas_totales || 0) * 60), 0)
+  const minutosNocturnos = turnosCumplidosHistorial.filter(t => t.tipo.toLowerCase().includes('nocturno')).reduce((total, t) => total + Math.round(Number(t.horas_totales || 0) * 60), 0)
+  const minutosExtras = extrasHistorial.filter(s => s.estado === 'aprobada').reduce((total, s) => total + Number(s.minutos_aprobados ?? s.minutos_solicitados ?? 0), 0)
+  const formatearMinutos = (minutos: number) => formatearDuracion(minutos / 60)
+  const minutosTrabajados = minutosDiurnos + minutosNocturnos + minutosExtras
+
   const avisosHistorial = avisos.filter(a => objetivosDelVigilador.has(a.id_objetivo) && a.creado_en?.startsWith(mesHistorialOperativo) && (a.creado_en?.slice(0, 10) || '') <= fechaHoy).sort((a, b) => b.creado_en.localeCompare(a.creado_en))
   const mesesHistorial = Array.from(new Set([
     ...turnos.filter(t => t.id_vigilador === vigiladorSeleccionado?.id && t.fecha <= fechaHoy).map(t => t.fecha.slice(0, 7)),
@@ -341,12 +349,22 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
               {mesesHistorial.map(m => <option key={m} value={m}>{new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1, 1))}</option>)}
             </select>
           </div>
-          <section className="space-y-2">
-            <h4 className="font-bold text-sm text-slate-900 dark:text-white">Turnos ({turnosHistorial.length})</h4>
-            {turnosHistorial.length ? turnosHistorial.map(t => <div key={t.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1"><strong>{t.fecha} · {t.tipo}</strong><span className="font-medium">{formatearDuracion(t.horas_totales)} + {formatearDuracion(t.horas_extra)} extra</span></div><p className="mt-1 text-slate-500">{objetivos.find(o => o.id === t.id_objetivo)?.nombre || 'Objetivo'} · {t.hora_inicio.slice(0, 5)}–{t.hora_fin.slice(0, 5)}</p><p className="mt-1 text-slate-500">Estado: {resumenEstadoTurno(t.estado)}</p></div>) : <p className="text-xs text-slate-500">Sin turnos para este mes.</p>}
-          </section>
-          <section className="space-y-2">
-            <h4 className="font-bold text-sm text-slate-900 dark:text-white">Solicitudes de horas extra ({extrasHistorial.length})</h4>
+          <details className="group rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-900/40">
+              <div className="min-w-0">
+                <h4 className="font-bold text-sm text-slate-900 dark:text-white">Turnos <span className="font-normal text-slate-500">({turnosHistorial.length})</span></h4>
+                <p className="mt-1 text-xs text-slate-500">Diurnas: {formatearMinutos(minutosDiurnos)} · Nocturnas: {formatearMinutos(minutosNocturnos)} · Extras: {formatearMinutos(minutosExtras)}</p>
+              </div>
+              <span className="shrink-0 text-right"><span className="block text-[10px] text-slate-500">Total mensual</span><strong className="text-base text-blue-600 dark:text-blue-400">{formatearMinutos(minutosTrabajados)}</strong></span>
+            </summary>
+            <div className="space-y-2 border-t border-slate-200 dark:border-slate-800 p-3">
+              {turnosHistorial.length ? turnosHistorial.map(t => <div key={t.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1"><strong>{t.fecha} · {t.tipo}</strong><span className="font-medium">{formatearDuracion(t.horas_totales)} + {formatearDuracion(t.horas_extra)} extra</span></div><p className="mt-1 text-slate-500">{objetivos.find(o => o.id === t.id_objetivo)?.nombre || 'Objetivo'} · {t.hora_inicio.slice(0, 5)}–{t.hora_fin.slice(0, 5)}</p><p className="mt-1 text-slate-500">Estado: {resumenEstadoTurno(t.estado)}</p></div>) : <p className="text-xs text-slate-500">Sin turnos para este mes.</p>}
+            </div>
+          </details>
+
+          <details className="group rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-900/40"><h4 className="font-bold text-sm text-slate-900 dark:text-white">Solicitudes de horas extra <span className="font-normal text-slate-500">({extrasHistorial.length})</span></h4><span className="text-xs text-blue-600 dark:text-blue-400">Ver detalle <span aria-hidden="true">⌄</span></span></summary>
+            <div className="space-y-2 border-t border-slate-200 dark:border-slate-800 p-3">
             {extrasHistorial.length ? extrasHistorial.map(s => {
               const turnoAsociado = turnos.find(t => t.id === s.id_turno)
               const minutosAprobados = Number(s.minutos_aprobados ?? s.minutos_solicitados)
@@ -356,19 +374,29 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
               const excedeTurno = s.estado === 'aprobada' && turnoAsociado && Number(turnoAsociado.horas_totales || 0) > 0 && minutosAprobados > Number(turnoAsociado.horas_totales) * 60
               return <div key={s.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><strong>{s.fecha}</strong> · {s.estado === 'aprobada' ? 'Aprobada' : s.estado === 'rechazada' ? 'Rechazada' : 'Pendiente'} · {formatearDuracion(minutosAprobados / 60)}<p className="mt-1 text-slate-500">{s.motivo}</p>{turnoAsociado && <p className="mt-1 text-slate-500">Turno asociado: {turnoAsociado.fecha} · {turnoAsociado.tipo} · {resumenEstadoTurno(turnoAsociado.estado)}</p>}{hayDiferencia && <p className="mt-2 rounded-md bg-amber-50 dark:bg-amber-950/30 p-2 font-medium text-amber-800 dark:text-amber-300">Revisar: las solicitudes aprobadas suman {formatearDuracion(minutosSolicitadosAprobados / 60)}, pero la grilla registra {formatearDuracion((minutosEnGrilla || 0) / 60)} extra.</p>}{excedeTurno && <p className="mt-2 rounded-md bg-amber-50 dark:bg-amber-950/30 p-2 font-medium text-amber-800 dark:text-amber-300">Revisar: el tiempo aprobado supera la duración del turno.</p>}</div>
             }) : <p className="text-xs text-slate-500">Sin solicitudes de extras para este mes.</p>}
-          </section>
-          <section className="space-y-2">
-            <h4 className="font-bold text-sm text-slate-900 dark:text-white">Libro de Novedades ({novedadesHistorial.length})</h4>
+            </div>
+          </details>
+
+          <details className="group rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-900/40"><h4 className="font-bold text-sm text-slate-900 dark:text-white">Libro de Novedades <span className="font-normal text-slate-500">({novedadesHistorial.length})</span></h4><span className="text-xs text-blue-600 dark:text-blue-400">Ver detalle <span aria-hidden="true">⌄</span></span></summary>
+            <div className="space-y-2 border-t border-slate-200 dark:border-slate-800 p-3">
             {novedadesHistorial.length ? novedadesHistorial.map(n => <div key={n.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><strong>{n.fecha} {n.hora}</strong> · {objetivos.find(o => o.id === n.id_objetivo)?.nombre || 'Objetivo'}<p className="mt-1 whitespace-pre-line text-slate-600 dark:text-slate-300">{n.informe_novedades}</p></div>) : <p className="text-xs text-slate-500">Sin novedades para este mes.</p>}
-          </section>
-          <section className="space-y-2">
-            <h4 className="font-bold text-sm text-slate-900 dark:text-white">Cambios de turno ({cambiosHistorial.length})</h4>
+            </div>
+          </details>
+
+          <details className="group rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-900/40"><h4 className="font-bold text-sm text-slate-900 dark:text-white">Cambios de turno <span className="font-normal text-slate-500">({cambiosHistorial.length})</span></h4><span className="text-xs text-blue-600 dark:text-blue-400">Ver detalle <span aria-hidden="true">⌄</span></span></summary>
+            <div className="space-y-2 border-t border-slate-200 dark:border-slate-800 p-3">
             {cambiosHistorial.length ? cambiosHistorial.map(s => <div key={s.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><strong>{s.fecha_turno}</strong><p className="mt-1 font-medium text-slate-700 dark:text-slate-200">{etiquetaEstadoCambio(s.estado, (s as typeof s & { revisado_por_nombre?: string | null }).revisado_por_nombre)}</p><p className="mt-1 text-slate-500">Solicitante: {nombreVigilador(s.id_solicitante)} · Destinatario: {nombreVigilador(s.id_destinatario)}</p><p className="mt-1 text-slate-500">Motivo: {s.motivo?.trim() || 'Sin motivo indicado'}</p></div>) : <p className="text-xs text-slate-500">Sin cambios para este mes.</p>}
-          </section>
-          <section className="space-y-2">
-            <h4 className="font-bold text-sm text-slate-900 dark:text-white">Avisos de sus objetivos ({avisosHistorial.length})</h4>
+            </div>
+          </details>
+
+          <details className="group rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-900/40"><h4 className="font-bold text-sm text-slate-900 dark:text-white">Avisos de sus objetivos <span className="font-normal text-slate-500">({avisosHistorial.length})</span></h4><span className="text-xs text-blue-600 dark:text-blue-400">Ver detalle <span aria-hidden="true">⌄</span></span></summary>
+            <div className="space-y-2 border-t border-slate-200 dark:border-slate-800 p-3">
             {avisosHistorial.length ? avisosHistorial.map(a => <div key={a.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><div className="flex flex-col sm:flex-row sm:justify-between gap-1"><strong>{a.titulo?.trim() || 'Aviso sin título'}</strong><span>Prioridad: {a.prioridad}</span></div><p className="mt-1 text-slate-500">Publicado: {a.creado_en.slice(0, 10)} · {objetivos.find(o => o.id === a.id_objetivo)?.nombre || 'Objetivo'}</p><p className="mt-1 whitespace-pre-line">{a.contenido}</p></div>) : <p className="text-xs text-slate-500">Sin avisos de esos objetivos para este mes.</p>}
-          </section>
+            </div>
+          </details>
           <div className="flex justify-end border-t border-slate-200 dark:border-slate-800 pt-3"><Boton variante="secundario" onClick={() => setModalHistorialOperativoAbierto(false)}>Cerrar</Boton></div>
         </div>
       </Dialogo>
