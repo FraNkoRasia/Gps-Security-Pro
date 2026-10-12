@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { BookOpen, Plus, Search, Edit2 } from 'lucide-react'
+import { BookOpen, Plus, Search, Edit2, ChevronDown } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -122,6 +122,22 @@ export const LibroNovedades: React.FC = () => {
       return fechaB - fechaA
     })
 
+  const novedadesPorDia = novedadesFiltradas.reduce<Record<string, NovedadLibro[]>>((grupos, novedad) => {
+    if (!grupos[novedad.fecha]) grupos[novedad.fecha] = []
+    grupos[novedad.fecha].push(novedad)
+    return grupos
+  }, {})
+  const diasNovedades = Object.keys(novedadesPorDia).sort((a, b) => b.localeCompare(a))
+  const formatearDia = (valor: string) => {
+    const [anio, mes, dia] = valor.split('-').map(Number)
+    return new Intl.DateTimeFormat('es-AR', {
+      weekday: 'long',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).format(new Date(anio, mes - 1, dia)).replace(/^./, (letra) => letra.toLocaleUpperCase('es-AR'))
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -190,71 +206,84 @@ export const LibroNovedades: React.FC = () => {
               No se encontraron registros de novedades con los filtros seleccionados.
             </TarjetaContenido>
           </Tarjeta>
+        ) : usuario?.rol === 'vigilador' ? (
+          diasNovedades.map((dia) => (
+            <details key={dia} className="group rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0C121E] overflow-hidden">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 sm:p-5 hover:bg-slate-50 dark:hover:bg-slate-900/60">
+                <div className="min-w-0">
+                  <div className="font-bold text-sm text-slate-900 dark:text-white">{formatearDia(dia)}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{novedadesPorDia[dia].length} {novedadesPorDia[dia].length === 1 ? 'novedad' : 'novedades'}</div>
+                </div>
+                <ChevronDown className="w-5 h-5 shrink-0 text-slate-500 transition-transform group-open:rotate-180" />
+              </summary>
+              <div className="border-t border-slate-200 dark:border-slate-800 p-3 sm:p-4 space-y-2">
+                {novedadesPorDia[dia].map((nov) => {
+                  const obj = objetivos.find((o) => o.id === nov.id_objetivo)
+                  const noLeida = nov.id_vigilador !== usuario?.id && !novedadesLeidas.includes(nov.id)
+                  return (
+                    <details key={nov.id} className="group/item rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-900/50">
+                        <div className="min-w-0 space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-bold text-sm text-slate-900 dark:text-white">{nov.hora} hs</span>
+                            <Insignia variante="azul">{nov.turno}</Insignia>
+                            {noLeida && <Insignia variante="verde">Nueva</Insignia>}
+                          </div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">{obj?.nombre || 'Objetivo'} · {nov.nombre_vigilante}</div>
+                        </div>
+                        <ChevronDown className="w-4 h-4 shrink-0 text-slate-500 transition-transform group-open/item:rotate-180" />
+                      </summary>
+                      <div className="p-3 border-t border-slate-200 dark:border-slate-800 space-y-3">
+                        <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line">{nov.informe_novedades}</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800/60">
+                          <div><span className="font-semibold text-slate-700 dark:text-slate-300">Vigilante:</span> {nov.nombre_vigilante}</div>
+                          <div><span className="font-semibold text-slate-700 dark:text-slate-300">Supervisor:</span> {nov.nombre_supervisor}</div>
+                        </div>
+                        {noLeida && (
+                          <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+                            <button type="button" onClick={() => marcarNovedadLeida(nov.id)} className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">Marcar como leído</button>
+                          </div>
+                        )}
+                      </div>
+                    </details>
+                  )
+                })}
+              </div>
+            </details>
+          ))
         ) : (
           novedadesFiltradas.map((nov) => {
             const obj = objetivos.find((o) => o.id === nov.id_objetivo)
-
             return (
               <Tarjeta key={nov.id} className="hover:border-blue-500/50 transition-all">
                 <TarjetaContenido className="p-5 space-y-3">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-slate-900 dark:text-white text-sm">
-                        {obj?.nombre || 'Objetivo'}
-                      </span>
-                      <Insignia variante="azul">{nov.turno}</Insignia>{nov.id_vigilador !== usuario?.id && !novedadesLeidas.includes(nov.id) ? <Insignia variante="verde">Nueva</Insignia> : null}
+                      <span className="font-bold text-slate-900 dark:text-white text-sm">{obj?.nombre || 'Objetivo'}</span>
+                      <Insignia variante="azul">{nov.turno}</Insignia>
+                      {nov.id_vigilador !== usuario?.id && !novedadesLeidas.includes(nov.id) ? <Insignia variante="verde">Nueva</Insignia> : null}
                     </div>
-
                     <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                       <span className="font-mono">{nov.fecha} — {nov.hora} hs</span>
-                      <div className="flex items-center gap-1">
-                        {usuario?.rol !== 'administrador' && (
-                          <button
-                            type="button"
-                            onClick={() => abrirEditar(nov)}
-                            className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-amber-500 transition-colors"
-                            title="Corregir novedad (asienta auditoría)"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
+                      {usuario?.rol !== 'administrador' && usuario?.rol !== 'vigilador' && (
+                        <button type="button" onClick={() => abrirEditar(nov)} className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-amber-500 transition-colors" title="Corregir novedad (asienta auditoría)">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
-
-                  <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line">
-                    {nov.informe_novedades}
-                  </p>
-
+                  <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line">{nov.informe_novedades}</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800/60">
-                    <div>
-                      <span className="font-semibold text-slate-700 dark:text-slate-300">Vigilante:</span>{' '}
-                      {nov.nombre_vigilante}
-                    </div>
-                    <div>
-                      <span className="font-semibold text-slate-700 dark:text-slate-300">Supervisor:</span>{' '}
-                      {nov.nombre_supervisor}
-                    </div>
+                    <div><span className="font-semibold text-slate-700 dark:text-slate-300">Vigilante:</span> {nov.nombre_vigilante}</div>
+                    <div><span className="font-semibold text-slate-700 dark:text-slate-300">Supervisor:</span> {nov.nombre_supervisor}</div>
                   </div>
-
                   {usuario && (usuario.rol === 'administrador' || usuario.rol === 'supervisor' || nov.id_vigilador !== usuario.id) && (
                     <div className="pt-2 flex items-center justify-between text-xs border-t border-slate-200 dark:border-slate-800">
-                      <span className="text-[11px] text-slate-400 font-mono">
-                        {nov.fecha} — {nov.hora} hs
-                      </span>
-
+                      <span className="text-[11px] text-slate-400 font-mono">{nov.fecha} — {nov.hora} hs</span>
                       {novedadesLeidas.includes(nov.id) ? (
-                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                          <span>Leído ✓</span>
-                        </span>
+                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1"><span>Leído ✓</span></span>
                       ) : (
-                        <button
-                          type="button"
-                          onClick={() => marcarNovedadLeida(nov.id)}
-                          className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
-                        >
-                          <span>Marcar como leído</span>
-                        </button>
+                        <button type="button" onClick={() => marcarNovedadLeida(nov.id)} className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"><span>Marcar como leído</span></button>
                       )}
                     </div>
                   )}
