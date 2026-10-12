@@ -36,12 +36,16 @@ export const MiMes: React.FC = () => {
     (t) => t.id_vigilador === idVig && t.fecha.startsWith(mesSeleccionado)
   )
 
-  // Objetivo mensual: suma de las horas programadas en la grilla para este vigilador.
-  const horasObjetivoMes = turnosMes.reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
+  // Los turnos reemplazados no forman parte de las horas ni del objetivo de este vigilador.
+  // Si el turno sigue asignado al vigilador, su estado debe ser "programado".
+  const turnosContables = turnosMes.filter((t) => t.estado !== 'reemplazado')
+
+  // Objetivo mensual: suma de los turnos válidos de la grilla, incluidas las extras aprobadas.
+  const horasObjetivoMes = turnosContables.reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
 
   // Horas trabajadas hasta ahora: los turnos futuros no cuentan; el turno en curso
   // suma solo el tiempo transcurrido y las extras se agregan al finalizar la guardia.
-  const horasTrabajadasAlMomento = turnosMes.reduce((acc, t) => {
+  const horasTrabajadasAlMomento = turnosContables.reduce((acc, t) => {
     if (t.tipo === 'franco' || t.horas_totales <= 0) return acc
     if (mesSeleccionado < mesActual) return acc + t.horas_totales + t.horas_extra
     if (mesSeleccionado > mesActual) return acc
@@ -56,23 +60,22 @@ export const MiMes: React.FC = () => {
     if (ahora.getTime() <= inicio.getTime()) return acc
     if (ahora.getTime() >= fin.getTime()) return acc + t.horas_totales + t.horas_extra
 
-    const minutosTranscurridos = Math.max(0, (ahora.getTime() - inicio.getTime()) / 60_000)
-    const minutosProgramados = Math.max(1, (fin.getTime() - inicio.getTime()) / 60_000)
-    const horasTranscurridas = Math.min(t.horas_totales, t.horas_totales * minutosTranscurridos / minutosProgramados)
-    return acc + horasTranscurridas
+    // La guardia en curso no se suma parcialmente: se contabiliza completa
+    // recién cuando alcanza su hora de finalización.
+    return acc
   }, 0)
 
-  const horasDiurnas = turnosMes.reduce((acc, t) => acc + t.horas_diurnas, 0)
-  const horasNocturnas = turnosMes.reduce((acc, t) => acc + t.horas_nocturnas, 0)
-  const horasDomingos = turnosMes
+  const horasDiurnas = turnosContables.reduce((acc, t) => acc + t.horas_diurnas, 0)
+  const horasNocturnas = turnosContables.reduce((acc, t) => acc + t.horas_nocturnas, 0)
+  const horasDomingos = turnosContables
     .filter((t) => t.es_domingo)
     .reduce((acc, t) => acc + t.horas_totales, 0)
-  const horasFeriados = turnosMes
+  const horasFeriados = turnosContables
     .filter((t) => t.es_feriado)
     .reduce((acc, t) => acc + t.horas_totales, 0)
-  const horasExtra = turnosMes.reduce((acc, t) => acc + t.horas_extra, 0)
-  const francos = turnosMes.filter((t) => t.tipo === 'franco').length
-  const diasTrabajados = turnosMes.filter((t) => t.horas_totales > 0).length
+  const horasExtra = turnosContables.reduce((acc, t) => acc + t.horas_extra, 0)
+  const francos = turnosContables.filter((t) => t.tipo === 'franco').length
+  const diasTrabajados = turnosContables.filter((t) => t.horas_totales > 0).length
 
   const porcentajeCumplimiento = horasObjetivoMes > 0
     ? Math.min(100, Math.round((horasTrabajadasAlMomento / horasObjetivoMes) * 100))
