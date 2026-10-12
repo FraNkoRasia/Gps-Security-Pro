@@ -68,7 +68,7 @@ export const VistaPanelControl: React.FC = () => {
         { id: 'novedades', label: 'Libro de Novedades', contador: novedadesNoLeidas, icono: <BookOpen className="w-4 h-4" /> },
         { id: 'cambios', label: 'Cambios y Reemplazos', contador: solicitudesCambioNoLeidas, icono: <ArrowRightLeft className="w-4 h-4" /> },
         { id: 'avisos', label: 'Avisos', contador: avisosNoLeidos, icono: <Bell className="w-4 h-4" /> },
-        { id: 'horasExtra', label: `Horas Extra${solicitudesHorasExtra.filter(s => s.estado === 'pendiente').length ? ` (${solicitudesHorasExtra.filter(s => s.estado === 'pendiente').length})` : ''}`, icono: <Clock className="w-4 h-4" /> }
+        { id: 'horasExtra', label: 'Horas Extra', contador: solicitudesHorasExtra.filter(s => s.estado === 'pendiente').length, icono: <Clock className="w-4 h-4" /> }
       ]
     : []
 
