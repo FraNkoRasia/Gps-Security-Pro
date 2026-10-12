@@ -403,9 +403,6 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
                       </p>
                     )}
                   </div>
-                  <div className="text-[11px] text-slate-400">
-                    Registrado por: {asig.creado_por}
-                  </div>
                 </div>
               ))}
             </div>
