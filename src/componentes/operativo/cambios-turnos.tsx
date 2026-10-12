@@ -28,15 +28,22 @@ export const CambiosTurnos: React.FC = () => {
   const [fechaTurno, setFechaTurno] = useState('2026-10-15')
   const [motivo, setMotivo] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [historialDesde, setHistorialDesde] = useState('')
+  const [historialHasta, setHistorialHasta] = useState('')
+  const [filtroEstado, setFiltroEstado] = useState('todos')
 
   // Buscador de Reemplazos (Sección 30)
   const [fechaReemplazo, setFechaReemplazo] = useState('2026-10-15')
 
   const esAdmin = usuario?.rol === 'super_administrador' || usuario?.rol === 'administrador'
 
-  const solicitudesVisibles = solicitudesCambio.filter((sol) =>
-    esAdmin || sol.id_solicitante === usuario?.id || sol.id_destinatario === usuario?.id
-  )
+  const solicitudesVisibles = solicitudesCambio.filter((sol) => {
+    const autorizado = esAdmin || sol.id_solicitante === usuario?.id || sol.id_destinatario === usuario?.id
+    const coincideDesde = !historialDesde || sol.fecha_turno >= historialDesde
+    const coincideHasta = !historialHasta || sol.fecha_turno <= historialHasta
+    const coincideEstado = filtroEstado === 'todos' || sol.estado === filtroEstado
+    return autorizado && coincideDesde && coincideHasta && coincideEstado
+  })
 
   const notificacionesCambio = solicitudesCambio.filter((sol) =>
     usuario?.rol === 'vigilador'
@@ -150,6 +157,29 @@ export const CambiosTurnos: React.FC = () => {
           })}
         </div>
       )}
+
+      {/* Filtros del historial de solicitudes */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 rounded-xl border border-slate-200 dark:border-slate-800 p-3">
+        <div>
+          <label htmlFor="cambios-desde" className="mb-1 block text-[11px] font-semibold text-slate-500">Turnos desde</label>
+          <Entrada id="cambios-desde" type="date" value={historialDesde} onChange={(e) => setHistorialDesde(e.target.value)} />
+        </div>
+        <div>
+          <label htmlFor="cambios-hasta" className="mb-1 block text-[11px] font-semibold text-slate-500">Turnos hasta</label>
+          <Entrada id="cambios-hasta" type="date" min={historialDesde || undefined} value={historialHasta} onChange={(e) => setHistorialHasta(e.target.value)} />
+        </div>
+        <div>
+          <label htmlFor="cambios-estado" className="mb-1 block text-[11px] font-semibold text-slate-500">Estado de solicitud</label>
+          <select id="cambios-estado" value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)} className="w-full min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700 px-3 text-sm text-slate-900 dark:text-slate-100">
+            <option value="todos">Todos los estados</option>
+            <option value="pendiente">Pendiente de colega</option>
+            <option value="aceptada_vigilador">Pendiente de administración</option>
+            <option value="aprobada_admin">Aprobada</option>
+            <option value="rechazada_vigilador">Rechazada por colega</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+        </div>
+      </div>
 
       {/* Listado de Solicitudes */}
       <div className="space-y-3">
