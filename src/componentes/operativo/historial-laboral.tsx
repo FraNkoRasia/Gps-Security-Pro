@@ -9,6 +9,17 @@ const formatearHoras = (horas: number) => {
   return `${Math.floor(minutos / 60)}.${String(minutos % 60).padStart(2, '0')}`
 }
 
+const turnoYaFinalizo = (turno: { fecha: string; hora_inicio: string; hora_fin: string }) => {
+  const ahora = new Date()
+  const [anio, mes, dia] = turno.fecha.split('-').map(Number)
+  const [horaInicio, minutoInicio] = turno.hora_inicio.slice(0, 5).split(':').map(Number)
+  const [horaFin, minutoFin] = turno.hora_fin.slice(0, 5).split(':').map(Number)
+  const inicio = new Date(anio, mes - 1, dia, horaInicio, minutoInicio)
+  const fin = new Date(anio, mes - 1, dia, horaFin, minutoFin)
+  if (fin <= inicio) fin.setDate(fin.getDate() + 1)
+  return fin <= ahora
+}
+
 export const HistorialLaboral: React.FC = () => {
   const { turnos } = useOperativo()
   const { usuario } = useAutenticacion()
@@ -30,9 +41,12 @@ export const HistorialLaboral: React.FC = () => {
     const valor = `${anio}-${String(i + 1).padStart(2, '0')}`
     return { valor, etiqueta: new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(new Date(Number(anio), i, 1)) }
   }).filter(m => m.valor <= mesActual)).sort((a, b) => b.valor.localeCompare(a.valor))
-  const turnosMes = turnosVigilador.filter(t => t.fecha.startsWith(mesSeleccionado))
+  const turnosMes = turnosVigilador.filter(t => t.fecha.startsWith(mesSeleccionado) && turnoYaFinalizo(t))
   const horasNormales = turnosMes.reduce((s, t) => s + t.horas_totales, 0)
   const horasExtra = turnosMes.reduce((s, t) => s + t.horas_extra, 0)
+  const horasDiurnas = turnosMes.reduce((s, t) => s + (t.horas_diurnas || 0), 0)
+  const horasNocturnas = turnosMes.reduce((s, t) => s + (t.horas_nocturnas || 0), 0)
+  const horasFeriado = turnosMes.reduce((s, t) => s + (t.es_feriado ? t.horas_totales : 0), 0)
   const diasTrabajados = turnosMes.filter(t => t.horas_totales > 0).length
   const nombreMes = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(
     new Date(Number(mesSeleccionado.slice(0, 4)), Number(mesSeleccionado.slice(5, 7)) - 1, 1)
@@ -45,7 +59,7 @@ export const HistorialLaboral: React.FC = () => {
           <h3 className="flex items-center gap-2 text-xl font-black text-slate-900 dark:text-white">
             <History className="h-5 w-5 text-blue-500" /> Historial laboral
           </h3>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Consultá tus turnos y horas registradas por mes y año. Los meses anteriores son de consulta.</p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Consultá tus turnos y horas registradas por mes y año. Solo se muestran turnos cuyo horario ya finalizó; los turnos futuros no se contabilizan.</p>
         </div>
         <label className="flex flex-col gap-1 text-xs font-semibold text-slate-500">
           Mes y año
@@ -58,6 +72,9 @@ export const HistorialLaboral: React.FC = () => {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Tarjeta><TarjetaContenido className="p-4"><p className="text-xs text-slate-500">Días trabajados</p><p className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{diasTrabajados}</p></TarjetaContenido></Tarjeta>
         <Tarjeta><TarjetaContenido className="p-4"><p className="text-xs text-slate-500">Horas de turno</p><p className="mt-1 text-2xl font-black text-slate-900 dark:text-white">{formatearHoras(horasNormales)} h</p></TarjetaContenido></Tarjeta>
+        <Tarjeta><TarjetaContenido className="p-4"><p className="text-xs text-slate-500">Horas diurnas</p><p className="mt-1 text-2xl font-black text-amber-600">{formatearHoras(horasDiurnas)} h</p></TarjetaContenido></Tarjeta>
+        <Tarjeta><TarjetaContenido className="p-4"><p className="text-xs text-slate-500">Horas nocturnas</p><p className="mt-1 text-2xl font-black text-indigo-600">{formatearHoras(horasNocturnas)} h</p></TarjetaContenido></Tarjeta>
+        <Tarjeta><TarjetaContenido className="p-4"><p className="text-xs text-slate-500">Horas en feriados</p><p className="mt-1 text-2xl font-black text-orange-600">{formatearHoras(horasFeriado)} h</p></TarjetaContenido></Tarjeta>
         <Tarjeta><TarjetaContenido className="p-4"><p className="text-xs text-slate-500">Horas extra autorizadas</p><p className="mt-1 text-2xl font-black text-emerald-600">{formatearHoras(horasExtra)} h</p></TarjetaContenido></Tarjeta>
         <Tarjeta><TarjetaContenido className="p-4"><p className="text-xs text-slate-500">Total del mes</p><p className="mt-1 text-2xl font-black text-blue-600">{formatearHoras(horasNormales + horasExtra)} h</p></TarjetaContenido></Tarjeta>
       </div>
