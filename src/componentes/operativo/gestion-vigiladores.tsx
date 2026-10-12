@@ -180,14 +180,14 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
     solicitudesAprobadasPorTurno.set(s.id_turno, (solicitudesAprobadasPorTurno.get(s.id_turno) || 0) + Number(s.minutos_aprobados ?? s.minutos_solicitados))
   })
 
-  // Usa las horas desglosadas que registra la grilla; incluye turnos ya realizados
-  // y los que tienen un estado operativo posterior (por ejemplo, reemplazado).
-  // No cuenta francos, ausencias ni turnos aún programados como horas trabajadas.
+  // La grilla no tiene fichaje de entrada/salida: tomamos los turnos pasados
+  // que no fueron franco, ausencia ni reemplazo. Usamos el desglose de horas
+  // si está cargado y, si está en cero, recurrimos a las horas totales del turno.
   const turnosTrabajadosHistorial = turnosHistorial.filter(t =>
-    t.tipo !== 'franco' && t.estado !== 'programado' && t.estado !== 'ausente'
+    t.tipo !== 'franco' && t.estado !== 'ausente' && t.estado !== 'reemplazado'
   )
-  const minutosDiurnos = turnosTrabajadosHistorial.reduce((total, t) => total + Math.round(Number(t.horas_diurnas ?? (t.tipo === 'diurno' ? t.horas_totales : 0) ?? 0) * 60), 0)
-  const minutosNocturnos = turnosTrabajadosHistorial.reduce((total, t) => total + Math.round(Number(t.horas_nocturnas ?? (t.tipo === 'nocturno' ? t.horas_totales : 0) ?? 0) * 60), 0)
+  const minutosDiurnos = turnosTrabajadosHistorial.reduce((total, t) => total + Math.round(Number(t.horas_diurnas || (t.tipo === 'diurno' ? t.horas_totales : 0)) * 60), 0)
+  const minutosNocturnos = turnosTrabajadosHistorial.reduce((total, t) => total + Math.round(Number(t.horas_nocturnas || (t.tipo === 'nocturno' ? t.horas_totales : 0)) * 60), 0)
   const minutosExtras = extrasHistorial.filter(s => s.estado === 'aprobada').reduce((total, s) => total + Number(s.minutos_aprobados ?? s.minutos_solicitados ?? 0), 0)
   const formatearMinutos = (minutos: number) => formatearDuracion(minutos / 60)
   const minutosTrabajados = minutosDiurnos + minutosNocturnos + minutosExtras
