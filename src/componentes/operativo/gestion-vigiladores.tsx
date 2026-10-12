@@ -12,11 +12,13 @@ import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { Usuario } from '@/tipos'
 
 export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idObjetivoSeleccionado?: string; modoConsulta?: boolean }> = ({ idEmpresaSeleccionada, idObjetivoSeleccionado, modoConsulta = false }) => {
-  const { vigiladores, asignaciones, objetivos, crearVigilador, editarVigilador, cambiarEstadoVigilador } = useOperativo()
+  const { vigiladores, asignaciones, objetivos, turnos, novedades, solicitudesCambio, avisos, solicitudesHorasExtra, crearVigilador, editarVigilador, cambiarEstadoVigilador } = useOperativo()
   const { usuario } = useAutenticacion()
 
   const [modalNuevoAbierto, setModalNuevoAbierto] = useState(false)
   const [modalHistorialAbierto, setModalHistorialAbierto] = useState(false)
+  const [modalHistorialOperativoAbierto, setModalHistorialOperativoAbierto] = useState(false)
+  const [mesHistorialOperativo, setMesHistorialOperativo] = useState(`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`)
   const [modalTrasladoAbierto, setModalTrasladoAbierto] = useState(false)
   const [modalEstadoAbierto, setModalEstadoAbierto] = useState(false)
   const [vigiladorEstado, setVigiladorEstado] = useState<Usuario | null>(null)
@@ -137,6 +139,19 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
   const historialAsignaciones = asignaciones.filter(
     (a) => a.id_vigilador === vigiladorSeleccionado?.id
   )
+  const turnosHistorial = turnos.filter(t => t.id_vigilador === vigiladorSeleccionado?.id && t.fecha.startsWith(mesHistorialOperativo)).sort((a, b) => b.fecha.localeCompare(a.fecha))
+  const novedadesHistorial = novedades.filter(n => n.id_vigilador === vigiladorSeleccionado?.id && n.fecha.startsWith(mesHistorialOperativo)).sort((a, b) => b.fecha.localeCompare(a.fecha))
+  const extrasHistorial = solicitudesHorasExtra.filter(s => s.id_vigilador === vigiladorSeleccionado?.id && s.fecha.startsWith(mesHistorialOperativo)).sort((a, b) => b.fecha.localeCompare(a.fecha))
+  const cambiosHistorial = solicitudesCambio.filter(s => (s.id_solicitante === vigiladorSeleccionado?.id || s.id_destinatario === vigiladorSeleccionado?.id) && s.fecha_turno.startsWith(mesHistorialOperativo)).sort((a, b) => b.fecha_turno.localeCompare(a.fecha_turno))
+  const objetivosDelVigilador = new Set(asignaciones.filter(a => a.id_vigilador === vigiladorSeleccionado?.id).map(a => a.id_objetivo))
+  const avisosHistorial = avisos.filter(a => objetivosDelVigilador.has(a.id_objetivo) && a.creado_en?.startsWith(mesHistorialOperativo)).sort((a, b) => b.creado_en.localeCompare(a.creado_en))
+  const mesesHistorial = Array.from(new Set([
+    ...turnos.filter(t => t.id_vigilador === vigiladorSeleccionado?.id).map(t => t.fecha.slice(0, 7)),
+    ...novedades.filter(n => n.id_vigilador === vigiladorSeleccionado?.id).map(n => n.fecha.slice(0, 7)),
+    ...solicitudesHorasExtra.filter(s => s.id_vigilador === vigiladorSeleccionado?.id).map(s => s.fecha.slice(0, 7)),
+    ...solicitudesCambio.filter(s => s.id_solicitante === vigiladorSeleccionado?.id || s.id_destinatario === vigiladorSeleccionado?.id).map(s => s.fecha_turno.slice(0, 7)),
+    `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
+  ])).sort((a, b) => b.localeCompare(a))
 
   const vigiladoresMostrados = vigiladores.filter((v) => {
     if (v.id_empresa !== idEmpresaActiva) return false
@@ -234,6 +249,14 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
                 {!modoConsulta && <div className="pt-2 flex items-center justify-between gap-2 border-t border-slate-200 dark:border-slate-800">
                   <button
                     type="button"
+                    onClick={() => { setVigiladorSeleccionado(vig); setMesHistorialOperativo(`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`); setModalHistorialOperativoAbierto(true) }}
+                    className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <History className="w-3.5 h-3.5" />
+                    <span>Historial operativo</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => abrirHistorial(vig)}
                     className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
@@ -255,6 +278,45 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
           )
         })}
       </div>
+
+      <Dialogo
+        abierto={modalHistorialOperativoAbierto}
+        alCerrar={() => setModalHistorialOperativoAbierto(false)}
+        titulo={`Historial operativo: ${vigiladorSeleccionado?.nombre} ${vigiladorSeleccionado?.apellido}`}
+        subtitulo="Consulta por mes de turnos, horas extra, novedades, cambios de turno y avisos de sus objetivos asignados."
+        icono={<History className="w-5 h-5 text-blue-500" />}
+        tamano="grande"
+      >
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="historial-operativo-mes" className="mb-1 block text-xs font-semibold text-slate-500">Mes y año</label>
+            <select id="historial-operativo-mes" value={mesHistorialOperativo} onChange={e => setMesHistorialOperativo(e.target.value)} className="w-full min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0A0F1A] px-3 text-sm text-slate-900 dark:text-slate-100">
+              {mesesHistorial.map(m => <option key={m} value={m}>{new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1, 1))}</option>)}
+            </select>
+          </div>
+          <section className="space-y-2">
+            <h4 className="font-bold text-sm text-slate-900 dark:text-white">Turnos ({turnosHistorial.length})</h4>
+            {turnosHistorial.length ? turnosHistorial.map(t => <div key={t.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><div className="flex justify-between gap-2"><strong>{t.fecha} · {t.tipo}</strong><span>{t.horas_totales} h + {t.horas_extra} h extra</span></div><p className="mt-1 text-slate-500">{objetivos.find(o => o.id === t.id_objetivo)?.nombre || 'Objetivo'} · {t.hora_inicio.slice(0, 5)}–{t.hora_fin.slice(0, 5)}</p></div>) : <p className="text-xs text-slate-500">Sin turnos para este mes.</p>}
+          </section>
+          <section className="space-y-2">
+            <h4 className="font-bold text-sm text-slate-900 dark:text-white">Solicitudes de horas extra ({extrasHistorial.length})</h4>
+            {extrasHistorial.length ? extrasHistorial.map(s => <div key={s.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><strong>{s.fecha}</strong> · {s.estado} · {Math.floor((s.minutos_aprobados ?? s.minutos_solicitados) / 60)} h {String((s.minutos_aprobados ?? s.minutos_solicitados) % 60).padStart(2, '0')} min<p className="mt-1 text-slate-500">{s.motivo}</p></div>) : <p className="text-xs text-slate-500">Sin solicitudes de extras para este mes.</p>}
+          </section>
+          <section className="space-y-2">
+            <h4 className="font-bold text-sm text-slate-900 dark:text-white">Libro de Novedades ({novedadesHistorial.length})</h4>
+            {novedadesHistorial.length ? novedadesHistorial.map(n => <div key={n.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><strong>{n.fecha} {n.hora}</strong> · {objetivos.find(o => o.id === n.id_objetivo)?.nombre || 'Objetivo'}<p className="mt-1 whitespace-pre-line text-slate-600 dark:text-slate-300">{n.informe_novedades}</p></div>) : <p className="text-xs text-slate-500">Sin novedades para este mes.</p>}
+          </section>
+          <section className="space-y-2">
+            <h4 className="font-bold text-sm text-slate-900 dark:text-white">Cambios de turno ({cambiosHistorial.length})</h4>
+            {cambiosHistorial.length ? cambiosHistorial.map(s => <div key={s.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><strong>{s.fecha_turno}</strong> · {s.estado}<p className="mt-1 text-slate-500">{s.motivo}</p></div>) : <p className="text-xs text-slate-500">Sin cambios para este mes.</p>}
+          </section>
+          <section className="space-y-2">
+            <h4 className="font-bold text-sm text-slate-900 dark:text-white">Avisos de sus objetivos ({avisosHistorial.length})</h4>
+            {avisosHistorial.length ? avisosHistorial.map(a => <div key={a.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><div className="flex justify-between gap-2"><strong>{a.titulo}</strong><span>{a.prioridad}</span></div><p className="mt-1 text-slate-500">{a.creado_en.slice(0, 10)} · {objetivos.find(o => o.id === a.id_objetivo)?.nombre || 'Objetivo'}</p><p className="mt-1 whitespace-pre-line">{a.contenido}</p></div>) : <p className="text-xs text-slate-500">Sin avisos de esos objetivos para este mes.</p>}
+          </section>
+          <div className="flex justify-end border-t border-slate-200 dark:border-slate-800 pt-3"><Boton variante="secundario" onClick={() => setModalHistorialOperativoAbierto(false)}>Cerrar</Boton></div>
+        </div>
+      </Dialogo>
 
       {/* Modal Historial de Asignaciones (Sección 20) */}
       <Dialogo
