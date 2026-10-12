@@ -24,6 +24,7 @@ export const MiTurno: React.FC = () => {
   const asignacionActiva = asignaciones.find((a) => a.id_vigilador === idVig && a.activa)
   const objetivoActivo = objetivos.find((o) => o.id === asignacionActiva?.id_objetivo)
   const supervisorActivo = supervisores.find((s) => s.id === objetivoActivo?.id_supervisor)
+  const supervisorNombre = objetivoActivo?.supervisor_nombre?.trim() || (supervisorActivo ? `${supervisorActivo.nombre} ${supervisorActivo.apellido}`.trim() : '')
 
   // Última novedad registrada
   return (
@@ -86,7 +87,7 @@ export const MiTurno: React.FC = () => {
                   Supervisor a Cargo:
                 </span>
                 <span className="font-bold text-slate-900 dark:text-white text-sm break-words">
-                  {supervisorActivo ? `${supervisorActivo.nombre} ${supervisorActivo.apellido}` : 'Sin supervisor asignado'}
+                  {supervisorNombre || 'Sin supervisor asignado'}
                 </span>
                 <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
                   {supervisorActivo?.telefono || 'Contacto no registrado'}
