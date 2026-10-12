@@ -349,7 +349,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
               {mesesHistorial.map(m => <option key={m} value={m}>{new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1, 1))}</option>)}
             </select>
           </div>
-          <details className="group rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden" open>
+          <details className="group rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-900/40">
               <div className="min-w-0">
                 <h4 className="font-bold text-sm text-slate-900 dark:text-white">Turnos <span className="font-normal text-slate-500">({turnosHistorial.length})</span></h4>
