@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Sun, Moon } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { useOperativo } from '@/contextos/contexto-operativo'
@@ -16,7 +16,11 @@ export const MiMes: React.FC = () => {
   const { usuario } = useAutenticacion()
 
   const idVig = usuario?.id || 'usr-vig-01'
-  const ahora = new Date()
+  const [ahora, setAhora] = useState(() => new Date())
+  useEffect(() => {
+    const intervalo = window.setInterval(() => setAhora(new Date()), 60_000)
+    return () => window.clearInterval(intervalo)
+  }, [])
   const mesActual = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`
   const [mesSeleccionado, setMesSeleccionado] = useState(mesActual)
   const mesesDisponibles = useMemo(() => {
@@ -32,7 +36,32 @@ export const MiMes: React.FC = () => {
     (t) => t.id_vigilador === idVig && t.fecha.startsWith(mesSeleccionado)
   )
 
-  const horasTotales = turnosMes.reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
+  // Objetivo mensual: suma de las horas programadas en la grilla para este vigilador.
+  const horasObjetivoMes = turnosMes.reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
+
+  // Horas trabajadas hasta ahora: los turnos futuros no cuentan; el turno en curso
+  // suma solo el tiempo transcurrido y las extras se agregan al finalizar la guardia.
+  const horasTrabajadasAlMomento = turnosMes.reduce((acc, t) => {
+    if (t.tipo === 'franco' || t.horas_totales <= 0) return acc
+    if (mesSeleccionado < mesActual) return acc + t.horas_totales + t.horas_extra
+    if (mesSeleccionado > mesActual) return acc
+
+    const [anio, mes, dia] = t.fecha.split('-').map(Number)
+    const [horaInicio, minutoInicio] = t.hora_inicio.split(':').map(Number)
+    const [horaFin, minutoFin] = t.hora_fin.split(':').map(Number)
+    const inicio = new Date(anio, mes - 1, dia, horaInicio, minutoInicio || 0, 0, 0)
+    let fin = new Date(anio, mes - 1, dia, horaFin, minutoFin || 0, 0, 0)
+    if (fin.getTime() <= inicio.getTime()) fin = new Date(fin.getTime() + 24 * 60 * 60 * 1000)
+
+    if (ahora.getTime() <= inicio.getTime()) return acc
+    if (ahora.getTime() >= fin.getTime()) return acc + t.horas_totales + t.horas_extra
+
+    const minutosTranscurridos = Math.max(0, (ahora.getTime() - inicio.getTime()) / 60_000)
+    const minutosProgramados = Math.max(1, (fin.getTime() - inicio.getTime()) / 60_000)
+    const horasTranscurridas = Math.min(t.horas_totales, t.horas_totales * minutosTranscurridos / minutosProgramados)
+    return acc + horasTranscurridas
+  }, 0)
+
   const horasDiurnas = turnosMes.reduce((acc, t) => acc + t.horas_diurnas, 0)
   const horasNocturnas = turnosMes.reduce((acc, t) => acc + t.horas_nocturnas, 0)
   const horasDomingos = turnosMes
@@ -45,8 +74,10 @@ export const MiMes: React.FC = () => {
   const francos = turnosMes.filter((t) => t.tipo === 'franco').length
   const diasTrabajados = turnosMes.filter((t) => t.horas_totales > 0).length
 
-  const metaHoras = 204
-  const porcentajeCumplimiento = Math.min(100, Math.round((horasTotales / metaHoras) * 100))
+  const porcentajeCumplimiento = horasObjetivoMes > 0
+    ? Math.min(100, Math.round((horasTrabajadasAlMomento / horasObjetivoMes) * 100))
+    : 0
+  const horasPendientes = Math.max(0, horasObjetivoMes - horasTrabajadasAlMomento)
 
   return (
     <div className="space-y-6">
@@ -89,9 +120,9 @@ export const MiMes: React.FC = () => {
               </span>
               <div className="flex items-baseline gap-2 mt-1">
                 <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">
-                  {formatearHorasMinutos(horasTotales)} hs
+                  {formatearHorasMinutos(horasTrabajadasAlMomento)} hs
                 </span>
-                <span className="text-sm font-bold text-slate-500">/ {metaHoras} hs objetivo</span>
+                <span className="text-sm font-bold text-slate-500">/ {formatearHorasMinutos(horasObjetivoMes)} hs objetivo</span>
               </div>
             </div>
 
@@ -100,9 +131,9 @@ export const MiMes: React.FC = () => {
                 {porcentajeCumplimiento}%
               </span>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                {horasTotales >= metaHoras
+                {horasObjetivoMes > 0 && horasTrabajadasAlMomento >= horasObjetivoMes
                   ? 'Objetivo mensual alcanzado'
-                  : `Faltan ${metaHoras - horasTotales} hs para cumplir la meta`}
+                  : `Faltan ${formatearHorasMinutos(horasPendientes)} hs para cumplir el objetivo`}
               </p>
             </div>
           </div>
