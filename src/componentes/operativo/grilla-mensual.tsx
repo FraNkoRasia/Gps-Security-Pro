@@ -31,6 +31,11 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   const fechaMesSeleccionado = new Date(anioSeleccionado, numeroMesSeleccionado - 1, 1)
   const nombreMesSeleccionado = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(fechaMesSeleccionado)
   const totalDiasMes = new Date(anioSeleccionado, numeroMesSeleccionado, 0).getDate()
+
+  const desplazarMes = (cantidad: number) => {
+    const nuevoMes = new Date(anioSeleccionado, numeroMesSeleccionado - 1 + cantidad, 1)
+    setMesSeleccionado(`${nuevoMes.getFullYear()}-${String(nuevoMes.getMonth() + 1).padStart(2, '0')}`)
+  }
   const claveFeriadosManuales = `${objetivoActual?.id_empresa || 'sin-empresa'}:${objetivoSeleccionado || 'sin-objetivo'}`
   const [feriadosManuales, setFeriadosManuales] = useState<string[]>([])
   const [feriadosNacionales, setFeriadosNacionales] = useState<Record<string, string>>({})
