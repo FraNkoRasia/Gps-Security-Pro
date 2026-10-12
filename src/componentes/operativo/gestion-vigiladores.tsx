@@ -39,6 +39,9 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
   const [modalEstadoAbierto, setModalEstadoAbierto] = useState(false)
   const [vigiladorEstado, setVigiladorEstado] = useState<Usuario | null>(null)
   const [filtroEstadoVigiladores, setFiltroEstadoVigiladores] = useState<'activos' | 'inactivos'>('activos')
+  const hoy = new Date()
+  const fechaHoy = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
+  const mesActual = fechaHoy.slice(0, 7)
 
   const [vigiladorSeleccionado, setVigiladorSeleccionado] = useState<Usuario | null>(null)
   const [vigiladorEditando, setVigiladorEditando] = useState<Usuario | null>(null)
@@ -156,10 +159,10 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
   const historialAsignaciones = asignaciones.filter(
     (a) => a.id_vigilador === vigiladorSeleccionado?.id
   )
-  const turnosHistorial = turnos.filter(t => t.id_vigilador === vigiladorSeleccionado?.id && t.fecha.startsWith(mesHistorialOperativo)).sort((a, b) => b.fecha.localeCompare(a.fecha))
-  const novedadesHistorial = novedades.filter(n => n.id_vigilador === vigiladorSeleccionado?.id && n.fecha.startsWith(mesHistorialOperativo)).sort((a, b) => b.fecha.localeCompare(a.fecha))
-  const extrasHistorial = solicitudesHorasExtra.filter(s => s.id_vigilador === vigiladorSeleccionado?.id && s.fecha.startsWith(mesHistorialOperativo)).sort((a, b) => b.fecha.localeCompare(a.fecha))
-  const cambiosHistorial = solicitudesCambio.filter(s => (s.id_solicitante === vigiladorSeleccionado?.id || s.id_destinatario === vigiladorSeleccionado?.id) && s.fecha_turno.startsWith(mesHistorialOperativo)).sort((a, b) => b.fecha_turno.localeCompare(a.fecha_turno))
+  const turnosHistorial = turnos.filter(t => t.id_vigilador === vigiladorSeleccionado?.id && t.fecha.startsWith(mesHistorialOperativo) && t.fecha <= fechaHoy).sort((a, b) => b.fecha.localeCompare(a.fecha))
+  const novedadesHistorial = novedades.filter(n => n.id_vigilador === vigiladorSeleccionado?.id && n.fecha.startsWith(mesHistorialOperativo) && n.fecha <= fechaHoy).sort((a, b) => b.fecha.localeCompare(a.fecha))
+  const extrasHistorial = solicitudesHorasExtra.filter(s => s.id_vigilador === vigiladorSeleccionado?.id && s.fecha.startsWith(mesHistorialOperativo) && s.fecha <= fechaHoy).sort((a, b) => b.fecha.localeCompare(a.fecha))
+  const cambiosHistorial = solicitudesCambio.filter(s => (s.id_solicitante === vigiladorSeleccionado?.id || s.id_destinatario === vigiladorSeleccionado?.id) && s.fecha_turno.startsWith(mesHistorialOperativo) && s.fecha_turno <= fechaHoy).sort((a, b) => b.fecha_turno.localeCompare(a.fecha_turno))
   const objetivosDelVigilador = new Set(asignaciones.filter(a => a.id_vigilador === vigiladorSeleccionado?.id).map(a => a.id_objetivo))
   const nombreVigilador = (id: string | null | undefined) => {
     const encontrado = vigiladores.find(v => v.id === id)
@@ -177,14 +180,14 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
     solicitudesAprobadasPorTurno.set(s.id_turno, (solicitudesAprobadasPorTurno.get(s.id_turno) || 0) + Number(s.minutos_aprobados ?? s.minutos_solicitados))
   })
 
-  const avisosHistorial = avisos.filter(a => objetivosDelVigilador.has(a.id_objetivo) && a.creado_en?.startsWith(mesHistorialOperativo)).sort((a, b) => b.creado_en.localeCompare(a.creado_en))
+  const avisosHistorial = avisos.filter(a => objetivosDelVigilador.has(a.id_objetivo) && a.creado_en?.startsWith(mesHistorialOperativo) && (a.creado_en?.slice(0, 10) || '') <= fechaHoy).sort((a, b) => b.creado_en.localeCompare(a.creado_en))
   const mesesHistorial = Array.from(new Set([
-    ...turnos.filter(t => t.id_vigilador === vigiladorSeleccionado?.id).map(t => t.fecha.slice(0, 7)),
-    ...novedades.filter(n => n.id_vigilador === vigiladorSeleccionado?.id).map(n => n.fecha.slice(0, 7)),
-    ...solicitudesHorasExtra.filter(s => s.id_vigilador === vigiladorSeleccionado?.id).map(s => s.fecha.slice(0, 7)),
-    ...solicitudesCambio.filter(s => s.id_solicitante === vigiladorSeleccionado?.id || s.id_destinatario === vigiladorSeleccionado?.id).map(s => s.fecha_turno.slice(0, 7)),
-    `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
-  ])).sort((a, b) => b.localeCompare(a))
+    ...turnos.filter(t => t.id_vigilador === vigiladorSeleccionado?.id && t.fecha <= fechaHoy).map(t => t.fecha.slice(0, 7)),
+    ...novedades.filter(n => n.id_vigilador === vigiladorSeleccionado?.id && n.fecha <= fechaHoy).map(n => n.fecha.slice(0, 7)),
+    ...solicitudesHorasExtra.filter(s => s.id_vigilador === vigiladorSeleccionado?.id && s.fecha <= fechaHoy).map(s => s.fecha.slice(0, 7)),
+    ...solicitudesCambio.filter(s => (s.id_solicitante === vigiladorSeleccionado?.id || s.id_destinatario === vigiladorSeleccionado?.id) && s.fecha_turno <= fechaHoy).map(s => s.fecha_turno.slice(0, 7)),
+    mesActual
+  ])).filter(m => m <= mesActual).sort((a, b) => b.localeCompare(a))
 
   const vigiladoresMostrados = vigiladores.filter((v) => {
     if (v.id_empresa !== idEmpresaActiva) return false
@@ -215,10 +218,10 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
 
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 p-2">
         <button type="button" onClick={() => setFiltroEstadoVigiladores('activos')} aria-pressed={filtroEstadoVigiladores === 'activos'} className={`flex-1 min-w-[150px] rounded-lg px-4 py-3 text-sm font-bold transition-colors ${filtroEstadoVigiladores === 'activos' ? 'bg-emerald-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
-          <UserCheck className="inline w-4 h-4 mr-2" />Vigilantes Activos ({vigiladores.filter(v => v.id_empresa === idEmpresaActiva && v.activo && (!idObjetivoSeleccionado || asignaciones.some(a => a.id_vigilador === v.id && a.id_objetivo === idObjetivoSeleccionado && a.activa))).length})
+          <UserCheck className="inline w-4 h-4 mr-2" />Activos ({vigiladores.filter(v => v.id_empresa === idEmpresaActiva && v.activo && (!idObjetivoSeleccionado || asignaciones.some(a => a.id_vigilador === v.id && a.id_objetivo === idObjetivoSeleccionado && a.activa))).length})
         </button>
         <button type="button" onClick={() => setFiltroEstadoVigiladores('inactivos')} aria-pressed={filtroEstadoVigiladores === 'inactivos'} className={`flex-1 min-w-[150px] rounded-lg px-4 py-3 text-sm font-bold transition-colors ${filtroEstadoVigiladores === 'inactivos' ? 'bg-slate-700 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
-          <UserX className="inline w-4 h-4 mr-2" />Vigilantes Inactivos ({vigiladores.filter(v => v.id_empresa === idEmpresaActiva && !v.activo && (!idObjetivoSeleccionado || asignaciones.some(a => a.id_vigilador === v.id && a.id_objetivo === idObjetivoSeleccionado))).length})
+          <UserX className="inline w-4 h-4 mr-2" />Inactivos ({vigiladores.filter(v => v.id_empresa === idEmpresaActiva && !v.activo && (!idObjetivoSeleccionado || asignaciones.some(a => a.id_vigilador === v.id && a.id_objetivo === idObjetivoSeleccionado))).length})
         </button>
       </div>
 
