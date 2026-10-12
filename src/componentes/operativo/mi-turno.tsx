@@ -7,7 +7,7 @@ import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import { SolicitarHorasExtra } from '@/componentes/operativo/solicitar-horas-extra'
 
 export const MiTurno: React.FC = () => {
-  const { turnos, objetivos, asignaciones, supervisores, tiposTurno } = useOperativo()
+  const { turnos, objetivos, asignaciones, supervisores, tiposTurno, solicitudesHorasExtra } = useOperativo()
   const { usuario } = useAutenticacion()
 
   const idVig = usuario?.id || 'usr-vig-01'
@@ -118,7 +118,7 @@ export const MiTurno: React.FC = () => {
 
             <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
               {turnoHoy && turnoHoy.tipo !== 'franco' && turnoHoy.horas_extra > 0 && <p className="text-xs font-semibold text-emerald-500">Horas extra confirmadas: +{turnoHoy.horas_extra} h</p>}
-              <SolicitarHorasExtra turnos={turnos.filter(t => t.id_vigilador === idVig && t.tipo !== 'franco' && t.horas_totales > 0).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 30)} solicitudes={[]}/>
+              <SolicitarHorasExtra turnos={turnos.filter(t => t.id_vigilador === idVig && t.tipo !== 'franco' && t.horas_totales > 0 && t.fecha <= hoyStr).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 30)} solicitudes={solicitudesHorasExtra.filter(s => s.id_vigilador === idVig)}/>
             </div>
           </TarjetaContenido>
         </Tarjeta>
