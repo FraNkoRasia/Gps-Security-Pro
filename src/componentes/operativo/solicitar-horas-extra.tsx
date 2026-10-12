@@ -10,7 +10,7 @@ import type {Turno, SolicitudHorasExtra} from '@/tipos'
 
 const minutosEntre=(inicio:string,fin:string)=>{const [ih,im]=inicio.split(':').map(Number);const [fh,fm]=fin.split(':').map(Number);let a=ih*60+im,b=fh*60+fm;if(b<=a)b+=1440;return b-a}
 const normalizarHora=(hora:string)=>hora.slice(0,5)
-const calcularMinutosExtra=(turno:Turno|undefined,salida:string)=>{if(!turno||!salida)return 0;const programada=normalizarHora(turno.hora_fin);const esNocturno=turno.tipo==='nocturno'&&normalizarHora(turno.hora_inicio)>programada;return salida<=programada?(esNocturno?minutosEntre(programada,salida):0):minutosEntre(programada,salida)}
+const calcularMinutosExtra=(turno:Turno|undefined,salida:string)=>{if(!turno||!salida)return 0;const programada=normalizarHora(turno.hora_fin);return salida<=programada?0:minutosEntre(programada,salida)}
 const formatearDuracion=(minutos:number)=>`${Math.floor(minutos/60)} h ${String(minutos%60).padStart(2,'0')} min`
 export const SolicitarHorasExtra:React.FC<{turnos:Turno[];solicitudes?:SolicitudHorasExtra[]}>=({turnos,solicitudes=[]})=>{
  const {solicitarHorasExtra}=useOperativo(); const {usuario}=useAutenticacion(); const [abierto,setAbierto]=useState(false); const [turnoId,setTurnoId]=useState(''); const [salida,setSalida]=useState(''); const [motivo,setMotivo]=useState('Reemplazo no llegó'); const [obs,setObs]=useState(''); const [error,setError]=useState(''); const [guardando,setGuardando]=useState(false)
