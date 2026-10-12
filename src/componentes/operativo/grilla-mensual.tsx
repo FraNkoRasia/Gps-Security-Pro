@@ -39,6 +39,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   const claveFeriadosManuales = `${objetivoActual?.id_empresa || 'sin-empresa'}:${objetivoSeleccionado || 'sin-objetivo'}`
   const [feriadosManuales, setFeriadosManuales] = useState<string[]>([])
   const [feriadosNacionales, setFeriadosNacionales] = useState<Record<string, string>>({})
+  const [feriadosNacionalesIgnorados, setFeriadosNacionalesIgnorados] = useState<string[]>([])
+  const claveFeriadosIgnorados = `gsp-feriados-nacionales-ignorados:${claveFeriadosManuales}`
 
   useEffect(() => {
     let cancelado = false
@@ -53,7 +55,27 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
     } else {
       setFeriadosManuales([])
     }
-  }, [claveFeriadosManuales, objetivoActual?.id_empresa, objetivoSeleccionado])
+    try {
+      const guardados = window.localStorage.getItem(claveFeriadosIgnorados)
+      setFeriadosNacionalesIgnorados(guardados ? JSON.parse(guardados) as string[] : [])
+    } catch {
+      setFeriadosNacionalesIgnorados([])
+    }
+  }, [claveFeriadosManuales, claveFeriadosIgnorados, objetivoActual?.id_empresa, objetivoSeleccionado])
+
+  const alternarFeriadoNacional = (fecha: string) => {
+    setFeriadosNacionalesIgnorados((actuales) => {
+      const nuevasFechas = actuales.includes(fecha)
+        ? actuales.filter((dia) => dia !== fecha)
+        : [...actuales, fecha]
+      try {
+        window.localStorage.setItem(claveFeriadosIgnorados, JSON.stringify(nuevasFechas))
+      } catch {
+        // La grilla sigue funcionando aunque no se pueda guardar la preferencia local.
+      }
+      return nuevasFechas
+    })
+  }
 
   const alternarFeriadoManual = (fecha: string) => {
     setFeriadosManuales((actuales) => {
@@ -67,7 +89,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
     })
   }
 
-  const nombreFeriadoEnFecha = (fecha: string) => feriadosNacionales[fecha] || (feriadosManuales.includes(fecha) ? 'Feriado manual' : undefined)
+  const nombreFeriadoEnFecha = (fecha: string) => feriadosNacionalesIgnorados.includes(fecha) ? (feriadosManuales.includes(fecha) ? 'Feriado manual' : undefined) : feriadosNacionales[fecha] || (feriadosManuales.includes(fecha) ? 'Feriado manual' : undefined)
 
   // Modal para edición interactiva de celda
   const [modalEdicionAbierto, setModalEdicionAbierto] = useState(false)
@@ -380,7 +402,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
 
       {!soloLectura && (
         <p className="text-center text-xs text-slate-500 dark:text-slate-400">
-          Marcá o quitá un feriado con el botón de cada día. Las marcas se guardan en este navegador para este objetivo y no se comparten con otros usuarios.
+          Usá el botón de cada día para marcar o quitar feriados, incluidos los nacionales automáticos. Los cambios se guardan en este navegador para este objetivo y no se comparten con otros usuarios.
         </p>
       )}
 
@@ -423,16 +445,20 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                         </span>
                       </div>
                       <div className="font-extrabold text-sm">{dia}</div>
-                      {!soloLectura && !feriadosNacionales[claveFecha] ? (
+                      {!soloLectura ? (
                         <button
                           type="button"
-                          onClick={() => alternarFeriadoManual(claveFecha)}
-                          aria-pressed={feriadosManuales.includes(claveFecha)}
-                          aria-label={`${feriadosManuales.includes(claveFecha) ? 'Quitar' : 'Marcar'} feriado el ${dia} de ${nombreMesSeleccionado}`}
-                          title={`${feriadosManuales.includes(claveFecha) ? 'Quitar' : 'Marcar'} feriado`}
+                          onClick={() => feriadosNacionales[claveFecha]
+                            ? alternarFeriadoNacional(claveFecha)
+                            : alternarFeriadoManual(claveFecha)}
+                          aria-pressed={esFeriado}
+                          aria-label={`${esFeriado ? 'Quitar' : 'Marcar'} feriado el ${dia} de ${nombreMesSeleccionado}`}
+                          title={feriadosNacionales[claveFecha]
+                            ? (feriadosNacionalesIgnorados.includes(claveFecha) ? 'Restaurar feriado nacional automático' : 'Quitar feriado nacional automático')
+                            : (feriadosManuales.includes(claveFecha) ? 'Quitar feriado manual' : 'Marcar feriado manual')}
                           className="mt-0.5 rounded px-1 text-[9px] font-bold text-amber-700 hover:bg-amber-200 dark:text-amber-300 dark:hover:bg-amber-900/50"
                         >
-                          {feriadosManuales.includes(claveFecha) ? 'Fer' : '+ Fer'}
+                          {esFeriado ? 'Fer' : '+ Fer'}
                         </button>
                       ) : esFeriado ? (
                         <div className="text-[9px] text-amber-700 dark:text-amber-300 font-bold" title={nombreFeriado}>Fer</div>
