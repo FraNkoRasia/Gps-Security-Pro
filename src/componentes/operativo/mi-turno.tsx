@@ -42,9 +42,12 @@ export const MiTurno: React.FC = () => {
   // Si hoy figura franco pero el turno nocturno de ayer aún no terminó, sigue en servicio.
   const turnoVisible = (!turnoHoy || turnoHoy.tipo === 'franco') && turnoAyerEnCurso ? turnoAyer : turnoHoy
   const enServicio = !!turnoVisible && turnoVisible.tipo !== 'franco' && turnoVisible.horas_totales > 0
-  // Mostrar los próximos cinco días calendario, incluso si no hay turno o corresponde franco.
+  // Antes de las 07:00, si sigue activa la guardia nocturna de ayer, el día operativo
+  // actual todavía no terminó. Incluirlo en próximos turnos y avanzar al día siguiente
+  // recién cuando finalice la guardia.
+  const inicioProximosDias = turnoAyerEnCurso ? 0 : 1
   const proximosTurnos = Array.from({ length: 5 }, (_, i) => {
-    const fecha = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + i + 1)
+    const fecha = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + i + inicioProximosDias)
     const fechaStr = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`
     return {
       fecha: fechaStr,
