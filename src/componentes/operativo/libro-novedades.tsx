@@ -164,20 +164,22 @@ export const LibroNovedades: React.FC = () => {
             <Entrada id="novedades-hasta" type="date" value={fechaHasta} min={fechaDesde || undefined} onChange={(e) => setFechaHasta(e.target.value)} />
           </div>
         </div>
-        <div className="w-full sm:w-64">
-          <select
-            value={filtroObjetivo}
-            onChange={(e) => setFiltroObjetivo(e.target.value)}
-            className="w-full min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700/80 px-3 py-2.5 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
-          >
-            <option value="todos">Todos los objetivos</option>
-            {objetivos.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.nombre}
-              </option>
-            ))}
-          </select>
-        </div>
+        {usuario?.rol !== 'vigilador' && (
+          <div className="w-full sm:w-64">
+            <select
+              value={filtroObjetivo}
+              onChange={(e) => setFiltroObjetivo(e.target.value)}
+              className="w-full min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700/80 px-3 py-2.5 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
+            >
+              <option value="todos">Todos los objetivos</option>
+              {objetivos.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Listado de Novedades */}
