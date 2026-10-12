@@ -22,7 +22,7 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
   const [nombre, setNombre] = useState('')
   const [descripcion, setDescripcion] = useState('')
   const [elementosACargo, setElementosACargo] = useState('')
-  const [idSupervisor, setIdSupervisor] = useState('')
+  const [supervisorNombre, setSupervisorNombre] = useState('')
   const [direccion, setDireccion] = useState('')
   const [localidad, setLocalidad] = useState('Río Cuarto')
   const [provincia, setProvincia] = useState('Córdoba')
@@ -39,7 +39,7 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
     setNombre('')
     setDescripcion('')
     setElementosACargo('')
-    setIdSupervisor('')
+    setSupervisorNombre('')
     setDireccion('')
     setLocalidad('Río Cuarto')
     setProvincia('Córdoba')
@@ -65,7 +65,8 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
     setNombre(obj.nombre)
     setDescripcion(obj.descripcion || '')
     setElementosACargo(obj.elementos_a_cargo || '')
-    setIdSupervisor(obj.id_supervisor || '')
+    const supervisorExistente = supervisores.find(s => s.id === obj.id_supervisor)
+    setSupervisorNombre(obj.supervisor_nombre || (supervisorExistente ? `${supervisorExistente.nombre} ${supervisorExistente.apellido}`.trim() : ''))
     setDireccion(obj.direccion)
     setLocalidad(obj.localidad)
     setProvincia(obj.provincia)
@@ -87,7 +88,7 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
         nombre: nombre.trim(),
         descripcion: descripcion.trim(),
         elementos_a_cargo: elementosACargo.trim(),
-        id_supervisor: idSupervisor || null,
+        supervisor_nombre: supervisorNombre.trim() || null,
         direccion: direccion.trim(),
         localidad: localidad.trim(),
         provincia: provincia.trim()
@@ -98,6 +99,7 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
         nombre: nombre.trim(),
         descripcion: descripcion.trim(),
         elementos_a_cargo: elementosACargo.trim(),
+        supervisor_nombre: supervisorNombre.trim() || null,
         direccion: direccion.trim(),
         localidad: localidad.trim(),
         provincia: provincia.trim()
@@ -270,10 +272,11 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
 
           <div>
             <Etiqueta>Supervisor a Cargo</Etiqueta>
-            <select value={idSupervisor} onChange={(e) => setIdSupervisor(e.target.value)} className="w-full min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700/80 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-              <option value="">Sin supervisor asignado</option>
-              {supervisores.filter(s => s.activo && s.id_empresa === idEmpresaActiva).map(s => <option key={s.id} value={s.id}>{s.nombre} {s.apellido}</option>)}
-            </select>
+            <Entrada
+              value={supervisorNombre}
+              onChange={(e) => setSupervisorNombre(e.target.value)}
+              placeholder="Nombre y apellido del supervisor (opcional)"
+            />
           </div>
 
           <div>
