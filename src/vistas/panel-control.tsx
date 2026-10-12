@@ -56,7 +56,7 @@ export const VistaPanelControl: React.FC = () => {
     ? [
         { id: 'miTurno', label: 'Mi Turno', icono: <Clock className="w-4 h-4" /> },
         { id: 'grilla', label: 'Grilla', icono: <Calendar className="w-4 h-4" /> },
-        { id: 'miMes', label: 'Mi Mes (204 hs)', icono: <Calendar className="w-4 h-4" /> },
+        { id: 'miMes', label: 'Mi Mes', icono: <Calendar className="w-4 h-4" /> },
         { id: 'historialLaboral', label: 'Historial laboral', icono: <History className="w-4 h-4" /> },
         { id: 'novedades', label: 'Libro de Novedades', contador: novedadesNoLeidas, icono: <BookOpen className="w-4 h-4" /> },
         { id: 'cambios', label: 'Cambios de Turno', contador: solicitudesCambioNoLeidas, icono: <ArrowRightLeft className="w-4 h-4" /> },
