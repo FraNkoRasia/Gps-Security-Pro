@@ -5,6 +5,13 @@ import { Insignia } from '@/componentes/ui/insignia'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 
+const formatearHorasMinutos = (horas: number) => {
+  const minutosTotales = Math.round(horas * 60)
+  const horasEnteras = Math.floor(minutosTotales / 60)
+  const minutosRestantes = minutosTotales % 60
+  return `${horasEnteras}.${String(minutosRestantes).padStart(2, '0')}`
+}
+
 export const MiMes: React.FC = () => {
   const { turnos } = useOperativo()
   const { usuario } = useAutenticacion()
@@ -81,7 +88,7 @@ export const MiMes: React.FC = () => {
               </span>
               <div className="flex items-baseline gap-2 mt-1">
                 <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">
-                  {horasTotales} hs
+                  {formatearHorasMinutos(horasTotales)} hs
                 </span>
                 <span className="text-sm font-bold text-slate-500">/ {metaHoras} hs objetivo</span>
               </div>
@@ -176,7 +183,7 @@ export const MiMes: React.FC = () => {
           <TarjetaContenido className="p-4">
             <span className="text-slate-500 dark:text-slate-400 text-xs block">Horas Extra</span>
             <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 block">
-              {horasExtra} hs
+              {formatearHorasMinutos(horasExtra)} hs
             </span>
             <p className="text-[10px] text-slate-400 mt-0.5">Excedentes autorizados</p>
           </TarjetaContenido>
