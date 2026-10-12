@@ -6,7 +6,8 @@ import {
   BookOpen,
   ArrowRightLeft,
   Bell,
-  Clock
+  Clock,
+  History
 } from 'lucide-react'
 import { Insignia } from '@/componentes/ui/insignia'
 import { Boton } from '@/componentes/ui/boton'
@@ -19,6 +20,7 @@ import { CambiosTurnos } from '@/componentes/operativo/cambios-turnos'
 import { AvisosComunicacion } from '@/componentes/operativo/avisos-comunicacion'
 import { MiTurno } from '@/componentes/operativo/mi-turno'
 import { MiMes } from '@/componentes/operativo/mi-mes'
+import { HistorialLaboral } from '@/componentes/operativo/historial-laboral'
 import { GestionHorasExtra } from '@/componentes/operativo/gestion-horas-extra'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import { useTraduccion } from '@/i18n'
@@ -55,6 +57,7 @@ export const VistaPanelControl: React.FC = () => {
         { id: 'miTurno', label: 'Mi Turno', icono: <Clock className="w-4 h-4" /> },
         { id: 'grilla', label: 'Grilla', icono: <Calendar className="w-4 h-4" /> },
         { id: 'miMes', label: 'Mi Mes (204 hs)', icono: <Calendar className="w-4 h-4" /> },
+        { id: 'historialLaboral', label: 'Historial laboral', icono: <History className="w-4 h-4" /> },
         { id: 'novedades', label: 'Libro de Novedades', contador: novedadesNoLeidas, icono: <BookOpen className="w-4 h-4" /> },
         { id: 'cambios', label: 'Cambios de Turno', contador: solicitudesCambioNoLeidas, icono: <ArrowRightLeft className="w-4 h-4" /> },
         { id: 'avisos', label: 'Avisos', contador: avisosNoLeidos, icono: <Bell className="w-4 h-4" /> }
@@ -200,6 +203,7 @@ export const VistaPanelControl: React.FC = () => {
             {pestanaRenderizada === 'grilla' && esVigilador && objetivoVigiladorId && <GrillaMensual objetivoInicial={objetivoVigiladorId} soloLectura />}
             {pestanaRenderizada === 'grilla' && esVigilador && !objetivoVigiladorId && <div className="rounded-2xl border border-slate-800 bg-[#0C121E] p-6 text-center text-sm text-slate-400">No tenés un objetivo activo asignado actualmente.</div>}
             {pestanaRenderizada === 'miMes' && esVigilador && <MiMes />}
+            {pestanaRenderizada === 'historialLaboral' && esVigilador && <HistorialLaboral />}
           </div>
         </>
       )}
