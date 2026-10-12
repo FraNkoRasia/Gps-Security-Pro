@@ -35,6 +35,9 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
     return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`
   })
   const [anioSeleccionado, numeroMesSeleccionado] = mesSeleccionado.split('-').map(Number)
+  const hoy = new Date()
+  const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`
+  const soloLecturaEfectiva = soloLectura || mesSeleccionado < mesActual
   const fechaMesSeleccionado = new Date(anioSeleccionado, numeroMesSeleccionado - 1, 1)
   const nombreMesSeleccionado = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(fechaMesSeleccionado)
   const totalDiasMes = new Date(anioSeleccionado, numeroMesSeleccionado, 0).getDate()
@@ -407,7 +410,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
         </button>
       </div>
 
-      {!soloLectura && (
+      {!soloLecturaEfectiva && (
         <p className="text-center text-xs text-slate-500 dark:text-slate-400">
           Usá el botón de cada día para marcar o quitar feriados, incluidos los nacionales automáticos. Los cambios se guardan en este navegador para este objetivo y no se comparten con otros usuarios.
         </p>
@@ -452,7 +455,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                         </span>
                       </div>
                       <div className="font-extrabold text-sm">{dia}</div>
-                      {!soloLectura ? (
+                      {!soloLecturaEfectiva ? (
                         <button
                           type="button"
                           onClick={() => feriadosNacionales[claveFecha]
@@ -512,9 +515,9 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                       return (
                         <td
                           key={dia}
-                          onClick={() => !soloLectura && abrirEditarCelda(vig.id, `${vig.nombre} ${vig.apellido}`, dia)}
-                          className={`p-1 text-center border-r border-slate-200 dark:border-slate-800/70 transition-colors select-none group ${feriadoCelda ? 'bg-amber-50 dark:bg-amber-950/20' : 'bg-white dark:bg-[#0C121E]'} ${soloLectura ? '' : 'cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-800/80'}`}
-                          title={feriadoCelda ? `${feriadoCelda} · ${fechaCelda}` : soloLectura ? 'Turno programado' : 'Clic para modificar turno'}
+                          onClick={() => !soloLecturaEfectiva && abrirEditarCelda(vig.id, `${vig.nombre} ${vig.apellido}`, dia)}
+                          className={`p-1 text-center border-r border-slate-200 dark:border-slate-800/70 transition-colors select-none group ${feriadoCelda ? 'bg-amber-50 dark:bg-amber-950/20' : 'bg-white dark:bg-[#0C121E]'} ${soloLecturaEfectiva ? '' : 'cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-800/80'}`}
+                          title={feriadoCelda ? `${feriadoCelda} · ${fechaCelda}` : soloLecturaEfectiva ? 'Turno de un mes anterior: solo lectura' : 'Clic para modificar turno'}
                         >
                           <div
                             className={`h-10 sm:h-7 min-w-[38px] sm:min-w-0 flex items-center justify-center rounded-lg border transition-transform group-hover:scale-105 ${
