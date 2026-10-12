@@ -84,21 +84,7 @@ export const MiMes: React.FC = () => {
               .sort((a, b) => b.valor.localeCompare(a.valor))
               .map(m => <option key={m.valor} value={m.valor}>{m.etiqueta}</option>)}
           </select>
-          <Insignia
-            variante={
-              estadoCumplimiento === 'verde'
-                ? 'verde'
-                : estadoCumplimiento === 'rojo'
-                ? 'rojo'
-                : 'dorado'
-            }
-          >
-            {estadoCumplimiento === 'verde'
-              ? 'Objetivo Cumplido (204 hs)'
-              : estadoCumplimiento === 'rojo'
-              ? 'Exceso de Carga'
-              : 'En Progreso hacia Meta'}
-          </Insignia>
+
         </div>
       </div>
 
