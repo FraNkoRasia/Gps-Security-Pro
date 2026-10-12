@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo, useState } from 'react'
 import { Sun, Moon } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -17,11 +17,20 @@ export const MiMes: React.FC = () => {
   const { usuario } = useAutenticacion()
 
   const idVig = usuario?.id || 'usr-vig-01'
-  const mesActual = '2026-10'
+  const ahora = new Date()
+  const mesActual = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`
+  const [mesSeleccionado, setMesSeleccionado] = useState(mesActual)
+  const mesesDisponibles = useMemo(() => {
+    const anios = new Set(turnos.filter(t => t.id_vigilador === idVig).map(t => t.fecha.slice(0, 4)))
+    anios.add(String(ahora.getFullYear()))
+    return Array.from(anios).sort((a, b) => b.localeCompare(a))
+  }, [turnos, idVig, ahora.getFullYear()])
+  const fechaMesSeleccionado = new Date(Number(mesSeleccionado.slice(0, 4)), Number(mesSeleccionado.slice(5, 7)) - 1, 1)
+  const nombreMesSeleccionado = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(fechaMesSeleccionado)
 
-  // Turnos del mes para este vigilador
+  // Turnos del mes seleccionado para este vigilador
   const turnosMes = turnos.filter(
-    (t) => t.id_vigilador === idVig && t.fecha.startsWith(mesActual)
+    (t) => t.id_vigilador === idVig && t.fecha.startsWith(mesSeleccionado)
   )
 
   const horasTotales = turnosMes.reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
@@ -52,14 +61,29 @@ export const MiMes: React.FC = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h3 className="text-xl font-black text-slate-900 dark:text-white font-['Outfit']">
-            Mi Mes — Octubre 2026
+            Mi Mes — {nombreMesSeleccionado}
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Cálculo consolidado de horas de servicio, nocturnidad y objetivo laboral (Sección 34).
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <label htmlFor="mi-mes-selector" className="sr-only">Seleccionar mes y año</label>
+          <select
+            id="mi-mes-selector"
+            value={mesSeleccionado}
+            onChange={(e) => setMesSeleccionado(e.target.value)}
+            className="min-h-[40px] rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold capitalize text-slate-800 dark:border-slate-700 dark:bg-[#0A0F1A] dark:text-slate-100"
+          >
+            {mesesDisponibles.flatMap(anio => Array.from({ length: 12 }, (_, i) => {
+              const valor = `${anio}-${String(i + 1).padStart(2, '0')}`
+              const etiqueta = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(new Date(Number(anio), i, 1))
+              return { valor, etiqueta }
+            }).filter(m => m.valor <= mesActual))
+              .sort((a, b) => b.valor.localeCompare(a.valor))
+              .map(m => <option key={m.valor} value={m.valor}>{m.etiqueta}</option>)}
+          </select>
           <Insignia
             variante={
               estadoCumplimiento === 'verde'
@@ -175,7 +199,7 @@ export const MiMes: React.FC = () => {
             <span className="text-xl font-bold text-slate-900 dark:text-white mt-1 block">
               {horasFeriados} hs
             </span>
-            <p className="text-[10px] text-slate-400 mt-0.5">12 Octubre (Día del Respeto)</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">Total de horas registradas en feriados</p>
           </TarjetaContenido>
         </Tarjeta>
 
