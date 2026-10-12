@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Clock, MapPin, Calendar } from 'lucide-react'
 import { Tarjeta, TarjetaContenido, TarjetaEncabezado, TarjetaTitulo } from '@/componentes/ui/tarjeta'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -11,7 +11,12 @@ export const MiTurno: React.FC = () => {
   const { usuario } = useAutenticacion()
 
   const idVig = usuario?.id || 'usr-vig-01'
-  const hoy = new Date()
+  const [ahora, setAhora] = useState(() => new Date())
+  useEffect(() => {
+    const intervalo = window.setInterval(() => setAhora(new Date()), 30_000)
+    return () => window.clearInterval(intervalo)
+  }, [])
+  const hoy = ahora
   const formatearFecha = (fecha: string) => {
     const [anio, mes, dia] = fecha.split('-')
     return `${dia}-${mes}-${anio}`
@@ -19,8 +24,24 @@ export const MiTurno: React.FC = () => {
   const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
   const formatearExtra = (horas: number) => { const minutos = Math.round(horas * 60); return `${Math.floor(minutos / 60)} h${minutos % 60 ? ` ${minutos % 60} min` : ''}` }
 
-  // Buscar turno de hoy
+  // Buscar el turno de hoy y comprobar si la guardia nocturna de ayer sigue activa.
   const turnoHoy = turnos.find((t) => t.id_vigilador === idVig && t.fecha === hoyStr)
+  const ayer = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 1)
+  const ayerStr = `${ayer.getFullYear()}-${String(ayer.getMonth() + 1).padStart(2, '0')}-${String(ayer.getDate()).padStart(2, '0')}`
+  const turnoAyer = turnos.find((t) => t.id_vigilador === idVig && t.fecha === ayerStr)
+  const minutosHora = (hora: string) => {
+    const [horas, minutos] = hora.split(':').map(Number)
+    return horas * 60 + (minutos || 0)
+  }
+  const minutosActuales = hoy.getHours() * 60 + hoy.getMinutes()
+  const turnoAyerEnCurso = !!turnoAyer
+    && turnoAyer.tipo !== 'franco'
+    && turnoAyer.horas_totales > 0
+    && minutosHora(turnoAyer.hora_inicio) > minutosHora(turnoAyer.hora_fin)
+    && minutosActuales < minutosHora(turnoAyer.hora_fin)
+  // Si hoy figura franco pero el turno nocturno de ayer aún no terminó, sigue en servicio.
+  const turnoVisible = (!turnoHoy || turnoHoy.tipo === 'franco') && turnoAyerEnCurso ? turnoAyer : turnoHoy
+  const enServicio = !!turnoVisible && turnoVisible.tipo !== 'franco' && turnoVisible.horas_totales > 0
   // Mostrar los próximos cinco días calendario, incluso si no hay turno o corresponde franco.
   const proximosTurnos = Array.from({ length: 5 }, (_, i) => {
     const fecha = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + i + 1)
@@ -58,10 +79,10 @@ export const MiTurno: React.FC = () => {
                 <Clock className="w-5 h-5 text-blue-500" />
                 Guardia de Hoy {formatearFecha(hoyStr)}
               </TarjetaTitulo>
-              {turnoHoy && turnoHoy.tipo !== 'franco' ? (
+              {enServicio ? (
                 <Insignia variante="verde" className="animate-pulse w-fit self-start sm:self-auto">En Servicio</Insignia>
               ) : (
-                <Insignia variante="gris">Franco de Servicio</Insignia>
+                <Insignia variante="gris" className="w-fit self-start sm:self-auto">Franco de Servicio</Insignia>
               )}
             </div>
           </TarjetaEncabezado>
@@ -86,10 +107,10 @@ export const MiTurno: React.FC = () => {
                   Horario del Turno:
                 </span>
                 <span className="font-extrabold text-slate-900 dark:text-white text-base break-words">
-                  {turnoHoy ? `${turnoHoy.hora_inicio} → ${turnoHoy.hora_fin}` : 'Sin turno hoy'}
+                  {turnoVisible ? `${turnoVisible.hora_inicio} → ${turnoVisible.hora_fin}` : 'Sin turno hoy'}
                 </span>
                 <span className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold block mt-0.5">
-                  {turnoHoy ? (tiposTurno.find(t => t.id === turnoHoy.id_tipo_turno)?.nombre || (turnoHoy.tipo === 'nocturno' ? 'Turno nocturno' : turnoHoy.tipo === 'diurno' ? 'Turno diurno' : 'Franco')) : 'Sin guardia programada'}
+                  {turnoVisible ? (tiposTurno.find(t => t.id === turnoVisible.id_tipo_turno)?.nombre || (turnoVisible.tipo === 'nocturno' ? 'Turno nocturno' : turnoVisible.tipo === 'diurno' ? 'Turno diurno' : 'Franco')) : 'Sin guardia programada'}
                 </span>
               </div>
 
@@ -118,7 +139,7 @@ export const MiTurno: React.FC = () => {
             </div>
 
             <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
-              {turnoHoy && turnoHoy.tipo !== 'franco' && turnoHoy.horas_extra > 0 && <p className="text-xs font-semibold text-emerald-500">Horas extra confirmadas: +{formatearExtra(turnoHoy.horas_extra)}</p>}
+              {turnoVisible && turnoVisible.tipo !== 'franco' && turnoVisible.horas_extra > 0 && <p className="text-xs font-semibold text-emerald-500">Horas extra confirmadas: +{formatearExtra(turnoVisible.horas_extra)}</p>}
               <SolicitarHorasExtra turnos={turnos.filter(t => t.id_vigilador === idVig && t.tipo !== 'franco' && t.horas_totales > 0 && t.fecha <= hoyStr).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 30)} solicitudes={solicitudesHorasExtra.filter(s => s.id_vigilador === idVig)}/>
             </div>
           </TarjetaContenido>
