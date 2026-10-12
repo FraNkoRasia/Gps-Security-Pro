@@ -19,7 +19,7 @@ const formatearDuracion = (horas: number | null | undefined) => {
 }
 
 const etiquetaEstadoCambio = (estado: string, administrador?: string | null) => {
-  if (estado === 'aprobada_admin') return administrador ? `Aprobada por ${administrador}` : 'Aprobada (administrador no registrado)'
+  if (estado === 'aprobada_admin') return administrador ? `Aprobada por ${administrador}` : 'Aprobada (aprobador no guardado en el registro histórico)'
   if (estado === 'aceptada_vigilador') return 'Aceptada por vigilador · pendiente de administración'
   if (estado === 'rechazada_vigilador') return 'Rechazada por vigilador'
   if (estado === 'cancelada') return administrador ? `Rechazada por ${administrador}` : 'Cancelada'
@@ -184,7 +184,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
   // que no fueron franco, ausencia ni reemplazo. Usamos el desglose de horas
   // si está cargado y, si está en cero, recurrimos a las horas totales del turno.
   const turnosTrabajadosHistorial = turnosHistorial.filter(t =>
-    t.tipo !== 'franco' && t.estado !== 'ausente' && t.estado !== 'reemplazado'
+    t.fecha < fechaHoy && t.tipo !== 'franco' && t.estado !== 'ausente' && t.estado !== 'reemplazado'
   )
   const minutosDiurnos = turnosTrabajadosHistorial.reduce((total, t) => total + Math.round(Number(t.horas_diurnas || (t.tipo === 'diurno' ? t.horas_totales : 0)) * 60), 0)
   const minutosNocturnos = turnosTrabajadosHistorial.reduce((total, t) => total + Math.round(Number(t.horas_nocturnas || (t.tipo === 'nocturno' ? t.horas_totales : 0)) * 60), 0)
