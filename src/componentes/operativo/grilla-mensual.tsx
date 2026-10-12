@@ -15,7 +15,7 @@ import { cargarFeriadosManuales, guardarFeriadosManuales } from '@/utilidades/fe
 import { cargarFeriadosArgentina } from '@/utilidades/feriados-argentina'
 import type { Turno } from '@/tipos'
 
-const formatearHorasExtra = (horas: number) => {
+const formatearHorasMinutos = (horas: number) => {
   const minutosTotales = Math.round(horas * 60)
   const horasEnteras = Math.floor(minutosTotales / 60)
   const minutosRestantes = minutosTotales % 60
@@ -265,7 +265,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
               : turno.tipo === 'franco'
                 ? ''
                 : '◆'
-          const extra = turno.horas_extra > 0 ? `<small>+${formatearHorasExtra(turno.horas_extra)} h extra</small>` : ''
+          const extra = turno.horas_extra > 0 ? `<small>+${formatearHorasMinutos(turno.horas_extra)} h extra</small>` : ''
           const claseTurno = turno.tipo === 'diurno'
             ? 'turno-diurno'
             : turno.tipo === 'nocturno'
@@ -286,12 +286,12 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
           })
           .reduce((total, turno) => total + turno.horas_totales + turno.horas_extra, 0)
 
-        return `<tr><th scope="row">${escaparHtml(`${vigilador.apellido}, ${vigilador.nombre}`)}</th>${celdas}<td class="total">${horasQuincena} hs</td></tr>`
+        return `<tr><th scope="row">${escaparHtml(`${vigilador.apellido}, ${vigilador.nombre}`)}</th>${celdas}<td class="total">${formatearHorasMinutos(horasQuincena)} hs</td></tr>`
       }).join('')
       const filasVacias = vigiladoresMostrados.length === 0
         ? `<tr><td colspan="${dias.length + 2}" class="vacio">No hay vigiladores asignados a este objetivo.</td></tr>`
         : filas
-      const totalesDiarios = dias.map((dia) => `<td>${calcularTotalDiario(dia)}h</td>`).join('')
+      const totalesDiarios = dias.map((dia) => `<td>${formatearHorasMinutos(calcularTotalDiario(dia))}h</td>`).join('')
 
       return `<section class="quincena"><header><h2>${quincena.titulo}</h2><p>${quincena.inicio} al ${quincena.fin} de ${escaparHtml(nombreMes)}</p></header><table><thead><tr><th>Vigilador</th>${encabezados}<th>Horas</th></tr></thead><tbody>${filasVacias}</tbody><tfoot><tr><th>Total Día</th>${totalesDiarios}<td>Total</td></tr></tfoot></table></section>`
     }).join('')
@@ -494,7 +494,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                         {vig.apellido}, {vig.nombre.charAt(0)}.
                       </div>
                       <div className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold truncate max-w-[105px]">
-                        {totales.horasTotales}h mes
+                        {formatearHorasMinutos(totales.horasTotales)}h mes
                       </div>
                     </td>
 
@@ -529,7 +529,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                                 : 'bg-emerald-500/10 border-emerald-500/60 dark:bg-emerald-950/40'
                             }`}
                           >
-                            {obtenerEtiquetaTurno(turno)}{horasExtra > 0 && <span className="text-[8px] font-bold text-emerald-700 dark:text-emerald-400">+{formatearHorasExtra(horasExtra)} h extra</span>}
+                            {obtenerEtiquetaTurno(turno)}{horasExtra > 0 && <span className="text-[8px] font-bold text-emerald-700 dark:text-emerald-400">+{formatearHorasMinutos(horasExtra)} h extra</span>}
                           </div>
                         </td>
                       )
@@ -547,7 +547,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                               : 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
                           }`}
                         >
-                          {totales.horasTotales} hs
+                          {formatearHorasMinutos(totales.horasTotales)} hs
                         </span>
                         <span className="text-[10px] text-slate-400">
                           {totales.horasNocturnas}🌙 • {totales.francos}F
@@ -570,7 +570,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                       key={dia}
                       className="p-1 text-center border-r border-slate-200 dark:border-slate-800/70 text-blue-700 dark:text-blue-400 font-mono bg-slate-50 dark:bg-[#101827]"
                     >
-                      {total}h
+                      {formatearHorasMinutos(total)}h
                     </td>
                   )
                 })}
