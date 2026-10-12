@@ -22,6 +22,12 @@ const formatearHorasMinutos = (horas: number) => {
   return `${horasEnteras}.${String(minutosRestantes).padStart(2, '0')}`
 }
 
+const formatearHorasCasillero = (turno: Turno) => {
+  if (turno.horas_extra <= 0) return String(turno.horas_totales)
+  const minutos = Math.round((turno.horas_totales + turno.horas_extra) * 60)
+  return `${Math.floor(minutos / 60)}:${String(minutos % 60).padStart(2, '0')}`
+}
+
 const fechaClave = (fecha: Date) =>
   `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`
 
@@ -36,6 +42,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   })
   const [anioSeleccionado, numeroMesSeleccionado] = mesSeleccionado.split('-').map(Number)
   const hoy = new Date()
+  const fechaHoyClave = fechaClave(hoy)
   const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`
   const soloLecturaEfectiva = soloLectura || mesSeleccionado < mesActual
   const fechaMesSeleccionado = new Date(anioSeleccionado, numeroMesSeleccionado - 1, 1)
@@ -119,6 +126,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   const abrirEditarCelda = (idVig: string, nombreVig: string, dia: number) => {
     const diaStr = dia < 10 ? `0${dia}` : `${dia}`
     const fecha = `${mesSeleccionado}-${diaStr}`
+    if (soloLecturaEfectiva || fecha < fechaHoyClave) return
     const turnoActual = turnos.find(
       (t) => t.id_vigilador === idVig && t.id_objetivo === objetivoSeleccionado && t.fecha === fecha
     )
@@ -189,13 +197,15 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
 
   const obtenerEtiquetaTurno = (t?: Turno) => {
     if (!t) return <span className="text-slate-400 dark:text-slate-600">-</span>
+    const duracion = formatearHorasCasillero(t)
+    const textoHoras = t.horas_extra > 0 ? 'text-emerald-700 dark:text-emerald-400' : ''
     if (t.tipo === 'franco') {
       return <span className="text-slate-700 dark:text-slate-300 font-extrabold text-xs">F</span>
     }
     if (t.tipo === 'nocturno') {
       return (
         <span className="font-extrabold flex flex-col items-center justify-center leading-none gap-0.5 text-blue-700 dark:text-blue-400">
-          <span className="text-[11px]">{t.horas_totales}</span>
+          <span className={`whitespace-nowrap text-[8px] sm:text-[10px] ${textoHoras}`}>{duracion}</span>
           <span className="text-[11px] leading-none" aria-label="Nocturno">🌙</span>
         </span>
       )
@@ -203,7 +213,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
     if (t.tipo === 'diurno') {
       return (
         <span className="font-extrabold flex flex-col items-center justify-center leading-none gap-0.5 text-amber-700 dark:text-amber-400">
-          <span className="text-[11px]">{t.horas_totales}</span>
+          <span className={`whitespace-nowrap text-[8px] sm:text-[10px] ${textoHoras}`}>{duracion}</span>
           <span className="text-[11px] leading-none" aria-label="Diurno">☀️</span>
         </span>
       )
@@ -260,7 +270,9 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
 
           const codigo = turno.tipo === 'franco'
             ? 'F'
-            : `${turno.horas_totales}h`
+            : turno.horas_extra > 0
+              ? formatearHorasCasillero(turno)
+              : `${turno.horas_totales}h`
           const iconoTurno = turno.tipo === 'diurno'
             ? '☀️'
             : turno.tipo === 'nocturno'
@@ -268,7 +280,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
               : turno.tipo === 'franco'
                 ? ''
                 : '◆'
-          const extra = turno.horas_extra > 0 ? `<small>+${formatearHorasMinutos(turno.horas_extra)} h extra</small>` : ''
+          const extra = ''
           const claseTurno = turno.tipo === 'diurno'
             ? 'turno-diurno'
             : turno.tipo === 'nocturno'
@@ -277,7 +289,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                 ? 'turno-franco'
                 : 'turno-especial'
           const icono = iconoTurno ? `<span class="icono-turno">${iconoTurno}</span>` : ''
-          return `<td><span class="turno-casillero ${claseTurno}"><strong>${escaparHtml(codigo)}</strong>${icono}</span>${extra}</td>`
+          const estiloExtra = turno.horas_extra > 0 ? ' turno-con-extra' : ''
+          return `<td><span class="turno-casillero ${claseTurno}${estiloExtra}"><strong>${escaparHtml(codigo)}</strong>${icono}</span>${extra}</td>`
         }).join('')
         const horasQuincena = turnos
           .filter((turno) => {
@@ -340,6 +353,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
       .turno-casillero.turno-nocturno { border-color: #3b82f6; background: #dbeafe; color: #1e40af; }
       .turno-casillero.turno-franco { border-color: #22c55e; background: #dcfce7; color: #166534; }
       .turno-casillero.turno-especial { border-color: #8b5cf6; background: #ede9fe; color: #5b21b6; }
+      .turno-casillero.turno-con-extra strong { color: #047857; }
       tfoot th, tfoot td { border-top: 2px solid #64748b; background: #f1f5f9; color: #1e293b; font-weight: 800; }
       tfoot th { border-radius: 0 0 0 5px; text-align: left; }
       tfoot td { color: #1d4ed8; font-family: Arial, sans-serif; }
@@ -455,7 +469,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                         </span>
                       </div>
                       <div className="font-extrabold text-sm">{dia}</div>
-                      {!soloLecturaEfectiva ? (
+                      {!(soloLecturaEfectiva || fecha < fechaHoyClave) ? (
                         <button
                           type="button"
                           onClick={() => feriadosNacionales[claveFecha]
@@ -510,17 +524,18 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                       )
                       const horasExtra = turno?.horas_extra ?? 0
                       const fechaCelda = fecha
+                      const celdaBloqueada = soloLecturaEfectiva || fechaCelda < fechaHoyClave
                       const feriadoCelda = nombreFeriadoEnFecha(fechaCelda)
 
                       return (
                         <td
                           key={dia}
-                          onClick={() => !soloLecturaEfectiva && abrirEditarCelda(vig.id, `${vig.nombre} ${vig.apellido}`, dia)}
-                          className={`p-1 text-center border-r border-slate-200 dark:border-slate-800/70 transition-colors select-none group ${feriadoCelda ? 'bg-amber-50 dark:bg-amber-950/20' : 'bg-white dark:bg-[#0C121E]'} ${soloLecturaEfectiva ? '' : 'cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-800/80'}`}
-                          title={feriadoCelda ? `${feriadoCelda} · ${fechaCelda}` : soloLecturaEfectiva ? 'Turno de un mes anterior: solo lectura' : 'Clic para modificar turno'}
+                          onClick={() => !celdaBloqueada && abrirEditarCelda(vig.id, `${vig.nombre} ${vig.apellido}`, dia)}
+                          className={`w-[30px] min-w-[30px] max-w-[30px] p-1 text-center border-r border-slate-200 dark:border-slate-800/70 transition-colors select-none group ${feriadoCelda ? 'bg-amber-50 dark:bg-amber-950/20' : 'bg-white dark:bg-[#0C121E]'} ${celdaBloqueada ? '' : 'cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-800/80'}`}
+                          title={feriadoCelda ? `${feriadoCelda} · ${fechaCelda}` : celdaBloqueada ? 'Día pasado: turno bloqueado para edición' : 'Clic para modificar turno'}
                         >
                           <div
-                            className={`h-10 sm:h-7 min-w-[38px] sm:min-w-0 flex items-center justify-center rounded-lg border transition-transform group-hover:scale-105 ${
+                            className={`h-10 sm:h-7 w-[30px] min-w-[30px] max-w-[30px] overflow-hidden flex items-center justify-center rounded-lg border transition-colors ${
                               !turno
                                 ? 'border-transparent'
                                 : turno.tipo === 'franco'
@@ -532,7 +547,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                                 : 'bg-emerald-500/10 border-emerald-500/60 dark:bg-emerald-950/40'
                             }`}
                           >
-                            {obtenerEtiquetaTurno(turno)}{horasExtra > 0 && <span className="text-[8px] font-bold text-emerald-700 dark:text-emerald-400">+{formatearHorasMinutos(horasExtra)} h extra</span>}
+                            {turno?.horas_extra ? <span title={`${formatearHorasCasillero(turno)} hs total, incluye horas extra aprobadas`} className="w-full overflow-hidden">{obtenerEtiquetaTurno(turno)}</span> : obtenerEtiquetaTurno(turno)}
                           </div>
                         </td>
                       )
