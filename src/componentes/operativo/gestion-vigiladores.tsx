@@ -180,10 +180,14 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
     solicitudesAprobadasPorTurno.set(s.id_turno, (solicitudesAprobadasPorTurno.get(s.id_turno) || 0) + Number(s.minutos_aprobados ?? s.minutos_solicitados))
   })
 
-  // El resumen contabiliza como trabajados únicamente los turnos cumplidos.
-  const turnosCumplidosHistorial = turnosHistorial.filter(t => t.estado === 'cumplido')
-  const minutosDiurnos = turnosCumplidosHistorial.filter(t => t.tipo.toLowerCase().includes('diurno')).reduce((total, t) => total + Math.round(Number(t.horas_totales || 0) * 60), 0)
-  const minutosNocturnos = turnosCumplidosHistorial.filter(t => t.tipo.toLowerCase().includes('nocturno')).reduce((total, t) => total + Math.round(Number(t.horas_totales || 0) * 60), 0)
+  // Usa las horas desglosadas que registra la grilla; incluye turnos ya realizados
+  // y los que tienen un estado operativo posterior (por ejemplo, reemplazado).
+  // No cuenta francos, ausencias ni turnos aún programados como horas trabajadas.
+  const turnosTrabajadosHistorial = turnosHistorial.filter(t =>
+    t.tipo !== 'franco' && t.estado !== 'programado' && t.estado !== 'ausente'
+  )
+  const minutosDiurnos = turnosTrabajadosHistorial.reduce((total, t) => total + Math.round(Number(t.horas_diurnas ?? (t.tipo === 'diurno' ? t.horas_totales : 0) ?? 0) * 60), 0)
+  const minutosNocturnos = turnosTrabajadosHistorial.reduce((total, t) => total + Math.round(Number(t.horas_nocturnas ?? (t.tipo === 'nocturno' ? t.horas_totales : 0) ?? 0) * 60), 0)
   const minutosExtras = extrasHistorial.filter(s => s.estado === 'aprobada').reduce((total, s) => total + Number(s.minutos_aprobados ?? s.minutos_solicitados ?? 0), 0)
   const formatearMinutos = (minutos: number) => formatearDuracion(minutos / 60)
   const minutosTrabajados = minutosDiurnos + minutosNocturnos + minutosExtras
@@ -349,13 +353,18 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
               {mesesHistorial.map(m => <option key={m} value={m}>{new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1, 1))}</option>)}
             </select>
           </div>
-          <details className="group rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-900/40">
-              <div className="min-w-0">
-                <h4 className="font-bold text-sm text-slate-900 dark:text-white">Turnos <span className="font-normal text-slate-500">({turnosHistorial.length})</span></h4>
-                <p className="mt-1 text-xs text-slate-500">Diurnas: {formatearMinutos(minutosDiurnos)} · Nocturnas: {formatearMinutos(minutosNocturnos)} · Extras: {formatearMinutos(minutosExtras)}</p>
+          <details className="group rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <summary className="cursor-pointer list-none p-4 sm:p-5 bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-blue-950/40 dark:via-slate-950 dark:to-indigo-950/30">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-2"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white"><History className="h-4 w-4" /></span><div><h4 className="font-black text-base text-slate-900 dark:text-white">Resumen de turnos</h4><p className="text-xs text-slate-500">{turnosHistorial.length} turnos registrados · tocar para ver el detalle</p></div></div>
+                <span className="text-xs font-bold text-blue-700 dark:text-blue-300 group-open:hidden">Ver detalle ⌄</span><span className="hidden text-xs font-bold text-blue-700 dark:text-blue-300 group-open:inline">Ocultar ⌃</span>
               </div>
-              <span className="shrink-0 text-right"><span className="block text-[10px] text-slate-500">Total mensual</span><strong className="text-base text-blue-600 dark:text-blue-400">{formatearMinutos(minutosTrabajados)}</strong></span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/70 dark:bg-amber-950/30"><p className="text-[11px] font-semibold text-amber-800 dark:text-amber-300">Diurnas</p><p className="mt-1 text-lg font-black text-amber-950 dark:text-amber-100">{formatearMinutos(minutosDiurnos)}</p></div>
+                <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 dark:border-indigo-900/70 dark:bg-indigo-950/30"><p className="text-[11px] font-semibold text-indigo-800 dark:text-indigo-300">Nocturnas</p><p className="mt-1 text-lg font-black text-indigo-950 dark:text-indigo-100">{formatearMinutos(minutosNocturnos)}</p></div>
+                <div className="rounded-xl border border-orange-200 bg-orange-50 p-3 dark:border-orange-900/70 dark:bg-orange-950/30"><p className="text-[11px] font-semibold text-orange-800 dark:text-orange-300">Horas extra</p><p className="mt-1 text-lg font-black text-orange-950 dark:text-orange-100">{formatearMinutos(minutosExtras)}</p></div>
+                <div className="rounded-xl border border-blue-200 bg-blue-600 p-3 dark:border-blue-500 dark:bg-blue-700"><p className="text-[11px] font-semibold text-blue-100">Total del mes</p><p className="mt-1 text-lg font-black text-white">{formatearMinutos(minutosTrabajados)}</p></div>
+              </div>
             </summary>
             <div className="space-y-2 border-t border-slate-200 dark:border-slate-800 p-3">
               {turnosHistorial.length ? turnosHistorial.map(t => <div key={t.id} className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 text-xs"><div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1"><strong>{t.fecha} · {t.tipo}</strong><span className="font-medium">{formatearDuracion(t.horas_totales)} + {formatearDuracion(t.horas_extra)} extra</span></div><p className="mt-1 text-slate-500">{objetivos.find(o => o.id === t.id_objetivo)?.nombre || 'Objetivo'} · {t.hora_inicio.slice(0, 5)}–{t.hora_fin.slice(0, 5)}</p><p className="mt-1 text-slate-500">Estado: {resumenEstadoTurno(t.estado)}</p></div>) : <p className="text-xs text-slate-500">Sin turnos para este mes.</p>}
