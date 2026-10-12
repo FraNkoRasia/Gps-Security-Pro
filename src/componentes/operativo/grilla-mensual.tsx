@@ -136,7 +136,6 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
       horasTotales,
       horasDiurnas,
       horasNocturnas,
-      horasSemana,
       francos,
       metaHoras,
       estadoMeta
@@ -457,7 +456,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                         {vig.apellido}, {vig.nombre.charAt(0)}.
                       </div>
                       <div className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold truncate max-w-[105px]">
-                        {totales.horasSemana}h sem
+                        {totales.horasTotales}h mes
                       </div>
                     </td>
 
@@ -501,7 +500,20 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                     {/* Columna Totales y Meta Sticky */}
                     <td className="p-1.5 text-center bg-white dark:bg-[#0C121E] border-l border-slate-200 dark:border-slate-800 shadow-xs">
                       <div className="flex flex-col items-center justify-center gap-0.5">
-                        )}
+                        <span
+                          className={`px-2 py-0.5 rounded-md font-bold text-xs ${
+                            totales.estadoMeta === 'verde'
+                              ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                              : totales.estadoMeta === 'rojo'
+                              ? 'bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-800'
+                              : 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                          }`}
+                        >
+                          {totales.horasTotales} hs
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          {totales.horasNocturnas}🌙 • {totales.francos}F
+                        </span>
                       </div>
                     </td>
                   </tr>
