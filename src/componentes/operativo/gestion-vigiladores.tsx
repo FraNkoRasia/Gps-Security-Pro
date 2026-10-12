@@ -40,7 +40,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
   const [vigiladorEstado, setVigiladorEstado] = useState<Usuario | null>(null)
   const [filtroEstadoVigiladores, setFiltroEstadoVigiladores] = useState<'activos' | 'inactivos'>('activos')
   const hoy = new Date()
-  const fechaHoy = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}
+  const fechaHoy = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
   const mesActual = fechaHoy.slice(0, 7)
 
   const [vigiladorSeleccionado, setVigiladorSeleccionado] = useState<Usuario | null>(null)
