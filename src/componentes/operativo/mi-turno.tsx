@@ -166,7 +166,7 @@ export const MiTurno: React.FC = () => {
                 return (
                   <div key={fecha} className="py-3 flex items-center justify-between gap-3">
                     <div>
-                      <div className="font-bold text-slate-900 dark:text-white">{fecha}</div>
+                      <div className="font-bold text-slate-900 dark:text-white">{new Intl.DateTimeFormat('es-AR', { weekday: 'long' }).format(new Date(Number(fecha.slice(0, 4)), Number(fecha.slice(5, 7)) - 1, Number(fecha.slice(8, 10)))).replace(/^./, (letra) => letra.toLocaleUpperCase('es-AR'))} {fecha.slice(8, 10)}/{fecha.slice(5, 7)}/{fecha.slice(0, 4)}</div>
                       <div className="text-[11px] text-slate-500 dark:text-slate-400">
                         {esFranco ? 'Día de franco' : `${turno.hora_inicio} a ${turno.hora_fin} (${turno.horas_totales} hs)`}
                       </div>
