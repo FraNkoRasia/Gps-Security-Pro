@@ -404,7 +404,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
                     )}
                   </div>
                   <div className="text-[11px] text-slate-400">
-                    Registrado por: {asig.creado_por}
+                    Registrado por: {vigiladores.find(v => v.id === asig.creado_por || v.id_usuario === asig.creado_por) ? `${vigiladores.find(v => v.id === asig.creado_por || v.id_usuario === asig.creado_por)?.nombre} ${vigiladores.find(v => v.id === asig.creado_por || v.id_usuario === asig.creado_por)?.apellido}`.trim() : 'Usuario no identificado'}
                   </div>
                 </div>
               ))}
