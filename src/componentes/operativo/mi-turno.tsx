@@ -17,6 +17,7 @@ export const MiTurno: React.FC = () => {
     return `${dia}-${mes}-${anio}`
   }
   const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
+  const formatearExtra = (horas: number) => { const minutos = Math.round(horas * 60); return `${Math.floor(minutos / 60)} h${minutos % 60 ? ` ${minutos % 60} min` : ''}` }
 
   // Buscar turno de hoy
   const turnoHoy = turnos.find((t) => t.id_vigilador === idVig && t.fecha === hoyStr)
@@ -117,7 +118,7 @@ export const MiTurno: React.FC = () => {
             </div>
 
             <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
-              {turnoHoy && turnoHoy.tipo !== 'franco' && turnoHoy.horas_extra > 0 && <p className="text-xs font-semibold text-emerald-500">Horas extra confirmadas: +{turnoHoy.horas_extra} h</p>}
+              {turnoHoy && turnoHoy.tipo !== 'franco' && turnoHoy.horas_extra > 0 && <p className="text-xs font-semibold text-emerald-500">Horas extra confirmadas: +{formatearExtra(turnoHoy.horas_extra)}</p>}
               <SolicitarHorasExtra turnos={turnos.filter(t => t.id_vigilador === idVig && t.tipo !== 'franco' && t.horas_totales > 0 && t.fecha <= hoyStr).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 30)} solicitudes={solicitudesHorasExtra.filter(s => s.id_vigilador === idVig)}/>
             </div>
           </TarjetaContenido>
