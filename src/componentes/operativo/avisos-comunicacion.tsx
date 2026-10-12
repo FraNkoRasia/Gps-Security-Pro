@@ -20,8 +20,18 @@ export const AvisosComunicacion: React.FC = () => {
   const [contenido, setContenido] = useState('')
   const [prioridad, setPrioridad] = useState<Aviso['prioridad']>('media')
   const [error, setError] = useState<string | null>(null)
+  const [fechaDesde, setFechaDesde] = useState('')
+  const [fechaHasta, setFechaHasta] = useState('')
+  const [filtroLectura, setFiltroLectura] = useState('todos')
 
   const esAdmin = usuario?.rol === 'super_administrador' || usuario?.rol === 'administrador'
+  const avisosFiltrados = avisos.filter((av) => {
+    const fechaAviso = av.creado_en?.slice(0, 10) || ''
+    const coincideDesde = !fechaDesde || fechaAviso >= fechaDesde
+    const coincideHasta = !fechaHasta || fechaAviso <= fechaHasta
+    const coincideLectura = filtroLectura === 'todos' || (filtroLectura === 'leidos' ? av.leido : !av.leido)
+    return coincideDesde && coincideHasta && coincideLectura
+  })
 
   const manejarCrear = (e: React.FormEvent) => {
     e.preventDefault()
@@ -74,15 +84,21 @@ export const AvisosComunicacion: React.FC = () => {
         )}
       </div>
 
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 rounded-xl border border-slate-200 dark:border-slate-800 p-3">
+        <div><label htmlFor="avisos-desde" className="mb-1 block text-[11px] font-semibold text-slate-500">Publicados desde</label><Entrada id="avisos-desde" type="date" value={fechaDesde} onChange={(e) => setFechaDesde(e.target.value)} /></div>
+        <div><label htmlFor="avisos-hasta" className="mb-1 block text-[11px] font-semibold text-slate-500">Publicados hasta</label><Entrada id="avisos-hasta" type="date" min={fechaDesde || undefined} value={fechaHasta} onChange={(e) => setFechaHasta(e.target.value)} /></div>
+        <div><label htmlFor="avisos-lectura" className="mb-1 block text-[11px] font-semibold text-slate-500">Estado de lectura</label><select id="avisos-lectura" value={filtroLectura} onChange={(e) => setFiltroLectura(e.target.value)} className="w-full min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700 px-3 text-sm text-slate-900 dark:text-slate-100"><option value="todos">Todos los avisos</option><option value="no-leidos">No leídos</option><option value="leidos">Leídos</option></select></div>
+      </div>
+
       <div className="space-y-3">
-        {avisos.length === 0 ? (
+        {avisosFiltrados.length === 0 ? (
           <Tarjeta>
             <TarjetaContenido className="p-8 text-center text-slate-500">
               No hay comunicados publicados actualmente.
             </TarjetaContenido>
           </Tarjeta>
         ) : (
-          avisos.map((av) => (
+          avisosFiltrados.map((av) => (
             <Tarjeta
               key={av.id}
               className={`hover:border-blue-500/50 transition-all ${
