@@ -80,7 +80,8 @@ export const MiMes: React.FC = () => {
               const valor = `${anio}-${String(i + 1).padStart(2, '0')}`
               const etiqueta = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(new Date(Number(anio), i, 1))
               return { valor, etiqueta }
-            }).filter(m => m.valor <= mesActual && (m.valor === mesActual || turnos.some(t => t.id_vigilador === idVig && t.fecha.startsWith(m.valor)))))
+            }).filter(m => m.valor <= mesActual))
+              .sort((a, b) => b.valor.localeCompare(a.valor))
               .map(m => <option key={m.valor} value={m.valor}>{m.etiqueta}</option>)}
           </select>
           <Insignia
