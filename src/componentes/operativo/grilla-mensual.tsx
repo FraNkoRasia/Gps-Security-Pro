@@ -15,6 +15,13 @@ import { cargarFeriadosManuales, guardarFeriadosManuales } from '@/utilidades/fe
 import { cargarFeriadosArgentina } from '@/utilidades/feriados-argentina'
 import type { Turno } from '@/tipos'
 
+const formatearHorasExtra = (horas: number) => {
+  const minutosTotales = Math.round(horas * 60)
+  const horasEnteras = Math.floor(minutosTotales / 60)
+  const minutosRestantes = minutosTotales % 60
+  return `${horasEnteras}.${String(minutosRestantes).padStart(2, '0')}`
+}
+
 const fechaClave = (fecha: Date) =>
   `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`
 
@@ -258,7 +265,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
               : turno.tipo === 'franco'
                 ? ''
                 : '◆'
-          const extra = turno.horas_extra > 0 ? `<small>+${turno.horas_extra}h extra</small>` : ''
+          const extra = turno.horas_extra > 0 ? `<small>+${formatearHorasExtra(turno.horas_extra)} h extra</small>` : ''
           const claseTurno = turno.tipo === 'diurno'
             ? 'turno-diurno'
             : turno.tipo === 'nocturno'
@@ -522,7 +529,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                                 : 'bg-emerald-500/10 border-emerald-500/60 dark:bg-emerald-950/40'
                             }`}
                           >
-                            {obtenerEtiquetaTurno(turno)}{horasExtra > 0 && <span className="text-[8px] font-bold text-emerald-700 dark:text-emerald-400">+{horasExtra}h extra</span>}
+                            {obtenerEtiquetaTurno(turno)}{horasExtra > 0 && <span className="text-[8px] font-bold text-emerald-700 dark:text-emerald-400">+{formatearHorasExtra(horasExtra)} h extra</span>}
                           </div>
                         </td>
                       )
