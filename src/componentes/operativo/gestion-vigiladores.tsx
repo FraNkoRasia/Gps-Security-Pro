@@ -22,6 +22,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
   const [modalTrasladoAbierto, setModalTrasladoAbierto] = useState(false)
   const [modalEstadoAbierto, setModalEstadoAbierto] = useState(false)
   const [vigiladorEstado, setVigiladorEstado] = useState<Usuario | null>(null)
+  const [filtroEstadoVigiladores, setFiltroEstadoVigiladores] = useState<'activos' | 'inactivos'>('activos')
 
   const [vigiladorSeleccionado, setVigiladorSeleccionado] = useState<Usuario | null>(null)
   const [vigiladorEditando, setVigiladorEditando] = useState<Usuario | null>(null)
@@ -155,6 +156,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
 
   const vigiladoresMostrados = vigiladores.filter((v) => {
     if (v.id_empresa !== idEmpresaActiva) return false
+    if ((filtroEstadoVigiladores === 'activos') !== v.activo) return false
     if (!idObjetivoSeleccionado) return true
     return asignaciones.some((a) => a.id_vigilador === v.id && a.id_objetivo === idObjetivoSeleccionado && a.activa)
   })
@@ -177,6 +179,15 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
         >
           Nuevo Vigilador
         </Boton>}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 p-2">
+        <button type="button" onClick={() => setFiltroEstadoVigiladores('activos')} aria-pressed={filtroEstadoVigiladores === 'activos'} className={`flex-1 min-w-[150px] rounded-lg px-4 py-3 text-sm font-bold transition-colors ${filtroEstadoVigiladores === 'activos' ? 'bg-emerald-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+          <UserCheck className="inline w-4 h-4 mr-2" />Vigilantes Activos ({vigiladores.filter(v => v.id_empresa === idEmpresaActiva && v.activo && (!idObjetivoSeleccionado || asignaciones.some(a => a.id_vigilador === v.id && a.id_objetivo === idObjetivoSeleccionado && a.activa))).length})
+        </button>
+        <button type="button" onClick={() => setFiltroEstadoVigiladores('inactivos')} aria-pressed={filtroEstadoVigiladores === 'inactivos'} className={`flex-1 min-w-[150px] rounded-lg px-4 py-3 text-sm font-bold transition-colors ${filtroEstadoVigiladores === 'inactivos' ? 'bg-slate-700 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+          <UserX className="inline w-4 h-4 mr-2" />Vigilantes Inactivos ({vigiladores.filter(v => v.id_empresa === idEmpresaActiva && !v.activo && (!idObjetivoSeleccionado || asignaciones.some(a => a.id_vigilador === v.id && a.id_objetivo === idObjetivoSeleccionado))).length})
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -277,6 +288,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
             </Tarjeta>
           )
         })}
+        {vigiladoresMostrados.length === 0 && <div className="md:col-span-2 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-8 text-center text-sm text-slate-500">{filtroEstadoVigiladores === 'activos' ? 'No hay vigilantes activos para este filtro.' : 'No hay vigilantes inactivos para este filtro.'}</div>}
       </div>
 
       <Dialogo
