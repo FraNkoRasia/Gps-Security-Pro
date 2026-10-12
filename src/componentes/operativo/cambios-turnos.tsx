@@ -159,7 +159,7 @@ export const CambiosTurnos: React.FC = () => {
       )}
 
       {/* Filtros del historial de solicitudes */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 rounded-xl border border-slate-200 dark:border-slate-800 p-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 rounded-xl border border-slate-200 dark:border-slate-800 p-3">
         <div>
           <label htmlFor="cambios-desde" className="mb-1 block text-[11px] font-semibold text-slate-500">Turnos desde</label>
           <Entrada id="cambios-desde" type="date" value={historialDesde} onChange={(e) => setHistorialDesde(e.target.value)} />
