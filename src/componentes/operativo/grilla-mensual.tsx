@@ -4,14 +4,12 @@ import {
   Edit3,
   ChevronLeft,
   ChevronRight,
-  Wand2,
   Settings2,
 } from 'lucide-react'
 import { GestionTiposTurno } from '@/componentes/operativo/gestion-tipos-turno'
 import { Tarjeta } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Dialogo } from '@/componentes/ui/dialogo'
-import { Etiqueta } from '@/componentes/ui/etiqueta'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { cargarFeriadosManuales, guardarFeriadosManuales } from '@/utilidades/feriados-manuales'
 import { cargarFeriadosArgentina } from '@/utilidades/feriados-argentina'
@@ -33,6 +31,11 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   const fechaMesSeleccionado = new Date(anioSeleccionado, numeroMesSeleccionado - 1, 1)
   const nombreMesSeleccionado = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(fechaMesSeleccionado)
   const totalDiasMes = new Date(anioSeleccionado, numeroMesSeleccionado, 0).getDate()
+
+  const desplazarMes = (cantidad: number) => {
+    const nuevoMes = new Date(anioSeleccionado, numeroMesSeleccionado - 1 + cantidad, 1)
+    setMesSeleccionado(`${nuevoMes.getFullYear()}-${String(nuevoMes.getMonth() + 1).padStart(2, '0')}`)
+  }
   const claveFeriadosManuales = `${objetivoActual?.id_empresa || 'sin-empresa'}:${objetivoSeleccionado || 'sin-objetivo'}`
   const [feriadosManuales, setFeriadosManuales] = useState<string[]>([])
   const [feriadosNacionales, setFeriadosNacionales] = useState<Record<string, string>>({})
@@ -66,10 +69,6 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
 
   const nombreFeriadoEnFecha = (fecha: string) => feriadosNacionales[fecha] || (feriadosManuales.includes(fecha) ? 'Feriado manual' : undefined)
 
-  // Selector de modo: una semana o el mes completo.
-  const [modoVista, setModoVista] = useState<'semana' | 'mes'>('semana')
-  const [semanaActiva, setSemanaActiva] = useState<number>(1)
-
   // Modal para edición interactiva de celda
   const [modalEdicionAbierto, setModalEdicionAbierto] = useState(false)
   const [celdaEditando, setCeldaEditando] = useState<{
@@ -80,47 +79,11 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
     turnoActual?: Turno
   } | null>(null)
 
-  // Modal Generador de Diagramas (Sección 28)
-  const [modalGeneradorAbierto, setModalGeneradorAbierto] = useState(false)
   const [modalTiposTurnoAbierto, setModalTiposTurnoAbierto] = useState(false)
-  const [vigiladorDiagrama, setVigiladorDiagrama] = useState('')
-
-  const [patronDiagrama, setPatronDiagrama] = useState<'4x3' | '4x2' | '2x2' | '6x1'>('4x3')
-  const [tipoTurnoDiagrama, setTipoTurnoDiagrama] = useState('')
-
-  const semanas = Array.from({ length: Math.ceil(totalDiasMes / 7) }, (_, indice) => {
-    const inicio = indice * 7 + 1
-    const fin = Math.min(inicio + 6, totalDiasMes)
-    return { numero: indice + 1, inicio, fin, label: `Sem ${indice + 1} (${inicio} - ${fin})` }
-  })
-
-  const semanaActualData = semanas.find((s) => s.numero === semanaActiva) || semanas[0]
-
-  const desplazarMes = (cantidad: number) => {
-    const nuevoMes = new Date(anioSeleccionado, numeroMesSeleccionado - 1 + cantidad, 1)
-    setMesSeleccionado(`${nuevoMes.getFullYear()}-${String(nuevoMes.getMonth() + 1).padStart(2, '0')}`)
-    setSemanaActiva(1)
-  }
-
-  // Días a renderizar según el modo
-  const diasVisibles =
-    modoVista === 'semana'
-      ? Array.from(
-          { length: semanaActualData.fin - semanaActualData.inicio + 1 },
-          (_, i) => semanaActualData.inicio + i
-        )
-      : Array.from({ length: totalDiasMes }, (_, i) => i + 1)
-
   // Filtrado de vigiladores
   const vigiladoresMostrados = objetivoSeleccionado
     ? vigiladores.filter((v) => asignaciones.some((a) => a.id_vigilador === v.id && a.id_objetivo === objetivoSeleccionado && a.activa))
     : []
-  useEffect(() => {
-    if (!vigiladorDiagrama && vigiladoresMostrados.length > 0) {
-      setVigiladorDiagrama(vigiladoresMostrados[0].id)
-    }
-  }, [vigiladoresMostrados, vigiladorDiagrama])
-
   const abrirEditarCelda = (idVig: string, nombreVig: string, dia: number) => {
     const diaStr = dia < 10 ? `0${dia}` : `${dia}`
     const fecha = `${mesSeleccionado}-${diaStr}`
@@ -155,54 +118,6 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
     setModalEdicionAbierto(false)
   }
 
-  // Generador de Diagramas (Sección 28: ej 4x3)
-  const aplicarGeneradorDiagrama = () => {
-    const objId = objetivoSeleccionado
-    if (!objId || !vigiladorDiagrama) return
-    let diasTrabajo = 4
-    let diasFranco = 3
-
-    if (patronDiagrama === '4x2') {
-      diasTrabajo = 4
-      diasFranco = 2
-    } else if (patronDiagrama === '2x2') {
-      diasTrabajo = 2
-      diasFranco = 2
-    } else if (patronDiagrama === '6x1') {
-      diasTrabajo = 6
-      diasFranco = 1
-    }
-
-    const cicloTotal = diasTrabajo + diasFranco
-    const tipoSeleccionado = tiposTurno.find(t => t.id === tipoTurnoDiagrama && t.activo)
-    const codigoGuardia = tipoSeleccionado?.abreviatura || '12🌙'
-
-    for (let d = 1; d <= totalDiasMes; d++) {
-      const posCiclo = (d - 1) % cicloTotal
-      const diaStr = d < 10 ? `0${d}` : `${d}`
-      const fecha = `${mesSeleccionado}-${diaStr}`
-
-      if (posCiclo < diasTrabajo) {
-        asignarTurnoGrilla({
-          id_vigilador: vigiladorDiagrama,
-          id_objetivo: objId,
-          fecha,
-          codigo: codigoGuardia,
-          id_tipo_turno: tipoSeleccionado?.id || null
-        })
-      } else {
-        asignarTurnoGrilla({
-          id_vigilador: vigiladorDiagrama,
-          id_objetivo: objId,
-          fecha,
-          codigo: 'F'
-        })
-      }
-    }
-
-    setModalGeneradorAbierto(false)
-  }
-
   // Cálculos por vigilador (Sección 24)
   const calcularTotalesVigilador = (idVig: string) => {
     const turnosVig = turnos.filter(
@@ -213,14 +128,6 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
     const horasDiurnas = turnosVig.reduce((acc, t) => acc + t.horas_diurnas, 0)
     const horasNocturnas = turnosVig.reduce((acc, t) => acc + t.horas_nocturnas, 0)
     const francos = turnosVig.filter((t) => t.tipo === 'franco').length
-
-    // Horas en la semana activa
-    const horasSemana = turnosVig
-      .filter((t) => {
-        const d = Number(t.fecha.split('-')[2])
-        return d >= semanaActualData.inicio && d <= semanaActualData.fin
-      })
-      .reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
 
     const metaHoras = 204
     let estadoMeta: 'verde' | 'amarillo' | 'rojo' = 'amarillo'
@@ -234,7 +141,6 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
       horasTotales,
       horasDiurnas,
       horasNocturnas,
-      horasSemana,
       francos,
       metaHoras,
       estadoMeta
@@ -420,55 +326,20 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
 
   return (
     <div className="grilla-mensual space-y-5">
-      {/* Barra de Controles y Selector Intuitivo de Semanas */}
+      {/* Controles de la grilla mensual */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div>
           <h3 className="text-xl font-black text-slate-900 dark:text-white font-['Outfit']">
             Grilla Mensual Operativa
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Diagramá turnos visualizando una semana completa a simple vista o el mes entero.
+            Visualizá y administrá los turnos del mes completo.
           </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto justify-between lg:justify-end">
-          {/* Alternador de Modo: Semana (7 días) vs Mes Completo */}
-          <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 p-1 text-xs">
-            <button
-              type="button"
-              onClick={() => setModoVista('semana')}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                modoVista === 'semana'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              Vista Semana (7 días)
-            </button>
-            <button
-              type="button"
-              onClick={() => setModoVista('mes')}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                modoVista === 'mes'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              Mes Completo ({totalDiasMes} días)
-            </button>
-          </div>
-
           {!soloLectura && (
             <div className="flex items-center gap-2">
-              <Boton
-                type="button"
-                variante="secundario"
-                tamano="chico"
-                onClick={() => { const primero = tiposTurno.find(t => (t.id_objetivo === objetivoSeleccionado || t.id_objetivo === null) && t.activo); setTipoTurnoDiagrama(primero?.id || ''); setModalGeneradorAbierto(true)  }}
-                icono={<Wand2 className="w-3.5 h-3.5 text-blue-500" />}
-              >
-                Generar Diagrama
-              </Boton>
               <Boton
                 type="button"
                 variante="secundario"
@@ -513,56 +384,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
         </p>
       )}
 
-      {/* Navegador Intuitivo de Semanas (Visible en modo Semana) */}
-      {modoVista === 'semana' && (
-        <div className="p-3 rounded-2xl bg-white dark:bg-[#0C121E] border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled={semanaActiva === 1}
-              onClick={() => setSemanaActiva((prev) => Math.max(1, prev - 1))}
-              className="p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800"
-              title="Semana anterior"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 min-w-[150px] text-center">
-              Semana {semanaActiva} de {nombreMesSeleccionado} ({semanaActualData.inicio} al {semanaActualData.fin})
-            </span>
-
-            <button
-              type="button"
-              disabled={semanaActiva === semanas.length}
-              onClick={() => setSemanaActiva((prev) => Math.min(semanas.length, prev + 1))}
-              className="p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800"
-              title="Semana siguiente"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Botones de Acceso Rápido por Semana */}
-          <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 sm:pb-0">
-            {semanas.map((sem) => (
-              <button
-                key={sem.numero}
-                type="button"
-                onClick={() => setSemanaActiva(sem.numero)}
-                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                  semanaActiva === sem.numero
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
-                }`}
-              >
-                {sem.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Tabla de la Grilla (Semanal o Mensual con Scroll Controlado) */}
+      {/* Tabla de la grilla mensual con desplazamiento horizontal */}
       <Tarjeta className="overflow-hidden rounded-2xl border-slate-200 dark:border-slate-800">
         <div className="overflow-x-auto max-w-full scrollbar-thin">
           <table className="w-max min-w-full text-xs text-left border-separate border-spacing-0 bg-white dark:bg-[#0C121E]">
@@ -571,7 +393,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                 <th className="p-2.5 sm:p-3 sticky left-0 z-20 bg-slate-100 dark:bg-[#0C121E] border-r border-slate-200 dark:border-slate-800 font-bold text-slate-800 dark:text-white w-[120px] min-w-[120px] sm:w-32 sm:min-w-[128px] rounded-tl-xl">
                   Vigilador
                 </th>
-                {diasVisibles.map((dia) => {
+                {Array.from({ length: totalDiasMes }, (_, i) => i + 1).map((dia) => {
                   const dateObj = new Date(anioSeleccionado, numeroMesSeleccionado - 1, dia)
                   const esFinDeSemana = dateObj.getDay() === 0 || dateObj.getDay() === 6
                   const claveFecha = fechaClave(dateObj)
@@ -583,7 +405,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                       title={nombreFeriado}
                       aria-label={`${dia} de ${nombreMesSeleccionado}${nombreFeriado ? `, feriado: ${nombreFeriado}` : ''}`}
                       className={`p-1.5 text-center border-r border-slate-200 dark:border-slate-800/80 font-semibold ${
-                        modoVista === 'semana' ? 'min-w-[36px] max-w-[36px]' : 'min-w-[30px] max-w-[30px]'
+                        'min-w-[30px] max-w-[30px]'
                       } ${
                         esFeriado
                           ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300'
@@ -619,7 +441,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                   )
                 })}
                 <th className="p-1.5 sm:p-2 text-center bg-slate-100 dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-200 min-w-[78px] sm:min-w-[88px]">
-                  {modoVista === 'semana' ? 'Sem / Mes' : 'Total hs'}
+                  Total hs
                 </th>
               </tr>
             </thead>
@@ -639,12 +461,12 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                         {vig.apellido}, {vig.nombre.charAt(0)}.
                       </div>
                       <div className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold truncate max-w-[105px]">
-                        {totales.horasSemana}h sem
+                        {totales.horasTotales}h mes
                       </div>
                     </td>
 
                     {/* Celdas de Días Editables */}
-                    {diasVisibles.map((dia) => {
+                    {Array.from({ length: totalDiasMes }, (_, i) => i + 1).map((dia) => {
                       const diaStr = dia < 10 ? `0${dia}` : `${dia}`
                       const fecha = `${mesSeleccionado}-${diaStr}`
                       const turno = turnos.find(
@@ -683,33 +505,20 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                     {/* Columna Totales y Meta Sticky */}
                     <td className="p-1.5 text-center bg-white dark:bg-[#0C121E] border-l border-slate-200 dark:border-slate-800 shadow-xs">
                       <div className="flex flex-col items-center justify-center gap-0.5">
-                        {modoVista === 'semana' ? (
-                          <>
-                            <span className="font-bold text-blue-600 dark:text-blue-400 text-xs">
-                              {totales.horasSemana} hs sem
-                            </span>
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                              Total: {totales.horasTotales} hs
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <span
-                              className={`px-2 py-0.5 rounded-md font-bold text-xs ${
-                                totales.estadoMeta === 'verde'
-                                  ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
-                                  : totales.estadoMeta === 'rojo'
-                                  ? 'bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-800'
-                                  : 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
-                              }`}
-                            >
-                              {totales.horasTotales} hs
-                            </span>
-                            <span className="text-[10px] text-slate-400">
-                              {totales.horasNocturnas}🌙 • {totales.francos}F
-                            </span>
-                          </>
-                        )}
+                        <span
+                          className={`px-2 py-0.5 rounded-md font-bold text-xs ${
+                            totales.estadoMeta === 'verde'
+                              ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                              : totales.estadoMeta === 'rojo'
+                              ? 'bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-800'
+                              : 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                          }`}
+                        >
+                          {totales.horasTotales} hs
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          {totales.horasNocturnas}🌙 • {totales.francos}F
+                        </span>
                       </div>
                     </td>
                   </tr>
@@ -721,7 +530,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                 <td className="p-2 sm:p-2.5 sticky left-0 z-10 bg-slate-100 dark:bg-[#101827] border-r border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
                   Total Día
                 </td>
-                {diasVisibles.map((dia) => {
+                {Array.from({ length: totalDiasMes }, (_, i) => i + 1).map((dia) => {
                   const total = calcularTotalDiario(dia)
                   return (
                     <td
@@ -785,76 +594,6 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
 
       {modalTiposTurnoAbierto && <GestionTiposTurno objetivoId={objetivoSeleccionado} alCerrar={()=>setModalTiposTurnoAbierto(false)} />}
 
-      {/* Modal Generador Automático de Diagramas (Sección 28) */}
-      <Dialogo
-        abierto={modalGeneradorAbierto}
-        alCerrar={() => setModalGeneradorAbierto(false)}
-        titulo="Generador Automático de Diagramas"
-        subtitulo="Diagramación automática configurable (ej. 4x3) para todo el mes con posterior edición manual (Sección 28)."
-        icono={<Wand2 className="w-5 h-5 text-blue-500" />}
-        tamano="medio"
-      >
-        <div className="space-y-4">
-          <div>
-            <Etiqueta requerido>Vigilador a Diagramar</Etiqueta>
-            <select
-              value={vigiladorDiagrama}
-              onChange={(e) => setVigiladorDiagrama(e.target.value)}
-              className="w-full min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700/80 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
-            >
-              {vigiladores.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.nombre} {v.apellido} ({v.email})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Etiqueta requerido>Esquema de Rotación</Etiqueta>
-              <select
-                value={patronDiagrama}
-                onChange={(e) => setPatronDiagrama(e.target.value as typeof patronDiagrama)}
-                className="w-full min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700/80 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
-              >
-                <option value="4x3">4x3 (4 trabajados, 3 francos)</option>
-                <option value="4x2">4x2 (4 trabajados, 2 francos)</option>
-                <option value="2x2">2x2 (2 trabajados, 2 francos)</option>
-                <option value="6x1">6x1 (6 trabajados, 1 franco)</option>
-              </select>
-            </div>
-
-            <div>
-              <Etiqueta requerido>Turno Predeterminado</Etiqueta>
-              <select
-                value={tipoTurnoDiagrama}
-                onChange={(e) => setTipoTurnoDiagrama(e.target.value)}
-                className="w-full min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700/80 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
-              >
-                {tiposTurno.filter(t => (t.id_objetivo === objetivoSeleccionado || t.id_objetivo === null) && t.activo).map(t => <option key={t.id} value={t.id}>{t.abreviatura} — {t.nombre} ({t.horas} hs)</option>)}
-                {tiposTurno.filter(t => (t.id_objetivo === objetivoSeleccionado || t.id_objetivo === null) && t.activo).length === 0 && <option value="">12🌙 Nocturno (19:00 - 07:00)</option>}
-              </select>
-            </div>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/40 text-xs text-blue-700 dark:text-blue-300 space-y-1">
-            <p className="font-bold">Regla de Diagramación Oficial (Sección 28):</p>
-            <p>
-              El generador poblará el mes con el patrón seleccionado calculando nocturnidad y feriados. Podrás ajustar manualmente cualquier celda con un solo clic.
-            </p>
-          </div>
-
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
-            <Boton type="button" variante="secundario" onClick={() => setModalGeneradorAbierto(false)}>
-              Cancelar
-            </Boton>
-            <Boton type="button" variante="primario" onClick={aplicarGeneradorDiagrama}>
-              Aplicar Diagrama al Mes
-            </Boton>
-          </div>
-        </div>
-      </Dialogo>
 
     </div>
   )
