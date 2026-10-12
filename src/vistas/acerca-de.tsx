@@ -31,14 +31,14 @@ export const VistaAcercaDe: React.FC<PropiedadesVistaAcercaDe> = ({ abierto, alC
             Gestión de Seguridad Profesional
           </p>
           <div className="mt-2 flex items-center gap-2">
-            <Insignia variante="dorado">Versión 1.0 — Fundación</Insignia>
+            <Insignia variante="dorado">Versión 1.0</Insignia>
             <Insignia variante="azul">PWA + Web</Insignia>
           </div>
         </div>
 
         {/* Desarrollador Oficial (Sección 3 y 16) */}
-        <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-left space-y-2">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
+        <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-center space-y-2">
+          <div className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400">
             <Award className="w-4 h-4" />
             <span>Créditos de Desarrollo</span>
           </div>
