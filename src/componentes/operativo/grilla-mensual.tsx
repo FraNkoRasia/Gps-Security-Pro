@@ -469,7 +469,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                         </span>
                       </div>
                       <div className="font-extrabold text-sm">{dia}</div>
-                      {!(soloLecturaEfectiva || fecha < fechaHoyClave) ? (
+                      {!(soloLecturaEfectiva || claveFecha < fechaHoyClave) ? (
                         <button
                           type="button"
                           onClick={() => feriadosNacionales[claveFecha]
@@ -522,7 +522,6 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                       const turno = turnos.find(
                         (t) => t.id_vigilador === vig.id && t.id_objetivo === objetivoSeleccionado && t.fecha === fecha
                       )
-                      const horasExtra = turno?.horas_extra ?? 0
                       const fechaCelda = fecha
                       const celdaBloqueada = soloLecturaEfectiva || fechaCelda < fechaHoyClave
                       const feriadoCelda = nombreFeriadoEnFecha(fechaCelda)
