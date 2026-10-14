@@ -181,6 +181,10 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
       setError('Completá DNI, fecha de nacimiento, domicilio y los datos laborales obligatorios.')
       return
     }
+    if ((contactoEmergenciaNombre.trim() && !contactoEmergenciaTelefono.trim()) || (!contactoEmergenciaNombre.trim() && contactoEmergenciaTelefono.trim())) {
+      setError('Completá nombre y teléfono del contacto de emergencia, o dejá ambos vacíos.')
+      return
+    }
 
     if (!vigiladorEditando && !idEmpresaActiva) {
       setError('Seleccioná una empresa antes de dar de alta el vigilador.')
