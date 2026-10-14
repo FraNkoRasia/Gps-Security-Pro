@@ -4,6 +4,7 @@ export interface Usuario {
   id: string
   /** ID de public.perfiles cuando el vigilador ya tiene una cuenta. Null si aún no fue vinculado. */
   id_usuario?: string | null
+  legajo?: string | null
   email: string
   nombre: string
   apellido: string
