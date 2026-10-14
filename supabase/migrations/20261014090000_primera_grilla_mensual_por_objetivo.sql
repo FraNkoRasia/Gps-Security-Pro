@@ -128,6 +128,13 @@ CREATE TRIGGER proteger_eliminacion_turnos_bloqueados
 BEFORE DELETE ON public.turnos
 FOR EACH ROW EXECUTE FUNCTION public.proteger_eliminacion_turnos_bloqueados();
 
+-- La protección de UPDATE debe estar instalada como trigger, no solo como función.
+-- Conserva la excepción del circuito autorizado de horas extra aprobadas.
+DROP TRIGGER IF EXISTS proteger_turnos_de_dias_pasados ON public.turnos;
+CREATE TRIGGER proteger_turnos_de_dias_pasados
+BEFORE UPDATE ON public.turnos
+FOR EACH ROW EXECUTE FUNCTION public.proteger_turnos_de_dias_pasados();
+
 -- Guarda todos los cambios en una transacción y crea el marcador únicamente al confirmar.
 CREATE OR REPLACE FUNCTION public.guardar_grilla_mensual(
   p_id_objetivo uuid,
