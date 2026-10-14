@@ -233,6 +233,10 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
       setError('Completá DNI, fecha de nacimiento, domicilio y los datos laborales obligatorios.')
       return
     }
+    if (dni.replace(/\D/g, '').length < 6) {
+      setError('El DNI debe contener al menos 6 dígitos.')
+      return
+    }
     if ((contactoEmergenciaNombre.trim() && !contactoEmergenciaTelefono.trim()) || (!contactoEmergenciaNombre.trim() && contactoEmergenciaTelefono.trim())) {
       setError('Completá nombre y teléfono del contacto de emergencia, o dejá ambos vacíos.')
       return
