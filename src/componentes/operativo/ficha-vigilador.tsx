@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Info, UserRound, Save, LoaderCircle } from 'lucide-react'
 import { Dialogo } from '@/componentes/ui/dialogo'
 import { Boton } from '@/componentes/ui/boton'
-import type { Usuario } from '@/tipos'
+import type { Usuario, Asignacion, Objetivo, Turno, NovedadLibro, SolicitudHorasExtra, SolicitudCambio } from '@/tipos'
 import { supabase } from '@/servicios/supabase'
 
 type Ficha = {
@@ -41,14 +41,20 @@ export const FichaVigilador: React.FC<{
   abierto: boolean
   vigilador: Usuario | null
   alCerrar: () => void
-}> = ({ abierto, vigilador, alCerrar }) => {
+  asignaciones: Asignacion[]
+  objetivos: Objetivo[]
+  turnos: Turno[]
+  novedades: NovedadLibro[]
+  horasExtra: SolicitudHorasExtra[]
+  cambios: SolicitudCambio[]
+}> = ({ abierto, vigilador, alCerrar, asignaciones, objetivos, turnos, novedades, horasExtra, cambios }) => {
   const [ficha, setFicha] = useState<Ficha>(vacia)
   const [idVigiladorDb, setIdVigiladorDb] = useState<string | null>(null)
   const [cargando, setCargando] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [mensaje, setMensaje] = useState('')
-  const [pestana, setPestana] = useState<'personal' | 'laboral'>('personal')
+  const [pestana, setPestana] = useState<'personal' | 'laboral' | 'objetivos' | 'actividad' | 'documentacion'>('personal')
 
   useEffect(() => {
     if (!abierto || !vigilador || !supabase) return
@@ -121,6 +127,11 @@ export const FichaVigilador: React.FC<{
     setGuardando(false)
   }
 
+  const asignacionesVigilador = asignaciones.filter(a => a.id_vigilador === vigilador?.id).sort((a, b) => b.fecha_inicio.localeCompare(a.fecha_inicio))
+  const turnosVigilador = turnos.filter(t => t.id_vigilador === vigilador?.id).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 20)
+  const novedadesVigilador = novedades.filter(n => n.id_vigilador === vigilador?.id).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 10)
+  const extrasVigilador = horasExtra.filter(h => h.id_vigilador === vigilador?.id).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 10)
+  const cambiosVigilador = cambios.filter(c => c.id_solicitante === vigilador?.id || c.id_destinatario === vigilador?.id).sort((a, b) => b.fecha_turno.localeCompare(a.fecha_turno)).slice(0, 10)
   const cambiar = (key: keyof Ficha, value: string) => setFicha(prev => ({ ...prev, [key]: value }))
   const etiquetaInput = 'mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300'
   const claseInput = 'w-full min-h-[42px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-[#0A0F1A] dark:text-slate-100'
@@ -146,9 +157,11 @@ export const FichaVigilador: React.FC<{
           </div>
         </div>
 
-        <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800">
-          <button type="button" onClick={() => setPestana('personal')} className={`border-b-2 px-3 py-2 text-sm font-semibold ${pestana === 'personal' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500'}`}>Personal</button>
-          <button type="button" onClick={() => setPestana('laboral')} className={`border-b-2 px-3 py-2 text-sm font-semibold ${pestana === 'laboral' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500'}`}>Laboral</button>
+        <div className="flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-800">
+          {([
+            ['personal', 'Personal'], ['laboral', 'Laboral'], ['objetivos', 'Objetivos'],
+            ['actividad', 'Actividad'], ['documentacion', 'Documentación']
+          ] as const).map(([key, label]) => <button key={key} type="button" onClick={() => setPestana(key)} className={`shrink-0 border-b-2 px-3 py-2 text-sm font-semibold ${pestana === key ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500'}`}>{label}</button>)}
         </div>
 
         {cargando ? <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-500"><LoaderCircle className="h-4 w-4 animate-spin" /> Cargando ficha…</div> : (
@@ -157,10 +170,31 @@ export const FichaVigilador: React.FC<{
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {campos.slice(0, 5).map(c => <label key={c.key}><span className={etiquetaInput}>{c.label}</span><input type={c.type || 'text'} value={ficha[c.key]} onChange={e => cambiar(c.key, e.target.value)} className={claseInput} /></label>)}
               </div>
-            ) : (
+            ) : pestana === 'laboral' ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {campos.slice(5).map(c => <label key={c.key}><span className={etiquetaInput}>{c.label}</span><input type={c.type || 'text'} value={ficha[c.key]} onChange={e => cambiar(c.key, e.target.value)} className={claseInput} /></label>)}
                 <label className="sm:col-span-2"><span className={etiquetaInput}>Notas administrativas</span><textarea rows={4} value={ficha.notas_administrativas} onChange={e => cambiar('notas_administrativas', e.target.value)} className={claseInput} /></label>
+              </div>
+            ) : pestana === 'objetivos' ? (
+              <div className="space-y-2">
+                {asignacionesVigilador.length ? asignacionesVigilador.map(a => <div key={a.id} className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
+                  <div className="flex flex-wrap items-center justify-between gap-2"><strong className="text-sm">{a.objetivo_nombre || objetivos.find(o => o.id === a.id_objetivo)?.nombre || 'Objetivo'}</strong><span className={`rounded-full px-2 py-1 text-[11px] font-semibold ${a.activa ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'}`}>{a.activa ? 'Activa' : 'Finalizada'}</span></div>
+                  <p className="mt-1 text-xs text-slate-500">Desde {a.fecha_inicio} · {a.fecha_fin ? `Hasta ${a.fecha_fin}` : 'Sin fecha de fin'}</p>
+                  {a.motivo_traslado && <p className="mt-1 text-xs text-slate-500">Motivo: {a.motivo_traslado}</p>}
+                </div>) : <p className="text-sm text-slate-500">No hay asignaciones registradas.</p>}
+              </div>
+            ) : pestana === 'actividad' ? (
+              <div className="space-y-4">
+                <section><h4 className="mb-2 text-sm font-bold">Turnos recientes</h4>{turnosVigilador.length ? <div className="space-y-2">{turnosVigilador.map(t => <div key={t.id} className="rounded-lg border border-slate-200 p-3 text-xs dark:border-slate-800"><div className="flex flex-wrap justify-between gap-2"><strong>{t.fecha} · {t.tipo}</strong><span>{t.estado}</span></div><p className="mt-1 text-slate-500">{objetivos.find(o => o.id === t.id_objetivo)?.nombre || 'Objetivo'} · {t.hora_inicio.slice(0,5)}–{t.hora_fin.slice(0,5)} · {t.horas_totales} h</p></div>)}</div> : <p className="text-xs text-slate-500">Sin turnos.</p>}</section>
+                <section><h4 className="mb-2 text-sm font-bold">Novedades recientes</h4>{novedadesVigilador.length ? <div className="space-y-2">{novedadesVigilador.map(n => <div key={n.id} className="rounded-lg border border-slate-200 p-3 text-xs dark:border-slate-800"><strong>{n.fecha} {n.hora} · {objetivos.find(o => o.id === n.id_objetivo)?.nombre || 'Objetivo'}</strong><p className="mt-1 whitespace-pre-line text-slate-600 dark:text-slate-300">{n.informe_novedades}</p></div>)}</div> : <p className="text-xs text-slate-500">Sin novedades.</p>}</section>
+                <section><h4 className="mb-2 text-sm font-bold">Horas extra</h4>{extrasVigilador.length ? <div className="space-y-2">{extrasVigilador.map(h => <div key={h.id} className="rounded-lg border border-slate-200 p-3 text-xs dark:border-slate-800"><strong>{h.fecha} · {h.estado}</strong><p className="mt-1 text-slate-500">{h.minutos_aprobados ?? h.minutos_solicitados} minutos · {h.motivo}</p></div>)}</div> : <p className="text-xs text-slate-500">Sin solicitudes de horas extra.</p>}</section>
+                <section><h4 className="mb-2 text-sm font-bold">Cambios de turno</h4>{cambiosVigilador.length ? <div className="space-y-2">{cambiosVigilador.map(c => <div key={c.id} className="rounded-lg border border-slate-200 p-3 text-xs dark:border-slate-800"><strong>{c.fecha_turno} · {c.estado}</strong><p className="mt-1 text-slate-500">{c.motivo || 'Sin motivo indicado'}</p></div>)}</div> : <p className="text-xs text-slate-500">Sin cambios de turno.</p>}</section>
+                <p className="text-[11px] text-slate-500">Los turnos representan registros de grilla; no equivalen a un fichaje real de entrada y salida.</p>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                <h4 className="font-bold">Documentación y vencimientos</h4>
+                <p className="mt-2">El sistema todavía no tiene un módulo de documentos ni un repositorio de archivos para vigiladores. No se mostrarán documentos ficticios. La estructura de esta pestaña queda preparada para implementarlo con permisos y vencimientos.</p>
               </div>
             )}
             {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">{error}</p>}
