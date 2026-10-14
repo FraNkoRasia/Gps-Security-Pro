@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Método no permitido." }, 405)
 
   try {
-    const token = req.headers.get("Authorization")?.replace(/^Bearer\\s+/i, "")
+    const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "")
     if (!token) return json({ error: "No autenticado." }, 401)
 
     const url = Deno.env.get("SUPABASE_URL")!
@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     const { data: ficha, error: fichaError } = await admin.from("fichas_vigiladores")
       .select("dni").eq("id_vigilador", vigilador.id).maybeSingle()
     if (fichaError) return json({ error: "No se pudo validar la contraseña inicial." }, 500)
-    const dniNormalizado = String(ficha?.dni || "").replace(/\\D/g, "")
+    const dniNormalizado = String(ficha?.dni || "").replace(/\D/g, "")
     if (dniNormalizado.length < 8) {
       return json({ error: "La ficha del vigilador no tiene un DNI válido. Contactá al administrador para corregirla." }, 409)
     }
