@@ -5,6 +5,8 @@ import { Boton } from '@/componentes/ui/boton'
 import type { Usuario, Asignacion, Objetivo, Turno, NovedadLibro, SolicitudHorasExtra, SolicitudCambio } from '@/tipos'
 import { supabase } from '@/servicios/supabase'
 
+type CabeceraVigilador = { nombre: string; apellido: string; email: string; telefono: string; legajo: string }
+
 type Ficha = {
   dni: string
   fecha_nacimiento: string
@@ -49,6 +51,7 @@ export const FichaVigilador: React.FC<{
   cambios: SolicitudCambio[]
 }> = ({ abierto, vigilador, alCerrar, asignaciones, objetivos, turnos, novedades, horasExtra, cambios }) => {
   const [ficha, setFicha] = useState<Ficha>(vacia)
+  const [cabecera, setCabecera] = useState<CabeceraVigilador>({ nombre: '', apellido: '', email: '', telefono: '', legajo: '' })
   const [idVigiladorDb, setIdVigiladorDb] = useState<string | null>(null)
   const [cargando, setCargando] = useState(false)
   const [guardando, setGuardando] = useState(false)
@@ -65,7 +68,8 @@ export const FichaVigilador: React.FC<{
       setError('')
       setMensaje('')
       setFicha(vacia)
-      const consultaRegistro = db.from('vigiladores').select('id,id_empresa')
+      setCabecera({ nombre: vigilador.nombre || '', apellido: vigilador.apellido || '', email: vigilador.email || '', telefono: vigilador.telefono || '', legajo: vigilador.legajo || '' })
+      const consultaRegistro = db.from('vigiladores').select('id,id_empresa,id_usuario,legajo,nombre,apellido,telefono')
       const { data: registro, error: errorRegistro } = vigilador.id_usuario
         ? await consultaRegistro.eq('id_usuario', vigilador.id_usuario).maybeSingle()
         : await consultaRegistro.eq('id', vigilador.id).maybeSingle()
@@ -74,10 +78,24 @@ export const FichaVigilador: React.FC<{
         if (!cancelado) setCargando(false)
         return
       }
-      const { data, error: errorFicha } = await db
-        .from('fichas_vigiladores').select('*').eq('id_vigilador', registro.id).maybeSingle()
+      const [resultadoFicha, resultadoPerfil] = await Promise.all([
+        db.from('fichas_vigiladores').select('*').eq('id_vigilador', registro.id).maybeSingle(),
+        registro.id_usuario
+          ? db.from('perfiles').select('email,nombre,apellido,telefono').eq('id', registro.id_usuario).maybeSingle()
+          : Promise.resolve({ data: null, error: null })
+      ])
       if (cancelado) return
       setIdVigiladorDb(registro.id)
+      const perfil = resultadoPerfil.data
+      setCabecera({
+        nombre: registro.nombre || perfil?.nombre || vigilador.nombre || '',
+        apellido: registro.apellido || perfil?.apellido || vigilador.apellido || '',
+        email: perfil?.email || vigilador.email || '',
+        telefono: registro.telefono || perfil?.telefono || vigilador.telefono || '',
+        legajo: registro.legajo || vigilador.legajo || ''
+      })
+      const data = resultadoFicha.data
+      const errorFicha = resultadoFicha.error
       if (errorFicha) setError(errorFicha.message)
       else if (data) setFicha({
         dni: data.dni || '',
@@ -141,7 +159,7 @@ export const FichaVigilador: React.FC<{
     <Dialogo
       abierto={abierto}
       alCerrar={alCerrar}
-      titulo={vigilador ? `Ficha del vigilador: ${vigilador.nombre} ${vigilador.apellido}` : 'Ficha del vigilador'}
+      titulo={`Ficha del vigilador: ${cabecera.nombre} ${cabecera.apellido}`}
       subtitulo="Datos personales y laborales. Acceso reservado a administración."
       icono={<Info className="h-5 w-5 text-blue-500" />}
       tamano="grande"
@@ -152,9 +170,9 @@ export const FichaVigilador: React.FC<{
             <UserRound className="h-6 w-6" />
           </div>
           <div className="min-w-0">
-            <p className="font-bold text-slate-900 dark:text-white">{vigilador?.nombre} {vigilador?.apellido}</p>
-            <p className="break-all text-xs text-slate-500">{vigilador?.email || 'Sin correo de acceso'} · Legajo: {(vigilador as Usuario & { legajo?: string | null })?.legajo || 'Sin legajo cargado'}</p>
-            <p className="text-xs text-slate-500">{vigilador?.telefono || 'Sin teléfono registrado'}</p>
+            <p className="font-bold text-slate-900 dark:text-white">{cabecera.nombre} {cabecera.apellido}</p>
+            <p className="break-all text-xs text-slate-500">{cabecera.email || 'Sin correo de acceso'} · Legajo: {cabecera.legajo || 'Sin legajo cargado'}</p>
+            <p className="text-xs text-slate-500">{cabecera.telefono || 'Sin teléfono registrado'}</p>
           </div>
         </div>
 
