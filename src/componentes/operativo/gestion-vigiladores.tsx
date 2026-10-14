@@ -11,12 +11,18 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { Usuario } from '@/tipos'
 import { FichaVigilador } from './ficha-vigilador'
+import { supabase } from '@/servicios/supabase'
 
 const formatearDuracion = (horas: number | null | undefined) => {
   const minutosTotales = Math.max(0, Math.round(Number(horas || 0) * 60))
   const horasEnteras = Math.floor(minutosTotales / 60)
   const minutos = minutosTotales % 60
   return minutos === 0 ? `${horasEnteras} h` : `${horasEnteras} h ${minutos} min`
+}
+
+const fechaLocalActual = () => {
+  const hoy = new Date()
+  return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
 }
 
 const etiquetaEstadoCambio = (estado: string, administrador?: string | null) => {
@@ -55,7 +61,16 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [telefono, setTelefono] = useState('')
-  const [legajo, setLegajo] = useState('')
+  const [dni, setDni] = useState('')
+  const [fechaNacimiento, setFechaNacimiento] = useState('')
+  const [domicilio, setDomicilio] = useState('')
+  const [contactoEmergenciaNombre, setContactoEmergenciaNombre] = useState('')
+  const [contactoEmergenciaTelefono, setContactoEmergenciaTelefono] = useState('')
+  const [fechaIngreso, setFechaIngreso] = useState(fechaLocalActual())
+  const [categoria, setCategoria] = useState('')
+  const [tipoContrato, setTipoContrato] = useState('')
+  const [fechaFinContrato, setFechaFinContrato] = useState('')
+  const [notasAdministrativas, setNotasAdministrativas] = useState('')
   const [idObjetivoInicial, setIdObjetivoInicial] = useState('')
   const [error, setError] = useState<string | null>(null)
 
@@ -69,22 +84,75 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
     setEmail('')
     setPassword('')
     setTelefono('')
-    setLegajo('')
+    setDni('')
+    setFechaNacimiento('')
+    setDomicilio('')
+    setContactoEmergenciaNombre('')
+    setContactoEmergenciaTelefono('')
+    setFechaIngreso(fechaLocalActual())
+    setCategoria('')
+    setTipoContrato('')
+    setFechaFinContrato('')
+    setNotasAdministrativas('')
     const empresaInicial = usuario?.id_empresa || ''
     setIdObjetivoInicial(objetivos.find((obj) => obj.id_empresa === empresaInicial)?.id || '')
     setError(null)
     setModalNuevoAbierto(true)
   }
 
-  const abrirEditar = (vig: Usuario) => {
+  const abrirEditar = async (vig: Usuario) => {
     setVigiladorEditando(vig)
     setNombre(vig.nombre)
     setApellido(vig.apellido)
     setEmail(vig.email)
     setTelefono(vig.telefono || '')
-    setLegajo(vig.legajo || '')
     setPassword('')
+    setDni('')
+    setFechaNacimiento('')
+    setDomicilio('')
+    setContactoEmergenciaNombre('')
+    setContactoEmergenciaTelefono('')
+    setFechaIngreso('')
+    setCategoria('')
+    setTipoContrato('')
+    setFechaFinContrato('')
+    setNotasAdministrativas('')
     setError(null)
+    if (!supabase) {
+      setError('Supabase no está configurado; no se pudo cargar la ficha del vigilador.')
+      setModalNuevoAbierto(true)
+      return
+    }
+    const consultaVigilador = supabase.from('vigiladores').select('id,id_empresa')
+    const { data: registro, error: errorRegistro } = vig.id_usuario
+      ? await consultaVigilador.eq('id_usuario', vig.id_usuario).maybeSingle()
+      : await consultaVigilador.eq('id', vig.id).maybeSingle()
+    if (errorRegistro || !registro) {
+      setError('No se pudo cargar el registro del vigilador: ' + (errorRegistro?.message || 'registro no encontrado'))
+      setModalNuevoAbierto(true)
+      return
+    }
+    const { data: ficha, error: errorFicha } = await supabase.from('fichas_vigiladores')
+      .select('dni,fecha_nacimiento,domicilio,contacto_emergencia_nombre,contacto_emergencia_telefono,fecha_ingreso,categoria,tipo_contrato,fecha_fin_contrato,notas_administrativas')
+      .eq('id_vigilador', registro.id).maybeSingle()
+    if (errorFicha) {
+      setError('No se pudo cargar la ficha: ' + errorFicha.message)
+      setModalNuevoAbierto(true)
+      return
+    }
+    // Los registros antiguos pueden no tener ficha: se permite completarla al editar.
+    if (ficha) {
+      setDni(ficha.dni || '')
+      setFechaNacimiento(ficha.fecha_nacimiento || '')
+      setDomicilio(ficha.domicilio || '')
+      setContactoEmergenciaNombre(ficha.contacto_emergencia_nombre || '')
+      setContactoEmergenciaTelefono(ficha.contacto_emergencia_telefono || '')
+      setFechaIngreso(ficha.fecha_ingreso || '')
+      setCategoria(ficha.categoria || '')
+      setTipoContrato(ficha.tipo_contrato || '')
+      setFechaFinContrato(ficha.fecha_fin_contrato || '')
+      setNotasAdministrativas(ficha.notas_administrativas || '')
+    }
     setModalNuevoAbierto(true)
   }
 
@@ -115,8 +183,17 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
     e.preventDefault()
     setError(null)
 
-    if (!nombre.trim() || !apellido.trim() || !email.trim() || (!vigiladorEditando && !password)) {
-      setError('Nombre, apellido, correo electrónico y contraseña son obligatorios.')
+    if (!nombre.trim() || !apellido.trim() || ((!vigiladorEditando || vigiladorEditando.id_usuario) && !email.trim()) || (!vigiladorEditando && !password)) {
+      setError('Nombre y apellido son obligatorios. El correo es obligatorio para cuentas de acceso y la contraseña para altas nuevas.')
+      return
+    }
+
+    if (!dni.trim() || !fechaNacimiento || !domicilio.trim() || !fechaIngreso || !categoria.trim() || !tipoContrato.trim()) {
+      setError('Completá DNI, fecha de nacimiento, domicilio y los datos laborales obligatorios.')
+      return
+    }
+    if ((contactoEmergenciaNombre.trim() && !contactoEmergenciaTelefono.trim()) || (!contactoEmergenciaNombre.trim() && contactoEmergenciaTelefono.trim())) {
+      setError('Completá nombre y teléfono del contacto de emergencia, o dejá ambos vacíos.')
       return
     }
 
@@ -136,7 +213,11 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
         apellido: apellido.trim(),
         email: email.trim().toLowerCase(),
         telefono: telefono.trim(),
-        legajo: legajo.trim(),
+        dni: dni.trim(), fecha_nacimiento: fechaNacimiento, domicilio: domicilio.trim(),
+        contacto_emergencia_nombre: contactoEmergenciaNombre.trim(),
+        contacto_emergencia_telefono: contactoEmergenciaTelefono.trim(), fecha_ingreso: fechaIngreso,
+        categoria: categoria.trim(), tipo_contrato: tipoContrato,
+        fecha_fin_contrato: fechaFinContrato || null, notas_administrativas: notasAdministrativas.trim(),
         ...(password.trim() ? { password: password.trim() } : {})
       })
       if (errorEdicion) {
@@ -154,7 +235,16 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
       email: email.trim().toLowerCase(),
       password,
       telefono: telefono.trim(),
-      legajo: legajo.trim(),
+      dni: dni.trim(),
+      fecha_nacimiento: fechaNacimiento,
+      domicilio: domicilio.trim(),
+      contacto_emergencia_nombre: contactoEmergenciaNombre.trim(),
+      contacto_emergencia_telefono: contactoEmergenciaTelefono.trim(),
+      fecha_ingreso: fechaIngreso,
+      categoria: categoria.trim(),
+      tipo_contrato: tipoContrato.trim(),
+      fecha_fin_contrato: fechaFinContrato || null,
+      notas_administrativas: notasAdministrativas.trim(),
       id_empresa: idEmpresaActiva,
       id_objetivo_inicial: idObjetivoInicial
     })
@@ -507,6 +597,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
         icono={<UserPlus className="w-5 h-5 text-blue-500" />}
       >
         <form onSubmit={manejarGuardar} className="space-y-4" autoComplete="off">
+          {!vigiladorEditando && <p className="rounded-lg bg-blue-50 p-3 text-xs text-blue-800 dark:bg-blue-950/30 dark:text-blue-200">El legajo se asignará automáticamente al guardar el alta y no podrá repetirse ni editarse.</p>}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Etiqueta requerido>Nombre</Etiqueta>
@@ -556,11 +647,6 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
           </div>
 
           <div>
-            <Etiqueta>Número de legajo</Etiqueta>
-            <Entrada value={legajo} onChange={(e) => setLegajo(e.target.value)} placeholder="Ej. VG-001" />
-          </div>
-
-          <div>
             <Etiqueta>Teléfono de Contacto</Etiqueta>
             <Entrada
               value={telefono}
@@ -568,6 +654,30 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
               placeholder="+54 9 358 1234567"
             />
           </div>
+
+          <>
+          <div className="border-t border-slate-200 pt-4 dark:border-slate-800">
+            <h4 className="mb-3 text-sm font-bold text-slate-900 dark:text-white">Datos personales</h4>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div><Etiqueta requerido>DNI</Etiqueta><Entrada value={dni} onChange={e => setDni(e.target.value)} placeholder="Número de documento" /></div>
+              <div><Etiqueta requerido>Fecha de nacimiento</Etiqueta><Entrada type="date" value={fechaNacimiento} onChange={e => setFechaNacimiento(e.target.value)} /></div>
+              <div className="sm:col-span-2"><Etiqueta requerido>Domicilio</Etiqueta><Entrada value={domicilio} onChange={e => setDomicilio(e.target.value)} placeholder="Calle, número, localidad" /></div>
+              <div><Etiqueta>Contacto de emergencia</Etiqueta><Entrada value={contactoEmergenciaNombre} onChange={e => setContactoEmergenciaNombre(e.target.value)} placeholder="Nombre y apellido" /></div>
+              <div><Etiqueta>Teléfono de emergencia</Etiqueta><Entrada type="tel" value={contactoEmergenciaTelefono} onChange={e => setContactoEmergenciaTelefono(e.target.value)} placeholder="Teléfono" /></div>
+            </div>
+          </div>
+
+          <div className="border-t border-slate-200 pt-4 dark:border-slate-800">
+            <h4 className="mb-3 text-sm font-bold text-slate-900 dark:text-white">Datos laborales</h4>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div><Etiqueta requerido>Fecha de ingreso</Etiqueta><Entrada type="date" value={fechaIngreso} onChange={e => setFechaIngreso(e.target.value)} /></div>
+              <div><Etiqueta requerido>Categoría laboral</Etiqueta><Entrada value={categoria} onChange={e => setCategoria(e.target.value)} placeholder="Ej. Vigilador general" /></div>
+              <div><Etiqueta requerido>Tipo de contrato</Etiqueta><select value={tipoContrato} onChange={e => setTipoContrato(e.target.value)} className="w-full min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100"><option value="">Seleccionar...</option><option value="indeterminado">Tiempo indeterminado</option><option value="plazo_fijo">Plazo fijo</option><option value="eventual">Eventual</option><option value="otro">Otro</option></select></div>
+              <div><Etiqueta>Fin de contrato</Etiqueta><Entrada type="date" value={fechaFinContrato} onChange={e => setFechaFinContrato(e.target.value)} /></div>
+              <div className="sm:col-span-2"><Etiqueta>Notas administrativas</Etiqueta><textarea value={notasAdministrativas} onChange={e => setNotasAdministrativas(e.target.value)} rows={3} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-[#0A0F1A] dark:text-slate-100" placeholder="Observaciones internas (opcional)" /></div>
+            </div>
+          </div>
+          </>
 
           {!vigiladorEditando && (
             <div>
