@@ -11,6 +11,7 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { Usuario } from '@/tipos'
 import { FichaVigilador } from './ficha-vigilador'
+import { supabase } from '@/servicios/supabase'
 
 const formatearDuracion = (horas: number | null | undefined) => {
   const minutosTotales = Math.max(0, Math.round(Number(horas || 0) * 60))
@@ -99,14 +100,48 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
     setModalNuevoAbierto(true)
   }
 
-  const abrirEditar = (vig: Usuario) => {
+  const abrirEditar = async (vig: Usuario) => {
     setVigiladorEditando(vig)
     setNombre(vig.nombre)
     setApellido(vig.apellido)
     setEmail(vig.email)
     setTelefono(vig.telefono || '')
     setPassword('')
+    setDni('')
+    setFechaNacimiento('')
+    setDomicilio('')
+    setContactoEmergenciaNombre('')
+    setContactoEmergenciaTelefono('')
+    setFechaIngreso('')
+    setCategoria('')
+    setTipoContrato('')
+    setFechaFinContrato('')
+    setNotasAdministrativas('')
     setError(null)
+    if (supabase && vig.id_usuario) {
+      const { data: registro, error: errorRegistro } = await supabase.from('vigiladores')
+        .select('id,id_empresa').eq('id_usuario', vig.id_usuario).maybeSingle()
+      if (errorRegistro || !registro) {
+        setError('No se pudo cargar la ficha del vigilador: ' + (errorRegistro?.message || 'registro no encontrado'))
+      } else {
+        const { data: ficha, error: errorFicha } = await supabase.from('fichas_vigiladores')
+          .select('dni,fecha_nacimiento,domicilio,contacto_emergencia_nombre,contacto_emergencia_telefono,fecha_ingreso,categoria,tipo_contrato,fecha_fin_contrato,notas_administrativas')
+          .eq('id_vigilador', registro.id).maybeSingle()
+        if (errorFicha) setError('No se pudo cargar la ficha: ' + errorFicha.message)
+        if (ficha) {
+          setDni(ficha.dni || '')
+          setFechaNacimiento(ficha.fecha_nacimiento || '')
+          setDomicilio(ficha.domicilio || '')
+          setContactoEmergenciaNombre(ficha.contacto_emergencia_nombre || '')
+          setContactoEmergenciaTelefono(ficha.contacto_emergencia_telefono || '')
+          setFechaIngreso(ficha.fecha_ingreso || '')
+          setCategoria(ficha.categoria || '')
+          setTipoContrato(ficha.tipo_contrato || '')
+          setFechaFinContrato(ficha.fecha_fin_contrato || '')
+          setNotasAdministrativas(ficha.notas_administrativas || '')
+        }
+      }
+    }
     setModalNuevoAbierto(true)
   }
 
@@ -142,7 +177,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
       return
     }
 
-    if (!vigiladorEditando && (!dni.trim() || !fechaNacimiento || !domicilio.trim() || !fechaIngreso || !categoria.trim() || !tipoContrato.trim())) {
+    if (!dni.trim() || !fechaNacimiento || !domicilio.trim() || !fechaIngreso || !categoria.trim() || !tipoContrato.trim()) {
       setError('Completá DNI, fecha de nacimiento, domicilio y los datos laborales obligatorios.')
       return
     }
@@ -163,6 +198,11 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
         apellido: apellido.trim(),
         email: email.trim().toLowerCase(),
         telefono: telefono.trim(),
+        dni: dni.trim(), fecha_nacimiento: fechaNacimiento, domicilio: domicilio.trim(),
+        contacto_emergencia_nombre: contactoEmergenciaNombre.trim(),
+        contacto_emergencia_telefono: contactoEmergenciaTelefono.trim(), fecha_ingreso: fechaIngreso,
+        categoria: categoria.trim(), tipo_contrato: tipoContrato,
+        fecha_fin_contrato: fechaFinContrato || null, notas_administrativas: notasAdministrativas.trim(),
         ...(password.trim() ? { password: password.trim() } : {})
       })
       if (errorEdicion) {
@@ -600,7 +640,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
             />
           </div>
 
-          {!vigiladorEditando && <>
+          <>
           <div className="border-t border-slate-200 pt-4 dark:border-slate-800">
             <h4 className="mb-3 text-sm font-bold text-slate-900 dark:text-white">Datos personales</h4>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -622,7 +662,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
               <div className="sm:col-span-2"><Etiqueta>Notas administrativas</Etiqueta><textarea value={notasAdministrativas} onChange={e => setNotasAdministrativas(e.target.value)} rows={3} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-[#0A0F1A] dark:text-slate-100" placeholder="Observaciones internas (opcional)" /></div>
             </div>
           </div>
-          </>}
+          </>
 
           {!vigiladorEditando && (
             <div>
