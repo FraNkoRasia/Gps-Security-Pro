@@ -123,11 +123,22 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
         .select('id,id_empresa').eq('id_usuario', vig.id_usuario).maybeSingle()
       if (errorRegistro || !registro) {
         setError('No se pudo cargar la ficha del vigilador: ' + (errorRegistro?.message || 'registro no encontrado'))
+        setModalNuevoAbierto(true)
+        return
       } else {
         const { data: ficha, error: errorFicha } = await supabase.from('fichas_vigiladores')
           .select('dni,fecha_nacimiento,domicilio,contacto_emergencia_nombre,contacto_emergencia_telefono,fecha_ingreso,categoria,tipo_contrato,fecha_fin_contrato,notas_administrativas')
           .eq('id_vigilador', registro.id).maybeSingle()
-        if (errorFicha) setError('No se pudo cargar la ficha: ' + errorFicha.message)
+        if (errorFicha) {
+          setError('No se pudo cargar la ficha: ' + errorFicha.message)
+          setModalNuevoAbierto(true)
+          return
+        }
+        if (!ficha) {
+          setError('Este vigilador todavía no tiene ficha personal y laboral. No guardes cambios hasta completar sus datos.')
+          setModalNuevoAbierto(true)
+          return
+        }
         if (ficha) {
           setDni(ficha.dni || '')
           setFechaNacimiento(ficha.fecha_nacimiento || '')
