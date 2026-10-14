@@ -207,7 +207,7 @@ export const GestionObjetivos: React.FC<{ onSeleccionarObjetivo?: (id: string) =
                     className="w-fit mt-1 px-3"
                     onClick={() => onSeleccionarObjetivo(obj.id)}
                   >
-                    Grilla de Vigiladores
+                    Ver Objetivo
                   </Boton>
                 )}
               </TarjetaContenido>
