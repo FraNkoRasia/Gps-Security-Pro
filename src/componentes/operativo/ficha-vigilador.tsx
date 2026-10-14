@@ -58,13 +58,14 @@ export const FichaVigilador: React.FC<{
 
   useEffect(() => {
     if (!abierto || !vigilador || !supabase) return
+    const db = supabase
     let cancelado = false
     const cargar = async () => {
       setCargando(true)
       setError('')
       setMensaje('')
       setFicha(vacia)
-      const consultaRegistro = supabase.from('vigiladores').select('id,id_empresa')
+      const consultaRegistro = db.from('vigiladores').select('id,id_empresa')
       const { data: registro, error: errorRegistro } = vigilador.id_usuario
         ? await consultaRegistro.eq('id_usuario', vigilador.id_usuario).maybeSingle()
         : await consultaRegistro.eq('id', vigilador.id).maybeSingle()
@@ -73,7 +74,7 @@ export const FichaVigilador: React.FC<{
         if (!cancelado) setCargando(false)
         return
       }
-      const { data, error: errorFicha } = await supabase
+      const { data, error: errorFicha } = await db
         .from('fichas_vigiladores').select('*').eq('id_vigilador', registro.id).maybeSingle()
       if (cancelado) return
       setIdVigiladorDb(registro.id)
