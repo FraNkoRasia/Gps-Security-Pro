@@ -286,7 +286,7 @@ export const VistaPanelControl: React.FC = () => {
             <h3 id="salida-grilla-titulo" className="text-lg font-bold text-white">Hay cambios sin guardar</h3>
             <p className="mt-3 text-sm leading-6 text-slate-300">Si salís de la grilla ahora, se perderán los cambios que todavía no guardaste.</p>
             <div className="mt-6 flex flex-wrap justify-end gap-2">
-              <Boton variante="secundario" onClick={() => { setModalSalidaGrilla(false); setPestanaPendiente(null) }}>Seguir editando</Boton>
+              <Boton variante="secundario" onClick={() => { setModalSalidaGrilla(false); setPestanaPendiente(null); setVolverDetallePendiente(false) }}>Seguir editando</Boton>
               <Boton variante="peligro" onClick={() => { setGrillaConCambios(false); setModalSalidaGrilla(false); if (volverDetallePendiente) { setVistaObjetivo('detalle'); setVolverDetallePendiente(false) } else if (pestanaPendiente) setPestanaActiva(pestanaPendiente); setPestanaPendiente(null) }}>Descartar y salir</Boton>
             </div>
           </div>
