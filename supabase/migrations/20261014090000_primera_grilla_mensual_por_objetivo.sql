@@ -107,7 +107,7 @@ RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = ''
-AS $
+AS $$
 DECLARE
   v_hoy date := (now() AT TIME ZONE 'America/Argentina/Buenos_Aires')::date;
 BEGIN
@@ -121,7 +121,7 @@ BEGIN
   END IF;
   RETURN OLD;
 END;
-$;
+$$;
 
 DROP TRIGGER IF EXISTS proteger_eliminacion_turnos_bloqueados ON public.turnos;
 CREATE TRIGGER proteger_eliminacion_turnos_bloqueados
