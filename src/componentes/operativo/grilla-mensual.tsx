@@ -189,16 +189,35 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
 
   const aplicarCodigoTurno = (codigo: string, idTipoTurno?: string) => {
     if (!celdaEditando) return
-    const operacion: OperacionGrilla = {
-      id_vigilador: celdaEditando.idVigilador,
-      fecha: celdaEditando.fecha,
-      codigo,
-      id_tipo_turno: idTipoTurno || null
-    }
-    setBorradores(actuales => ({
-      ...actuales,
-      [claveBorrador(celdaEditando.idVigilador, celdaEditando.fecha)]: operacion
-    }))
+    const clave = claveBorrador(celdaEditando.idVigilador, celdaEditando.fecha)
+    const turnoOriginal = turnos.find(
+      (t) => t.id_vigilador === celdaEditando.idVigilador &&
+        t.id_objetivo === objetivoSeleccionado && t.fecha === celdaEditando.fecha
+    )
+    const codigoOriginal = turnoOriginal
+      ? turnoOriginal.tipo === 'franco' ? 'F'
+        : turnoOriginal.tipo === 'nocturno' ? '12🌙'
+        : turnoOriginal.tipo === 'especial' && Number(turnoOriginal.horas_totales) === 10 ? '10'
+        : turnoOriginal.tipo === 'diurno' && Number(turnoOriginal.horas_totales) === 8 ? '8'
+        : '12☀️'
+      : null
+    const esValorOriginal = turnoOriginal
+      ? (idTipoTurno
+          ? turnoOriginal.id_tipo_turno === idTipoTurno
+          : !turnoOriginal.id_tipo_turno && codigo === codigoOriginal)
+      : codigo === 'borrar'
+
+    setBorradores(actuales => {
+      const siguientes = { ...actuales }
+      if (esValorOriginal) delete siguientes[clave]
+      else siguientes[clave] = {
+        id_vigilador: celdaEditando.idVigilador,
+        fecha: celdaEditando.fecha,
+        codigo,
+        id_tipo_turno: idTipoTurno || null
+      }
+      return siguientes
+    })
     setErrorGuardado('')
     setModalEdicionAbierto(false)
   }
