@@ -7,7 +7,9 @@ import {
   ArrowRightLeft,
   Bell,
   Clock,
-  History
+  History,
+  ArrowLeft,
+  Shield
 } from 'lucide-react'
 import { Insignia } from '@/componentes/ui/insignia'
 import { Boton } from '@/componentes/ui/boton'
@@ -32,6 +34,8 @@ export const VistaPanelControl: React.FC = () => {
 
   const [pestanaActiva, setPestanaActiva] = useState<string>('objetivos')
   const [objetivoGrillaId, setObjetivoGrillaId] = useState<string | null>(null)
+  const [vistaObjetivo, setVistaObjetivo] = useState<'detalle' | 'vigiladores' | 'grilla'>('detalle')
+  const [volverDetallePendiente, setVolverDetallePendiente] = useState(false)
   const [empresaSeleccionadaId, setEmpresaSeleccionadaId] = useState<string | null>(null)
   const [objetivoSeleccionadoId, setObjetivoSeleccionadoId] = useState<string | null>(null)
   const [grillaConCambios, setGrillaConCambios] = useState(false)
@@ -43,7 +47,7 @@ export const VistaPanelControl: React.FC = () => {
   const esSuperAdmin = usuario.rol === 'super_administrador'
   const esAdmin = usuario.rol === 'administrador'
   const esVigilador = usuario.rol === 'vigilador'
-  const { asignaciones, solicitudesHorasExtra, solicitudesCambio, avisos, novedades, novedadesLeidas } = useOperativo()
+  const { asignaciones, objetivos, solicitudesHorasExtra, solicitudesCambio, avisos, novedades, novedadesLeidas } = useOperativo()
   const asignacionActiva = asignaciones.find((a) => a.id_vigilador === usuario.id && a.activa)
   const objetivoVigiladorId = asignacionActiva?.id_objetivo || null
   const avisosNoLeidos = avisos.filter((a) => !a.leido).length
@@ -195,8 +199,74 @@ export const VistaPanelControl: React.FC = () => {
             })}
           </div>
           <div className="pt-1">
-            {pestanaRenderizada === 'objetivos' && esAdmin && <GestionObjetivos onSeleccionarObjetivo={(id) => { setObjetivoGrillaId(id); setPestanaActiva('grillaObjetivo') }} />}
-            {pestanaRenderizada === 'grillaObjetivo' && esAdmin && objetivoGrillaId && <GrillaMensual objetivoInicial={objetivoGrillaId} onCambiosPendientesChange={setGrillaConCambios} />}
+            {pestanaRenderizada === 'objetivos' && esAdmin && <GestionObjetivos onSeleccionarObjetivo={(id) => { setObjetivoGrillaId(id); setVistaObjetivo('detalle'); setPestanaActiva('grillaObjetivo') }} />}
+            {pestanaRenderizada === 'grillaObjetivo' && esAdmin && objetivoGrillaId && (() => {
+              const objetivo = objetivos.find((item) => item.id === objetivoGrillaId)
+              const volverAlDetalle = () => {
+                if (vistaObjetivo === 'grilla' && grillaConCambios) {
+                  setVolverDetallePendiente(true)
+                  setModalSalidaGrilla(true)
+                  return
+                }
+                setGrillaConCambios(false)
+                setVistaObjetivo('detalle')
+              }
+              if (!objetivo) return <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-8 text-center text-sm text-slate-500">No se encontró el objetivo seleccionado.</div>
+              if (vistaObjetivo === 'vigiladores') return (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <Boton variante="secundario" tamano="chico" onClick={() => setVistaObjetivo('detalle')} icono={<ArrowLeft className="w-4 h-4" />}>Volver al objetivo</Boton>
+                    <Insignia variante="azul">Vigiladores del objetivo</Insignia>
+                  </div>
+                  <GestionVigiladores idEmpresaSeleccionada={objetivo.id_empresa} idObjetivoSeleccionado={objetivo.id} modoConsulta />
+                </div>
+              )
+              if (vistaObjetivo === 'grilla') return (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <Boton variante="secundario" tamano="chico" onClick={volverAlDetalle} icono={<ArrowLeft className="w-4 h-4" />}>Volver al objetivo</Boton>
+                    <Insignia variante="azul">Grilla de Vigiladores · {objetivo.nombre}</Insignia>
+                  </div>
+                  <GrillaMensual objetivoInicial={objetivoGrillaId} onCambiosPendientesChange={setGrillaConCambios} />
+                </div>
+              )
+              return (
+                <div className="space-y-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <Boton variante="secundario" tamano="chico" onClick={() => setPestanaActiva('objetivos')} icono={<ArrowLeft className="w-4 h-4" />}>Volver a Objetivos</Boton>
+                    <Insignia variante={objetivo.activo ? 'verde' : 'gris'}>{objetivo.activo ? 'Operativo' : 'Inactivo'}</Insignia>
+                  </div>
+                  <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#0C121E]">
+                    <div className="flex items-start gap-3 border-b border-slate-200 p-5 dark:border-slate-800 sm:p-6">
+                      <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-blue-600 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-400"><Shield className="h-6 w-6" /></div>
+                      <div className="min-w-0">
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white">{objetivo.nombre}</h3>
+                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{objetivo.localidad}, {objetivo.provincia}</p>
+                        <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">{objetivo.direccion}</p>
+                      </div>
+                    </div>
+                    <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-6">
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
+                        <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Supervisor a cargo</p>
+                        <p className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{objetivo.supervisor_nombre || 'No informado'}</p>
+                      </div>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
+                        <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Elementos a cargo</p>
+                        <p className="mt-2 whitespace-pre-wrap text-sm text-slate-800 dark:text-slate-200">{objetivo.elementos_a_cargo || 'No informados'}</p>
+                      </div>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/40 sm:col-span-2">
+                        <p className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Descripción / puntos de cobertura</p>
+                        <p className="mt-2 whitespace-pre-wrap text-sm text-slate-800 dark:text-slate-200">{objetivo.descripcion || 'Sin descripción'}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-3 border-t border-slate-200 p-5 dark:border-slate-800 sm:flex-row sm:p-6">
+                      <Boton variante="secundario" className="w-full sm:flex-1" onClick={() => setVistaObjetivo('vigiladores')} icono={<Users className="h-4 w-4" />}>Vigiladores</Boton>
+                      <Boton variante="primario" className="w-full sm:flex-1" onClick={() => { setGrillaConCambios(false); setVistaObjetivo('grilla') }} icono={<Calendar className="h-4 w-4" />}>Grilla de Vigiladores</Boton>
+                    </div>
+                  </section>
+                </div>
+              )
+            })()}
             {pestanaRenderizada === 'vigiladores' && esAdmin && <GestionVigiladores />}
             {pestanaRenderizada === 'novedades' && (esAdmin || esVigilador) && <LibroNovedades />}
             {pestanaRenderizada === 'cambios' && (esAdmin || esVigilador) && <CambiosTurnos />}
@@ -217,7 +287,7 @@ export const VistaPanelControl: React.FC = () => {
             <p className="mt-3 text-sm leading-6 text-slate-300">Si salís de la grilla ahora, se perderán los cambios que todavía no guardaste.</p>
             <div className="mt-6 flex flex-wrap justify-end gap-2">
               <Boton variante="secundario" onClick={() => { setModalSalidaGrilla(false); setPestanaPendiente(null) }}>Seguir editando</Boton>
-              <Boton variante="peligro" onClick={() => { setGrillaConCambios(false); setModalSalidaGrilla(false); if (pestanaPendiente) setPestanaActiva(pestanaPendiente); setPestanaPendiente(null) }}>Descartar y salir</Boton>
+              <Boton variante="peligro" onClick={() => { setGrillaConCambios(false); setModalSalidaGrilla(false); if (volverDetallePendiente) { setVistaObjetivo('detalle'); setVolverDetallePendiente(false) } else if (pestanaPendiente) setPestanaActiva(pestanaPendiente); setPestanaPendiente(null) }}>Descartar y salir</Boton>
             </div>
           </div>
         </div>
