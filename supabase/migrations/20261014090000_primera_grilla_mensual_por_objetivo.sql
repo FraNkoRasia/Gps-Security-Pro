@@ -154,6 +154,9 @@ BEGIN
     RAISE EXCEPTION 'El objetivo no pertenece a la empresa autorizada.' USING ERRCODE = '42501';
   END IF;
 
+  -- Serializa guardados simultáneos para el mismo objetivo y mes.
+  PERFORM pg_advisory_xact_lock(hashtext(p_id_objetivo::text), hashtext(p_mes::text));
+
   SELECT EXISTS (
     SELECT 1 FROM public.grillas_mensuales g
     WHERE g.id_objetivo = p_id_objetivo AND g.mes = p_mes
@@ -203,7 +206,7 @@ BEGIN
     END IF;
 
     IF v_id_tipo IS NOT NULL THEN
-      SELECT tt.horas, tt.tipo, tt.hora_inicio, tt.hora_fin
+      SELECT tt.horas, tt.tipo, coalesce(tt.hora_inicio, '00:00'::time), coalesce(tt.hora_fin, '00:00'::time)
       INTO v_horas, v_tipo, v_inicio, v_fin
       FROM public.tipos_turno tt
       WHERE tt.id = v_id_tipo
