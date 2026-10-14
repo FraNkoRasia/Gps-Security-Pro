@@ -34,6 +34,9 @@ export const VistaPanelControl: React.FC = () => {
   const [objetivoGrillaId, setObjetivoGrillaId] = useState<string | null>(null)
   const [empresaSeleccionadaId, setEmpresaSeleccionadaId] = useState<string | null>(null)
   const [objetivoSeleccionadoId, setObjetivoSeleccionadoId] = useState<string | null>(null)
+  const [grillaConCambios, setGrillaConCambios] = useState(false)
+  const [modalSalidaGrilla, setModalSalidaGrilla] = useState(false)
+  const [pestanaPendiente, setPestanaPendiente] = useState<string | null>(null)
 
   if (!usuario) return null
 
@@ -178,7 +181,7 @@ export const VistaPanelControl: React.FC = () => {
                 <button
                   key={p.id}
                   type="button"
-                  onClick={() => setPestanaActiva(p.id)}
+                  onClick={() => { if (esAdmin && pestanaRenderizada === 'grillaObjetivo' && grillaConCambios && p.id !== pestanaRenderizada) { setPestanaPendiente(p.id); setModalSalidaGrilla(true) } else setPestanaActiva(p.id) }}
                   className={`flex items-center justify-center gap-1.5 px-2 sm:px-3 py-2.5 rounded-xl font-bold text-[11px] sm:text-xs text-center transition-all cursor-pointer select-none min-w-0 ${
                     estaActiva
                       ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
@@ -193,7 +196,7 @@ export const VistaPanelControl: React.FC = () => {
           </div>
           <div className="pt-1">
             {pestanaRenderizada === 'objetivos' && esAdmin && <GestionObjetivos onSeleccionarObjetivo={(id) => { setObjetivoGrillaId(id); setPestanaActiva('grillaObjetivo') }} />}
-            {pestanaRenderizada === 'grillaObjetivo' && esAdmin && objetivoGrillaId && <GrillaMensual objetivoInicial={objetivoGrillaId} />}
+            {pestanaRenderizada === 'grillaObjetivo' && esAdmin && objetivoGrillaId && <GrillaMensual objetivoInicial={objetivoGrillaId} onCambiosPendientesChange={setGrillaConCambios} />}
             {pestanaRenderizada === 'vigiladores' && esAdmin && <GestionVigiladores />}
             {pestanaRenderizada === 'novedades' && (esAdmin || esVigilador) && <LibroNovedades />}
             {pestanaRenderizada === 'cambios' && (esAdmin || esVigilador) && <CambiosTurnos />}
@@ -206,6 +209,18 @@ export const VistaPanelControl: React.FC = () => {
             {pestanaRenderizada === 'historialLaboral' && esVigilador && <HistorialLaboral />}
           </div>
         </>
+      )}
+      {modalSalidaGrilla && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="salida-grilla-titulo">
+          <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+            <h3 id="salida-grilla-titulo" className="text-lg font-bold text-white">Hay cambios sin guardar</h3>
+            <p className="mt-3 text-sm leading-6 text-slate-300">Si salís de la grilla ahora, se perderán los cambios que todavía no guardaste.</p>
+            <div className="mt-6 flex flex-wrap justify-end gap-2">
+              <Boton variante="secundario" onClick={() => { setModalSalidaGrilla(false); setPestanaPendiente(null) }}>Seguir editando</Boton>
+              <Boton variante="peligro" onClick={() => { setGrillaConCambios(false); setModalSalidaGrilla(false); if (pestanaPendiente) setPestanaActiva(pestanaPendiente); setPestanaPendiente(null) }}>Descartar y salir</Boton>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
