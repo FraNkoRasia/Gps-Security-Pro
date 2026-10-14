@@ -595,6 +595,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
             />
           </div>
 
+          {!vigiladorEditando && <>
           <div className="border-t border-slate-200 pt-4 dark:border-slate-800">
             <h4 className="mb-3 text-sm font-bold text-slate-900 dark:text-white">Datos personales</h4>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -615,6 +616,8 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
               <div><Etiqueta>Fin de contrato</Etiqueta><Entrada type="date" value={fechaFinContrato} onChange={e => setFechaFinContrato(e.target.value)} /></div>
               <div className="sm:col-span-2"><Etiqueta>Notas administrativas</Etiqueta><textarea value={notasAdministrativas} onChange={e => setNotasAdministrativas(e.target.value)} rows={3} className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-[#0A0F1A] dark:text-slate-100" placeholder="Observaciones internas (opcional)" /></div>
             </div>
+          </>}
+
           </div>
 
           {!vigiladorEditando && (
