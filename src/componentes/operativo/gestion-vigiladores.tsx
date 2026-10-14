@@ -118,40 +118,40 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
     setFechaFinContrato('')
     setNotasAdministrativas('')
     setError(null)
-    if (supabase && vig.id_usuario) {
-      const { data: registro, error: errorRegistro } = await supabase.from('vigiladores')
-        .select('id,id_empresa').eq('id_usuario', vig.id_usuario).maybeSingle()
-      if (errorRegistro || !registro) {
-        setError('No se pudo cargar la ficha del vigilador: ' + (errorRegistro?.message || 'registro no encontrado'))
-        setModalNuevoAbierto(true)
-        return
-      } else {
-        const { data: ficha, error: errorFicha } = await supabase.from('fichas_vigiladores')
-          .select('dni,fecha_nacimiento,domicilio,contacto_emergencia_nombre,contacto_emergencia_telefono,fecha_ingreso,categoria,tipo_contrato,fecha_fin_contrato,notas_administrativas')
-          .eq('id_vigilador', registro.id).maybeSingle()
-        if (errorFicha) {
-          setError('No se pudo cargar la ficha: ' + errorFicha.message)
-          setModalNuevoAbierto(true)
-          return
-        }
-        if (!ficha) {
-          setError('Este vigilador todavía no tiene ficha personal y laboral. No guardes cambios hasta completar sus datos.')
-          setModalNuevoAbierto(true)
-          return
-        }
-        if (ficha) {
-          setDni(ficha.dni || '')
-          setFechaNacimiento(ficha.fecha_nacimiento || '')
-          setDomicilio(ficha.domicilio || '')
-          setContactoEmergenciaNombre(ficha.contacto_emergencia_nombre || '')
-          setContactoEmergenciaTelefono(ficha.contacto_emergencia_telefono || '')
-          setFechaIngreso(ficha.fecha_ingreso || '')
-          setCategoria(ficha.categoria || '')
-          setTipoContrato(ficha.tipo_contrato || '')
-          setFechaFinContrato(ficha.fecha_fin_contrato || '')
-          setNotasAdministrativas(ficha.notas_administrativas || '')
-        }
-      }
+    if (!supabase) {
+      setError('Supabase no está configurado; no se pudo cargar la ficha del vigilador.')
+      setModalNuevoAbierto(true)
+      return
+    }
+    const consultaVigilador = supabase.from('vigiladores').select('id,id_empresa')
+    const { data: registro, error: errorRegistro } = vig.id_usuario
+      ? await consultaVigilador.eq('id_usuario', vig.id_usuario).maybeSingle()
+      : await consultaVigilador.eq('id', vig.id).maybeSingle()
+    if (errorRegistro || !registro) {
+      setError('No se pudo cargar el registro del vigilador: ' + (errorRegistro?.message || 'registro no encontrado'))
+      setModalNuevoAbierto(true)
+      return
+    }
+    const { data: ficha, error: errorFicha } = await supabase.from('fichas_vigiladores')
+      .select('dni,fecha_nacimiento,domicilio,contacto_emergencia_nombre,contacto_emergencia_telefono,fecha_ingreso,categoria,tipo_contrato,fecha_fin_contrato,notas_administrativas')
+      .eq('id_vigilador', registro.id).maybeSingle()
+    if (errorFicha) {
+      setError('No se pudo cargar la ficha: ' + errorFicha.message)
+      setModalNuevoAbierto(true)
+      return
+    }
+    // Los registros antiguos pueden no tener ficha: se permite completarla al editar.
+    if (ficha) {
+      setDni(ficha.dni || '')
+      setFechaNacimiento(ficha.fecha_nacimiento || '')
+      setDomicilio(ficha.domicilio || '')
+      setContactoEmergenciaNombre(ficha.contacto_emergencia_nombre || '')
+      setContactoEmergenciaTelefono(ficha.contacto_emergencia_telefono || '')
+      setFechaIngreso(ficha.fecha_ingreso || '')
+      setCategoria(ficha.categoria || '')
+      setTipoContrato(ficha.tipo_contrato || '')
+      setFechaFinContrato(ficha.fecha_fin_contrato || '')
+      setNotasAdministrativas(ficha.notas_administrativas || '')
     }
     setModalNuevoAbierto(true)
   }
