@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
 
     const { data: target, error: targetError } = await admin.from("perfiles")
       .select("id,id_empresa,rol,activo,email").eq("id", targetId).single()
-    if (targetError || !target || target.rol !== "vigilador" || !target.activo) {
+    if (targetError || !target || target.rol !== "vigilador") {
       return json({ error: "No se encontró una cuenta activa de vigilador." }, 404)
     }
     if (caller.rol !== "super_administrador" && target.id_empresa !== caller.id_empresa) {
@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     }
 
     const { data: operational, error: operationalError } = await admin.from("vigiladores")
-      .select("id,id_empresa").eq("id_usuario", targetId).single()
+      .select("id,id_empresa,legajo").eq("id_usuario", targetId).single()
     if (operationalError || !operational || operational.id_empresa !== target.id_empresa) {
       return json({ error: "No se encontró el registro operativo asociado." }, 409)
     }
