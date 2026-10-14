@@ -228,15 +228,16 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
       return { exito: false, error: 'La nueva contraseña debe tener al menos 8 caracteres.' }
     }
     try {
-      const { error: errorAuth } = await supabase.auth.updateUser({ password: nuevaContrasena })
-      if (errorAuth) return { exito: false, error: errorAuth.message }
-
-      const { error: errorPerfil } = await supabase
-        .from('perfiles')
-        .update({ debe_cambiar_contrasena: false })
-        .eq('id', usuario.id)
-      if (errorPerfil) {
-        return { exito: false, error: 'La contraseña se actualizó, pero no se pudo confirmar el cambio obligatorio. Cerrá sesión y volvé a ingresar; si el aviso continúa, contactá a administración.' }
+      const { data, error } = await supabase.functions.invoke('cambiar-contrasena-obligatoria', {
+        body: { nueva_contrasena: nuevaContrasena }
+      })
+      if (error || data?.error) {
+        const contexto = (error as { context?: Response } | null)?.context
+        let detalle = typeof data?.error === 'string' ? data.error : ''
+        if (!detalle && contexto) {
+          try { detalle = ((await contexto.clone().json()) as { error?: string }).error || '' } catch { /* respuesta sin JSON */ }
+        }
+        return { exito: false, error: detalle || error?.message || 'No se pudo actualizar la contraseña.' }
       }
       setUsuario((actual) => actual ? { ...actual, debe_cambiar_contrasena: false } : actual)
       return { exito: true }
