@@ -58,8 +58,10 @@ export const FichaVigilador: React.FC<{
       setError('')
       setMensaje('')
       setFicha(vacia)
-      const { data: registro, error: errorRegistro } = await supabase
-        .from('vigiladores').select('id,id_empresa').eq('id_usuario', vigilador.id_usuario || vigilador.id).maybeSingle()
+      const consultaRegistro = supabase.from('vigiladores').select('id,id_empresa')
+      const { data: registro, error: errorRegistro } = vigilador.id_usuario
+        ? await consultaRegistro.eq('id_usuario', vigilador.id_usuario).maybeSingle()
+        : await consultaRegistro.eq('id', vigilador.id).maybeSingle()
       if (errorRegistro || !registro) {
         if (!cancelado) setError(errorRegistro?.message || 'No se encontró el registro operativo del vigilador.')
         if (!cancelado) setCargando(false)
