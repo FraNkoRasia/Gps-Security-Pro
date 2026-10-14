@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { UserPlus, ArrowRightLeft, History, Edit2, Phone, Mail, MapPin, UserCheck, UserX } from 'lucide-react'
+import { UserPlus, ArrowRightLeft, History, Edit2, Phone, Mail, MapPin, UserCheck, UserX, Info } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -10,6 +10,7 @@ import { ModalTraslado } from './modal-traslado'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { Usuario } from '@/tipos'
+import { FichaVigilador } from './ficha-vigilador'
 
 const formatearDuracion = (horas: number | null | undefined) => {
   const minutosTotales = Math.max(0, Math.round(Number(horas || 0) * 60))
@@ -32,6 +33,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
   const { usuario } = useAutenticacion()
 
   const [modalNuevoAbierto, setModalNuevoAbierto] = useState(false)
+  const [modalFichaAbierto, setModalFichaAbierto] = useState(false)
   const [modalHistorialAbierto, setModalHistorialAbierto] = useState(false)
   const [modalHistorialOperativoAbierto, setModalHistorialOperativoAbierto] = useState(false)
   const [mesHistorialOperativo, setMesHistorialOperativo] = useState(`${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`)
@@ -44,6 +46,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
   const mesActual = fechaHoy.slice(0, 7)
 
   const [vigiladorSeleccionado, setVigiladorSeleccionado] = useState<Usuario | null>(null)
+  const [vigiladorFicha, setVigiladorFicha] = useState<Usuario | null>(null)
   const [vigiladorEditando, setVigiladorEditando] = useState<Usuario | null>(null)
 
   // Formulario alta / edición
@@ -262,6 +265,11 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
                     </div>
                   </div>
 
+                  <div className="flex items-center gap-1">
+                    <button type="button" onClick={() => { setVigiladorFicha(vig); setModalFichaAbierto(true) }} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Ver ficha del vigilador" aria-label={`Ver ficha de ${vig.nombre} ${vig.apellido}`}>
+                      <Info className="w-4 h-4" />
+                    </button>
+                  </div>
                   {!modoConsulta && vig.id_usuario && <div className="flex items-center gap-1">
                     <button
                       type="button"
@@ -575,6 +583,8 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
           </div>
         </form>
       </Dialogo>
+
+      <FichaVigilador abierto={modalFichaAbierto} vigilador={vigiladorFicha} alCerrar={() => { setModalFichaAbierto(false); setVigiladorFicha(null) }} />
 
       {/* Modal Traslado Oficial */}
       <ModalTraslado
