@@ -55,6 +55,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [telefono, setTelefono] = useState('')
+  const [legajo, setLegajo] = useState('')
   const [idObjetivoInicial, setIdObjetivoInicial] = useState('')
   const [error, setError] = useState<string | null>(null)
 
@@ -68,6 +69,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
     setEmail('')
     setPassword('')
     setTelefono('')
+    setLegajo('')
     const empresaInicial = usuario?.id_empresa || ''
     setIdObjetivoInicial(objetivos.find((obj) => obj.id_empresa === empresaInicial)?.id || '')
     setError(null)
@@ -80,6 +82,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
     setApellido(vig.apellido)
     setEmail(vig.email)
     setTelefono(vig.telefono || '')
+    setLegajo(vig.legajo || '')
     setPassword('')
     setError(null)
     setModalNuevoAbierto(true)
@@ -133,6 +136,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
         apellido: apellido.trim(),
         email: email.trim().toLowerCase(),
         telefono: telefono.trim(),
+        legajo: legajo.trim(),
         ...(password.trim() ? { password: password.trim() } : {})
       })
       setModalNuevoAbierto(false)
@@ -145,6 +149,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
       email: email.trim().toLowerCase(),
       password,
       telefono: telefono.trim(),
+      legajo: legajo.trim(),
       id_empresa: idEmpresaActiva,
       id_objetivo_inicial: idObjetivoInicial
     })
@@ -543,6 +548,11 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
             <p className="text-[11px] text-slate-500 mt-1">
               {vigiladorEditando ? 'Solo completala si querés cambiar la contraseña.' : 'Esta contraseña será la que use el vigilador para iniciar sesión.'}
             </p>
+          </div>
+
+          <div>
+            <Etiqueta>Número de legajo</Etiqueta>
+            <Entrada value={legajo} onChange={(e) => setLegajo(e.target.value)} placeholder="Ej. VG-001" />
           </div>
 
           <div>
