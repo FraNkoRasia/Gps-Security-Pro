@@ -30,14 +30,13 @@ Deno.serve(async (req) => {
       return json({ error: "Solo administración puede editar vigiladores." }, 403)
     }
 
-    let body: { vigilador_id?: string; nombre?: string; apellido?: string; email?: string; telefono?: string | null; legajo?: string | null; password?: string }
+    let body: { vigilador_id?: string; nombre?: string; apellido?: string; email?: string; telefono?: string | null; password?: string }
     try { body = await req.json() } catch { return json({ error: "Datos inválidos." }, 400) }
     const targetId = body.vigilador_id?.trim()
     const nombre = body.nombre?.trim()
     const apellido = body.apellido?.trim()
     const email = body.email?.trim().toLowerCase()
     const telefono = body.telefono?.trim() || null
-    const legajo = body.legajo?.trim() || null
     const password = body.password || ""
 
     if (!targetId || !nombre || !apellido || !email) return json({ error: "Vigilador, nombre, apellido y correo son obligatorios." }, 400)
@@ -78,7 +77,7 @@ Deno.serve(async (req) => {
     if (profileError) return json({ error: "La cuenta se actualizó, pero falló la actualización del perfil. Contacte a soporte." }, 500)
 
     const { error: operationalUpdateError } = await admin.from("vigiladores").update({
-      nombre, apellido, telefono, legajo,
+      nombre, apellido, telefono,
     }).eq("id", operational.id)
     if (operationalUpdateError) return json({ error: "El perfil se actualizó, pero falló la actualización operativa. Contacte a soporte." }, 500)
 
@@ -88,7 +87,7 @@ Deno.serve(async (req) => {
       accion: "EDITAR_VIGILADOR",
       entidad: "Vigilador",
       entidad_id: operational.id,
-      detalle: { texto: "Actualizó datos de acceso y perfil", cambio_email: Boolean(authUpdates.email), cambio_password: Boolean(password), cambio_legajo: operational.legajo !== legajo },
+      detalle: { texto: "Actualizó datos de acceso y perfil", cambio_email: Boolean(authUpdates.email), cambio_password: Boolean(password) },
       fecha_hora: new Date().toISOString(),
     })
     if (auditError) console.error("No se pudo registrar auditoría:", auditError.message)
