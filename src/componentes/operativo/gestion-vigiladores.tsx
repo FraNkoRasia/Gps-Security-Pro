@@ -19,6 +19,11 @@ const formatearDuracion = (horas: number | null | undefined) => {
   return minutos === 0 ? `${horasEnteras} h` : `${horasEnteras} h ${minutos} min`
 }
 
+const fechaLocalActual = () => {
+  const hoy = new Date()
+  return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
+}
+
 const etiquetaEstadoCambio = (estado: string, administrador?: string | null) => {
   if (estado === 'aprobada_admin') return administrador ? `Aprobada por ${administrador}` : 'Aprobada (aprobador no guardado en el registro histórico)'
   if (estado === 'aceptada_vigilador') return 'Aceptada por vigilador · pendiente de administración'
@@ -60,7 +65,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
   const [domicilio, setDomicilio] = useState('')
   const [contactoEmergenciaNombre, setContactoEmergenciaNombre] = useState('')
   const [contactoEmergenciaTelefono, setContactoEmergenciaTelefono] = useState('')
-  const [fechaIngreso, setFechaIngreso] = useState(new Date().toISOString().slice(0, 10))
+  const [fechaIngreso, setFechaIngreso] = useState(fechaLocalActual())
   const [categoria, setCategoria] = useState('')
   const [tipoContrato, setTipoContrato] = useState('')
   const [fechaFinContrato, setFechaFinContrato] = useState('')
@@ -83,7 +88,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
     setDomicilio('')
     setContactoEmergenciaNombre('')
     setContactoEmergenciaTelefono('')
-    setFechaIngreso(new Date().toISOString().slice(0, 10))
+    setFechaIngreso(fechaLocalActual())
     setCategoria('')
     setTipoContrato('')
     setFechaFinContrato('')
