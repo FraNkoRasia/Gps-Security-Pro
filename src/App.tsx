@@ -6,10 +6,11 @@ import { ProveedorOperativo } from '@/contextos/contexto-operativo'
 import { DisposicionPrincipal } from '@/componentes/layout/disposicion-principal'
 import { VistaInicioSesion } from '@/vistas/inicio-sesion'
 import { VistaPanelControl } from '@/vistas/panel-control'
+import { CambioContrasenaObligatorio } from '@/componentes/autenticacion/cambio-contrasena-obligatorio'
 import './App.css'
 
 const ContenidoAplicacion: React.FC = () => {
-  const { estaAutenticado, cargando } = useAutenticacion()
+  const { estaAutenticado, cargando, usuario } = useAutenticacion()
 
   if (cargando) {
     return (
@@ -29,6 +30,7 @@ const ContenidoAplicacion: React.FC = () => {
   return (
     <DisposicionPrincipal>
       {estaAutenticado ? <VistaPanelControl /> : <VistaInicioSesion />}
+      {estaAutenticado && usuario?.debe_cambiar_contrasena && <CambioContrasenaObligatorio />}
     </DisposicionPrincipal>
   )
 }
