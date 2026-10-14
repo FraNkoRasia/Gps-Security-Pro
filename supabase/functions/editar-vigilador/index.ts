@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     }
 
     const { data: operational, error: operationalError } = await admin.from("vigiladores")
-      .select("id,id_empresa,legajo").eq("id_usuario", targetId).single()
+      .select("id,id_empresa").eq("id_usuario", targetId).single()
     if (operationalError || !operational || operational.id_empresa !== target.id_empresa) {
       return json({ error: "No se encontró el registro operativo asociado." }, 409)
     }
