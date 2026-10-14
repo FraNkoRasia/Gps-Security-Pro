@@ -64,8 +64,8 @@ create policy "fichas vigilador alta admin"
     and exists (
       select 1
       from public.vigiladores v
-      where v.id = id_vigilador
-        and v.id_empresa = id_empresa
+      where v.id = fichas_vigiladores.id_vigilador
+        and v.id_empresa = fichas_vigiladores.id_empresa
     )
   );
 
