@@ -29,8 +29,11 @@ const ContenidoAplicacion: React.FC = () => {
 
   return (
     <DisposicionPrincipal>
-      {estaAutenticado ? <VistaPanelControl /> : <VistaInicioSesion />}
-      {estaAutenticado && usuario?.debe_cambiar_contrasena && <CambioContrasenaObligatorio />}
+      {estaAutenticado
+        ? usuario?.debe_cambiar_contrasena
+          ? <CambioContrasenaObligatorio />
+          : <VistaPanelControl />
+        : <VistaInicioSesion />}
     </DisposicionPrincipal>
   )
 }
