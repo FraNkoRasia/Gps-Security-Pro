@@ -71,6 +71,15 @@ Deno.serve(async (req) => {
         if (rollbackError) console.error("No se pudo revertir la marca de cambio obligatorio:", rollbackError.message)
         return json({ error: "Supabase no aceptó el DNI como contraseña inicial. Revisá la política de contraseñas de Auth." }, 400)
       }
+
+      // Revocar los refresh tokens para que las sesiones previas no sigan renovándose.
+      // El indicador de cambio obligatorio también se revalida en el cliente.
+      const { error: signOutError } = await admin.auth.admin.signOut(targetId, "global")
+      if (signOutError) {
+        console.error("No se pudieron revocar todas las sesiones del vigilador:", signOutError.message)
+        return json({ error: "La contraseña se restableció, pero no se pudieron revocar todas las sesiones. El cambio obligatorio quedó activado; cerrá las sesiones del vigilador y revisá Auth." }, 500)
+      }
+
       const { error: auditError } = await admin.from("auditoria").insert({
         id_empresa: targetProfile.id_empresa,
         id_usuario: caller.id,
