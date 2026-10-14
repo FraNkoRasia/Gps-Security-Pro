@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     const { data: target, error: targetError } = await admin.from("perfiles")
       .select("id,id_empresa,rol,activo,email").eq("id", targetId).single()
     if (targetError || !target || target.rol !== "vigilador") {
-      return json({ error: "No se encontró una cuenta activa de vigilador." }, 404)
+      return json({ error: "No se encontró una cuenta de vigilador." }, 404)
     }
     if (caller.rol !== "super_administrador" && target.id_empresa !== caller.id_empresa) {
       return json({ error: "No puede editar personal de otra empresa." }, 403)
