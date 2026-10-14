@@ -30,8 +30,9 @@ Deno.serve(async (req) => {
     if (nueva.length < 8) return json({ error: "La contraseña debe tener al menos 8 caracteres." }, 400)
 
     const { data: perfil, error: perfilError } = await admin.from("perfiles")
-      .select("id,debe_cambiar_contrasena,activo").eq("id", authData.user.id).single()
+      .select("id,rol,debe_cambiar_contrasena,activo").eq("id", authData.user.id).single()
     if (perfilError || !perfil?.activo) return json({ error: "No se encontró un perfil activo." }, 403)
+    if (perfil.rol !== "vigilador") return json({ error: "Esta operación está disponible solo para cuentas de vigilador." }, 403)
     if (perfil.debe_cambiar_contrasena !== true) {
       return json({ error: "No hay un cambio obligatorio de contraseña pendiente." }, 409)
     }
