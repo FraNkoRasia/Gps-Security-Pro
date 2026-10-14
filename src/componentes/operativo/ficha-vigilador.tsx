@@ -128,10 +128,10 @@ export const FichaVigilador: React.FC<{
     setGuardando(false)
   }
 
-  const asignacionesVigilador = asignaciones.filter(a => a.id_vigilador === vigilador?.id).sort((a, b) => b.fecha_inicio.localeCompare(a.fecha_inicio))
-  const turnosVigilador = turnos.filter(t => t.id_vigilador === vigilador?.id).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 20)
-  const novedadesVigilador = novedades.filter(n => n.id_vigilador === vigilador?.id).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 10)
-  const extrasVigilador = horasExtra.filter(h => h.id_vigilador === vigilador?.id).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 10)
+  const asignacionesVigilador = asignaciones.filter(a => a.id_vigilador === idVigiladorDb).sort((a, b) => b.fecha_inicio.localeCompare(a.fecha_inicio))
+  const turnosVigilador = turnos.filter(t => t.id_vigilador === idVigiladorDb).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 20)
+  const novedadesVigilador = novedades.filter(n => n.id_vigilador === idVigiladorDb).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 10)
+  const extrasVigilador = horasExtra.filter(h => h.id_vigilador === idVigiladorDb).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 10)
   const cambiosVigilador = cambios.filter(c => c.id_solicitante === vigilador?.id || c.id_destinatario === vigilador?.id).sort((a, b) => b.fecha_turno.localeCompare(a.fecha_turno)).slice(0, 10)
   const cambiar = (key: keyof Ficha, value: string) => setFicha(prev => ({ ...prev, [key]: value }))
   const etiquetaInput = 'mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300'
