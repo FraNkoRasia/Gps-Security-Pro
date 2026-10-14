@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     if (body.accion === "restablecer_contrasena") {
       if (!targetId || legacyOperationalId) return json({ error: "Cuenta de vigilador inválida." }, 400)
       const { data: targetProfile, error: targetProfileError } = await admin.from("perfiles")
-        .select("id,id_empresa,rol").eq("id", targetId).single()
+        .select("id,id_empresa,rol,debe_cambiar_contrasena").eq("id", targetId).single()
       if (targetProfileError || !targetProfile || targetProfile.rol !== "vigilador") {
         return json({ error: "No se encontró una cuenta de vigilador." }, 404)
       }
@@ -59,13 +59,18 @@ Deno.serve(async (req) => {
       if (passwordInicial.length < 6) {
         return json({ error: "El DNI registrado debe contener al menos 6 dígitos para utilizarlo como contraseña inicial." }, 400)
       }
-      const { error: passwordError } = await admin.auth.admin.updateUserById(targetId, { password: passwordInicial })
-      if (passwordError) {
-        return json({ error: "Supabase no aceptó el DNI como contraseña inicial. Revisá la longitud mínima configurada en Auth." }, 400)
-      }
+      // Activar primero el bloqueo. Si Auth falla, restaurar el valor previo.
       const { error: profileError } = await admin.from("perfiles")
         .update({ debe_cambiar_contrasena: true }).eq("id", targetId)
-      if (profileError) return json({ error: "La contraseña se restableció, pero no se pudo activar el cambio obligatorio." }, 500)
+      if (profileError) return json({ error: "No se pudo activar el cambio obligatorio; la contraseña no fue modificada." }, 500)
+
+      const { error: passwordError } = await admin.auth.admin.updateUserById(targetId, { password: passwordInicial })
+      if (passwordError) {
+        const { error: rollbackError } = await admin.from("perfiles")
+          .update({ debe_cambiar_contrasena: targetProfile.debe_cambiar_contrasena === true }).eq("id", targetId)
+        if (rollbackError) console.error("No se pudo revertir la marca de cambio obligatorio:", rollbackError.message)
+        return json({ error: "Supabase no aceptó el DNI como contraseña inicial. Revisá la política de contraseñas de Auth." }, 400)
+      }
       const { error: auditError } = await admin.from("auditoria").insert({
         id_empresa: targetProfile.id_empresa,
         id_usuario: caller.id,
