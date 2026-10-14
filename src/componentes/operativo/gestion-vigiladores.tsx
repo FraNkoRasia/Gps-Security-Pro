@@ -596,7 +596,17 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
         </form>
       </Dialogo>
 
-      <FichaVigilador abierto={modalFichaAbierto} vigilador={vigiladorFicha} alCerrar={() => { setModalFichaAbierto(false); setVigiladorFicha(null) }} />
+      <FichaVigilador
+        abierto={modalFichaAbierto}
+        vigilador={vigiladorFicha}
+        alCerrar={() => { setModalFichaAbierto(false); setVigiladorFicha(null) }}
+        asignaciones={asignaciones}
+        objetivos={objetivos}
+        turnos={turnos}
+        novedades={novedades}
+        horasExtra={solicitudesHorasExtra}
+        cambios={solicitudesCambio}
+      />
 
       {/* Modal Traslado Oficial */}
       <ModalTraslado
