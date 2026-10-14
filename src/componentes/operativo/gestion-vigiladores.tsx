@@ -106,7 +106,6 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
     setApellido(vig.apellido)
     setEmail(vig.email || '')
     setTelefono(vig.telefono || '')
-    setPassword('')
     setDni('')
     setFechaNacimiento('')
     setDomicilio('')
