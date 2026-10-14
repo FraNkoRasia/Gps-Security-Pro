@@ -86,7 +86,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
       if (tipoAtajo) { horas = tipoAtajo.horas; tipo = tipoAtajo.tipo === 'mixto' ? 'especial' : tipoAtajo.tipo === 'franco' ? 'franco' : tipoAtajo.tipo; inicio = tipoAtajo.hora_inicio || '00:00'; fin = tipoAtajo.hora_fin || '00:00'; diurnas = tipo === 'diurno' ? horas : 0; nocturnas = tipo === 'nocturno' ? horas : 0; if (tipo === 'franco') { horas = 0; diurnas = 0; nocturnas = 0 } }
       else if (op.codigo === '12🌙') { tipo = 'nocturno'; inicio = '19:00'; fin = '07:00'; diurnas = 3; nocturnas = 9 }
       else if (op.codigo === '10') { tipo = 'especial'; horas = 10; inicio = '08:00'; fin = '18:00'; diurnas = 10 }
-      else if (op.codigo === '8') { tipo = 'especial'; horas = 8; inicio = '08:00'; fin = '16:00'; diurnas = 8 }
+      else if (op.codigo === '8') { tipo = 'diurno'; horas = 8; inicio = '08:00'; fin = '16:00'; diurnas = 8 }
       else if (op.codigo === 'F') { tipo = 'franco'; horas = 0; inicio = '00:00'; fin = '00:00'; diurnas = 0 }
       const fechaObj = new Date(`${op.fecha}T12:00:00`)
       return { id: `borrador:${claveBorrador(op.id_vigilador, op.fecha)}`, id_empresa: objetivoActual?.id_empresa || '', id_objetivo: objetivoSeleccionado, id_vigilador: op.id_vigilador, fecha: op.fecha, hora_inicio: inicio, hora_fin: fin, horas_totales: horas, tipo, horas_diurnas: diurnas, horas_nocturnas: nocturnas, es_feriado: false, es_domingo: fechaObj.getDay() === 0, horas_extra: 0, id_tipo_turno: op.id_tipo_turno || null, estado: 'programado' as const }
