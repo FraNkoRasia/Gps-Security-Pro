@@ -99,6 +99,17 @@ Deno.serve(async (req) => {
     }).eq("id", operational.id)
     if (operationalUpdateError) return json({ error: "El perfil se actualizó, pero falló la actualización operativa. Contacte a soporte." }, 500)
 
+    const { error: fichaError } = await admin.from("fichas_vigiladores").upsert({
+      id_vigilador: operational.id,
+      id_empresa: target.id_empresa,
+      ...ficha,
+      actualizado_en: new Date().toISOString(),
+    }, { onConflict: "id_vigilador" })
+    if (fichaError) {
+      console.error("Error guardando ficha personal/laboral:", fichaError.message)
+      return json({ error: "El perfil se actualizó, pero no se pudo guardar la ficha personal y laboral: " + fichaError.message }, 500)
+    }
+
     const { error: auditError } = await admin.from("auditoria").insert({
       id_empresa: target.id_empresa,
       id_usuario: caller.id,
