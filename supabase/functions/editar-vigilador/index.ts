@@ -30,10 +30,25 @@ Deno.serve(async (req) => {
       return json({ error: "Solo administración puede editar vigiladores." }, 403)
     }
 
-    let body: { vigilador_id?: string; vigilador_operativo_id?: string; nombre?: string; apellido?: string; email?: string; telefono?: string | null; password?: string; dni?: string; fecha_nacimiento?: string; domicilio?: string; contacto_emergencia_nombre?: string; contacto_emergencia_telefono?: string; fecha_ingreso?: string; categoria?: string; tipo_contrato?: string; fecha_fin_contrato?: string | null; notas_administrativas?: string }
+    let body: { accion?: string; vigilador_id?: string; vigilador_operativo_id?: string; nombre?: string; apellido?: string; email?: string; telefono?: string | null; password?: string; dni?: string; fecha_nacimiento?: string; domicilio?: string; contacto_emergencia_nombre?: string; contacto_emergencia_telefono?: string; fecha_ingreso?: string; categoria?: string; tipo_contrato?: string; fecha_fin_contrato?: string | null; notas_administrativas?: string }
     try { body = await req.json() } catch { return json({ error: "Datos inválidos." }, 400) }
     const targetId = body.vigilador_id?.trim()
     const legacyOperationalId = body.vigilador_operativo_id?.trim()
+
+    if (body.accion === "consultar_email") {
+      if (!targetId || legacyOperationalId) return json({ error: "Cuenta de vigilador inválida." }, 400)
+      const { data: targetEmailProfile, error: targetEmailProfileError } = await admin.from("perfiles")
+        .select("id,id_empresa,rol").eq("id", targetId).single()
+      if (targetEmailProfileError || !targetEmailProfile || targetEmailProfile.rol !== "vigilador") {
+        return json({ error: "No se encontró una cuenta de vigilador." }, 404)
+      }
+      if (caller.rol !== "super_administrador" && targetEmailProfile.id_empresa !== caller.id_empresa) {
+        return json({ error: "No puede consultar personal de otra empresa." }, 403)
+      }
+      const { data: authTarget, error: authTargetError } = await admin.auth.admin.getUserById(targetId)
+      if (authTargetError || !authTarget.user) return json({ error: "No se pudo recuperar el correo de la cuenta." }, 409)
+      return json({ email: authTarget.user.email || "" })
+    }
     const nombre = body.nombre?.trim()
     const apellido = body.apellido?.trim()
     const email = body.email?.trim().toLowerCase()
