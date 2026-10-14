@@ -59,8 +59,11 @@ Deno.serve(async (req) => {
       return json({ error: "No se encontró el registro operativo asociado." }, 409)
     }
 
+    const { data: targetAuth, error: targetAuthError } = await admin.auth.admin.getUserById(targetId)
+    if (targetAuthError || !targetAuth.user) return json({ error: "No se pudo verificar la cuenta de acceso del vigilador." }, 409)
+
     const authUpdates: { email?: string; email_confirm?: boolean; password?: string } = {}
-    if (email !== (target.email || authData.user.email || "").toLowerCase()) {
+    if (email !== (targetAuth.user.email || "").toLowerCase()) {
       authUpdates.email = email
       authUpdates.email_confirm = true
     }
