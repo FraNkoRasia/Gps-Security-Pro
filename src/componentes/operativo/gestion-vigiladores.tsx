@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { UserPlus, ArrowRightLeft, History, Edit2, Phone, Mail, MapPin, UserCheck, UserX, Info } from 'lucide-react'
+import { UserPlus, ArrowRightLeft, History, Edit2, Phone, Mail, MapPin, UserCheck, UserX, Info, KeyRound } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { Boton } from '@/componentes/ui/boton'
 import { Insignia } from '@/componentes/ui/insignia'
@@ -59,7 +59,8 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
   const [nombre, setNombre] = useState('')
   const [apellido, setApellido] = useState('')
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [vigiladorRestablecer, setVigiladorRestablecer] = useState<Usuario | null>(null)
+  const [procesandoRestablecimiento, setProcesandoRestablecimiento] = useState(false)
   const [telefono, setTelefono] = useState('')
   const [dni, setDni] = useState('')
   const [fechaNacimiento, setFechaNacimiento] = useState('')
@@ -82,7 +83,6 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
     setNombre('')
     setApellido('')
     setEmail('')
-    setPassword('')
     setTelefono('')
     setDni('')
     setFechaNacimiento('')
@@ -106,7 +106,6 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
     setApellido(vig.apellido)
     setEmail(vig.email || '')
     setTelefono(vig.telefono || '')
-    setPassword('')
     setDni('')
     setFechaNacimiento('')
     setDomicilio('')
@@ -195,12 +194,38 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
     setModalTrasladoAbierto(true)
   }
 
+  const confirmarRestablecimiento = async () => {
+    if (!supabase || !vigiladorRestablecer?.id_usuario) return
+    setProcesandoRestablecimiento(true)
+    setError(null)
+    try {
+      const { data, error: errorFuncion } = await supabase.functions.invoke('editar-vigilador', {
+        body: { accion: 'restablecer_contrasena', vigilador_id: vigiladorRestablecer.id_usuario }
+      })
+      if (errorFuncion || data?.error) {
+        const contexto = (errorFuncion as { context?: Response } | null)?.context
+        let detalle = typeof data?.error === 'string' ? data.error : ''
+        if (!detalle && contexto) {
+          try { detalle = ((await contexto.clone().json()) as { error?: string }).error || '' } catch { /* respuesta sin JSON */ }
+        }
+        setError(detalle || errorFuncion?.message || 'No se pudo restablecer la contraseña.')
+        return
+      }
+      setVigiladorRestablecer(null)
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo restablecer la contraseña.')
+    } finally {
+      setProcesandoRestablecimiento(false)
+    }
+  }
+
   const manejarGuardar = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
 
-    if (!nombre.trim() || !apellido.trim() || ((!vigiladorEditando || vigiladorEditando.id_usuario) && !email.trim()) || (!vigiladorEditando && !password)) {
-      setError('Nombre y apellido son obligatorios. El correo es obligatorio para cuentas de acceso y la contraseña para altas nuevas.')
+    if (!nombre.trim() || !apellido.trim() || ((!vigiladorEditando || vigiladorEditando.id_usuario) && !email.trim())) {
+      setError('Nombre y apellido son obligatorios. El correo es obligatorio para cuentas de acceso.')
       return
     }
 
@@ -233,15 +258,13 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
         contacto_emergencia_nombre: contactoEmergenciaNombre.trim(),
         contacto_emergencia_telefono: contactoEmergenciaTelefono.trim(), fecha_ingreso: fechaIngreso,
         categoria: categoria.trim(), tipo_contrato: tipoContrato,
-        fecha_fin_contrato: fechaFinContrato || null, notas_administrativas: notasAdministrativas.trim(),
-        ...(password.trim() ? { password: password.trim() } : {})
+        fecha_fin_contrato: fechaFinContrato || null, notas_administrativas: notasAdministrativas.trim()
       })
       if (errorEdicion) {
         setError(errorEdicion)
         return
       }
       setModalNuevoAbierto(false)
-      setPassword('')
       return
     }
 
@@ -249,7 +272,6 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
       nombre: nombre.trim(),
       apellido: apellido.trim(),
       email: email.trim().toLowerCase(),
-      password,
       telefono: telefono.trim(),
       dni: dni.trim(),
       fecha_nacimiento: fechaNacimiento,
@@ -389,6 +411,15 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
                   </div>
                   )}
                   {!modoConsulta && vig.id_usuario && <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setVigiladorRestablecer(vig)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
+                      title="Restablecer contraseña"
+                      aria-label={`Restablecer contraseña de ${vig.nombre} ${vig.apellido}`}
+                    >
+                      <KeyRound className="w-4 h-4" />
+                    </button>
                     <button
                       type="button"
                       onClick={() => abrirEditar(vig)}
@@ -646,22 +677,16 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
             />
           </div>
 
-          <div>
-            <Etiqueta requerido={!vigiladorEditando}>
-              {vigiladorEditando ? 'Nueva Contraseña (opcional)' : 'Contraseña de Acceso'}
-            </Etiqueta>
-            <Entrada
-              type="password"
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={vigiladorEditando ? 'Dejar vacío para conservar la actual' : 'Mínimo 8 caracteres'}
-              minLength={vigiladorEditando ? undefined : 8}
-            />
-            <p className="text-[11px] text-slate-500 mt-1">
-              {vigiladorEditando ? 'Solo completala si querés cambiar la contraseña.' : 'Esta contraseña será la que use el vigilador para iniciar sesión.'}
+          {!vigiladorEditando && (
+            <p className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200">
+              La contraseña inicial será el DNI del vigilador. Al ingresar por primera vez, deberá crear una contraseña personal.
             </p>
-          </div>
+          )}
+          {vigiladorEditando && vigiladorEditando.id_usuario && (
+            <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+              Para cambiar la contraseña, usá el botón «Restablecer contraseña» de la tarjeta del vigilador. Se establecerá su DNI y deberá cambiarlo al ingresar.
+            </p>
+          )}
 
           <div>
             <Etiqueta>Teléfono de Contacto</Etiqueta>
@@ -726,6 +751,27 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
             </Boton>
           </div>
         </form>
+      </Dialogo>
+
+      <Dialogo
+        abierto={Boolean(vigiladorRestablecer)}
+        alCerrar={() => { if (!procesandoRestablecimiento) setVigiladorRestablecer(null) }}
+        titulo="Restablecer contraseña"
+        subtitulo="Se utilizará el DNI registrado en la ficha del vigilador."
+        icono={<KeyRound className="w-5 h-5 text-amber-500" />}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-slate-700 dark:text-slate-300">
+            ¿Querés restablecer la contraseña de <strong>{vigiladorRestablecer?.nombre} {vigiladorRestablecer?.apellido}</strong>? Su contraseña actual dejará de funcionar y deberá elegir una nueva al iniciar sesión.
+          </p>
+          {error && <p className="text-xs font-semibold text-red-500">{error}</p>}
+          <div className="flex justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
+            <Boton variante="secundario" disabled={procesandoRestablecimiento} onClick={() => setVigiladorRestablecer(null)}>Cancelar</Boton>
+            <Boton variante="primario" disabled={procesandoRestablecimiento} onClick={() => void confirmarRestablecimiento()}>
+              {procesandoRestablecimiento ? 'Restableciendo…' : 'Confirmar restablecimiento'}
+            </Boton>
+          </div>
+        </div>
       </Dialogo>
 
       <FichaVigilador
