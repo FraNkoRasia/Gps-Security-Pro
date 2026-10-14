@@ -63,7 +63,6 @@ export const FichaVigilador: React.FC<{
     const cargar = async () => {
       setCargando(true)
       setError('')
-      setMensaje('')
       setFicha(vacia)
       setCabecera({ nombre: vigilador.nombre || '', apellido: vigilador.apellido || '', email: vigilador.email || '', telefono: vigilador.telefono || '', legajo: vigilador.legajo || '' })
       const consultaRegistro = db.from('vigiladores').select('id,id_empresa,id_usuario,legajo,nombre,apellido,telefono')
