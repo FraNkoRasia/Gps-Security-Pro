@@ -30,10 +30,54 @@ Deno.serve(async (req) => {
       return json({ error: "Solo administración puede editar vigiladores." }, 403)
     }
 
-    let body: { accion?: string; vigilador_id?: string; vigilador_operativo_id?: string; nombre?: string; apellido?: string; email?: string; telefono?: string | null; password?: string; dni?: string; fecha_nacimiento?: string; domicilio?: string; contacto_emergencia_nombre?: string; contacto_emergencia_telefono?: string; fecha_ingreso?: string; categoria?: string; tipo_contrato?: string; fecha_fin_contrato?: string | null; notas_administrativas?: string }
+    let body: { accion?: string; vigilador_id?: string; vigilador_operativo_id?: string; nombre?: string; apellido?: string; email?: string; telefono?: string | null; dni?: string; fecha_nacimiento?: string; domicilio?: string; contacto_emergencia_nombre?: string; contacto_emergencia_telefono?: string; fecha_ingreso?: string; categoria?: string; tipo_contrato?: string; fecha_fin_contrato?: string | null; notas_administrativas?: string }
     try { body = await req.json() } catch { return json({ error: "Datos inválidos." }, 400) }
     const targetId = body.vigilador_id?.trim()
     const legacyOperationalId = body.vigilador_operativo_id?.trim()
+
+    if (body.accion === "restablecer_contrasena") {
+      if (!targetId || legacyOperationalId) return json({ error: "Cuenta de vigilador inválida." }, 400)
+      const { data: targetProfile, error: targetProfileError } = await admin.from("perfiles")
+        .select("id,id_empresa,rol").eq("id", targetId).single()
+      if (targetProfileError || !targetProfile || targetProfile.rol !== "vigilador") {
+        return json({ error: "No se encontró una cuenta de vigilador." }, 404)
+      }
+      if (caller.rol !== "super_administrador" && targetProfile.id_empresa !== caller.id_empresa) {
+        return json({ error: "No puede restablecer contraseñas de otra empresa." }, 403)
+      }
+      const { data: operationalTarget, error: operationalTargetError } = await admin.from("vigiladores")
+        .select("id,id_empresa").eq("id_usuario", targetId).single()
+      if (operationalTargetError || !operationalTarget || operationalTarget.id_empresa !== targetProfile.id_empresa) {
+        return json({ error: "No se encontró el registro operativo del vigilador." }, 409)
+      }
+      const { data: fichaTarget, error: fichaTargetError } = await admin.from("fichas_vigiladores")
+        .select("dni").eq("id_vigilador", operationalTarget.id).maybeSingle()
+      if (fichaTargetError || !fichaTarget?.dni) {
+        return json({ error: "El vigilador no tiene un DNI guardado en su ficha." }, 409)
+      }
+      const passwordInicial = String(fichaTarget.dni).replace(/\D/g, "")
+      if (passwordInicial.length < 6) {
+        return json({ error: "El DNI registrado debe contener al menos 6 dígitos para utilizarlo como contraseña inicial." }, 400)
+      }
+      const { error: passwordError } = await admin.auth.admin.updateUserById(targetId, { password: passwordInicial })
+      if (passwordError) {
+        return json({ error: "Supabase no aceptó el DNI como contraseña inicial. Revisá la longitud mínima configurada en Auth." }, 400)
+      }
+      const { error: profileError } = await admin.from("perfiles")
+        .update({ debe_cambiar_contrasena: true }).eq("id", targetId)
+      if (profileError) return json({ error: "La contraseña se restableció, pero no se pudo activar el cambio obligatorio." }, 500)
+      const { error: auditError } = await admin.from("auditoria").insert({
+        id_empresa: targetProfile.id_empresa,
+        id_usuario: caller.id,
+        accion: "RESTABLECER_CONTRASENA_VIGILADOR",
+        entidad: "Vigilador",
+        entidad_id: operationalTarget.id,
+        detalle: { texto: "Restableció la contraseña al DNI; cambio obligatorio al próximo ingreso" },
+        fecha_hora: new Date().toISOString(),
+      })
+      if (auditError) console.error("No se pudo registrar auditoría:", auditError.message)
+      return json({ ok: true })
+    }
 
     if (body.accion === "consultar_email") {
       if (!targetId || legacyOperationalId) return json({ error: "Cuenta de vigilador inválida." }, 400)
@@ -53,7 +97,6 @@ Deno.serve(async (req) => {
     const apellido = body.apellido?.trim()
     const email = body.email?.trim().toLowerCase()
     const telefono = body.telefono?.trim() || null
-    const password = body.password || ""
     const incluyeFicha = ["dni", "fecha_nacimiento", "domicilio", "contacto_emergencia_nombre", "contacto_emergencia_telefono", "fecha_ingreso", "categoria", "tipo_contrato", "fecha_fin_contrato", "notas_administrativas"].some((key) => Object.prototype.hasOwnProperty.call(body, key))
     const ficha = {
       dni: body.dni?.trim() || null,
@@ -69,7 +112,6 @@ Deno.serve(async (req) => {
     }
 
     if ((!targetId && !legacyOperationalId) || (targetId && legacyOperationalId) || !nombre || !apellido || (!legacyOperationalId && !email)) return json({ error: "Vigilador, nombre y apellido son obligatorios; el correo es obligatorio para cuentas vinculadas." }, 400)
-    if (password && password.length < 8) return json({ error: "La contraseña debe tener al menos 8 caracteres." }, 400)
     if (incluyeFicha && (!ficha.dni || !ficha.fecha_nacimiento || !ficha.domicilio || !ficha.fecha_ingreso || !ficha.categoria || !ficha.tipo_contrato)) {
       return json({ error: "Completá DNI, fecha de nacimiento, domicilio y los datos laborales obligatorios." }, 400)
     }
@@ -78,7 +120,6 @@ Deno.serve(async (req) => {
     }
 
     if (legacyOperationalId) {
-      if (password) return json({ error: "Este registro no tiene cuenta de acceso vinculada; no se puede cambiar su contraseña desde aquí." }, 400)
       const { data: operationalLegacy, error: legacyError } = await admin.from("vigiladores")
         .select("id,id_empresa,id_usuario")
         .eq("id", legacyOperationalId)
@@ -136,12 +177,11 @@ Deno.serve(async (req) => {
     const { data: targetAuth, error: targetAuthError } = await admin.auth.admin.getUserById(targetId)
     if (targetAuthError || !targetAuth.user) return json({ error: "No se pudo verificar la cuenta de acceso." }, 409)
 
-    const authUpdates: { email?: string; email_confirm?: boolean; password?: string } = {}
+    const authUpdates: { email?: string; email_confirm?: boolean } = {}
     if (email !== (targetAuth.user.email || "").toLowerCase()) {
       authUpdates.email = email
       authUpdates.email_confirm = true
     }
-    if (password) authUpdates.password = password
     if (Object.keys(authUpdates).length) {
       const { error } = await admin.auth.admin.updateUserById(targetId, authUpdates)
       if (error) return json({ error: error.message }, 400)
@@ -149,7 +189,6 @@ Deno.serve(async (req) => {
 
     const { error: profileError } = await admin.from("perfiles").update({
       nombre, apellido, email, telefono,
-      ...(password ? { debe_cambiar_contrasena: true } : {}),
     }).eq("id", targetId)
     if (profileError) return json({ error: "La cuenta se actualizó, pero falló la actualización del perfil. Contacte a soporte." }, 500)
 
@@ -177,7 +216,7 @@ Deno.serve(async (req) => {
       accion: "EDITAR_VIGILADOR",
       entidad: "Vigilador",
       entidad_id: operational.id,
-      detalle: { texto: "Actualizó datos de acceso y perfil", cambio_email: Boolean(authUpdates.email), cambio_password: Boolean(password) },
+      detalle: { texto: "Actualizó datos de acceso y perfil", cambio_email: Boolean(authUpdates.email) },
       fecha_hora: new Date().toISOString(),
     })
     if (auditError) console.error("No se pudo registrar auditoría:", auditError.message)
