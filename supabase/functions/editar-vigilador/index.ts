@@ -56,8 +56,8 @@ Deno.serve(async (req) => {
         return json({ error: "El vigilador no tiene un DNI guardado en su ficha." }, 409)
       }
       const passwordInicial = String(fichaTarget.dni).replace(/\D/g, "")
-      if (passwordInicial.length < 6) {
-        return json({ error: "El DNI registrado debe contener al menos 6 dígitos para utilizarlo como contraseña inicial." }, 400)
+      if (passwordInicial.length < 8) {
+        return json({ error: "El DNI registrado debe contener al menos 8 dígitos para utilizarlo como contraseña inicial." }, 400)
       }
       // Activar primero el bloqueo. Si Auth falla, restaurar el valor previo.
       const { error: profileError } = await admin.from("perfiles")
