@@ -132,6 +132,7 @@ Deno.serve(async (req) => {
       id_empresa: idEmpresa,
       nombre,
       apellido,
+      email,
       telefono: body.telefono?.trim() || null,
       rol: "vigilador",
       activo: true,
