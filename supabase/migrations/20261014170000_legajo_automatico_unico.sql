@@ -12,8 +12,12 @@ select setval(
   true
 );
 
-with filas as (
-  select id, legajo,
+with base as (
+  select coalesce(max(legajo::bigint) filter (where btrim(legajo) ~ '^[0-9]+$'), 0) as max_legajo
+  from public.vigiladores
+),
+filas as (
+  select id,
          row_number() over (
            partition by nullif(lower(btrim(legajo)), '')
            order by creado_en asc, id asc
@@ -22,14 +26,29 @@ with filas as (
   where legajo is not null and btrim(legajo) <> ''
 ),
 a_corregir as (
-  select id from filas where posicion > 1
-  union
-  select id from public.vigiladores where legajo is null or btrim(legajo) = ''
+  select v.id, v.creado_en
+  from public.vigiladores v
+  left join filas f on f.id = v.id
+  where (v.legajo is null or btrim(v.legajo) = '')
+     or coalesce(f.posicion, 1) > 1
+),
+numerados as (
+  select id, row_number() over (order by creado_en asc, id asc) as numero
+  from a_corregir
 )
 update public.vigiladores v
-set legajo = nextval('public.vigiladores_legajo_seq')::text
-from a_corregir c
-where c.id = v.id;
+set legajo = (b.max_legajo + n.numero)::text
+from numerados n cross join base b
+where n.id = v.id;
+
+select setval(
+  'public.vigiladores_legajo_seq',
+  greatest(
+    coalesce((select max(legajo::bigint) from public.vigiladores where btrim(legajo) ~ '^[0-9]+$'), 0),
+    1
+  ),
+  true
+);
 
 create unique index if not exists vigiladores_legajo_unico_idx
   on public.vigiladores (lower(btrim(legajo)))
