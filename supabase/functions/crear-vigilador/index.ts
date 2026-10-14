@@ -46,7 +46,16 @@ Deno.serve(async (req) => {
       telefono?: string
       id_empresa?: string
       id_objetivo_inicial?: string | null
-      legajo?: string
+      dni?: string
+      fecha_nacimiento?: string
+      domicilio?: string
+      contacto_emergencia_nombre?: string
+      contacto_emergencia_telefono?: string
+      fecha_ingreso?: string
+      categoria?: string
+      tipo_contrato?: string
+      fecha_fin_contrato?: string | null
+      notas_administrativas?: string
     }
 
     try {
@@ -61,10 +70,27 @@ Deno.serve(async (req) => {
     const idEmpresa = caller.id_empresa
     const idObjetivo = body.id_objetivo_inicial || null
     const password = body.password || ""
-    const legajo = body.legajo?.trim() || null
+    const dni = body.dni?.trim() || null
+    const fechaNacimiento = body.fecha_nacimiento || null
+    const domicilio = body.domicilio?.trim() || null
+    const contactoEmergenciaNombre = body.contacto_emergencia_nombre?.trim() || null
+    const contactoEmergenciaTelefono = body.contacto_emergencia_telefono?.trim() || null
+    const fechaIngreso = body.fecha_ingreso || null
+    const categoria = body.categoria?.trim() || null
+    const tipoContrato = body.tipo_contrato?.trim() || null
+    const fechaFinContrato = body.fecha_fin_contrato || null
+    const notasAdministrativas = body.notas_administrativas?.trim() || null
 
     if (!nombre || !apellido || !email || !password || !idEmpresa) {
-      return json({ error: "Nombre, apellido y email son obligatorios." }, 400)
+      return json({ error: "Nombre, apellido, correo y contraseña son obligatorios." }, 400)
+    }
+
+    if (!dni || !fechaNacimiento || !domicilio || !fechaIngreso || !categoria || !tipoContrato) {
+      return json({ error: "Completá los datos personales y laborales obligatorios." }, 400)
+    }
+
+    if ((contactoEmergenciaNombre && !contactoEmergenciaTelefono) || (!contactoEmergenciaNombre && contactoEmergenciaTelefono)) {
+      return json({ error: "Completá nombre y teléfono del contacto de emergencia, o dejá ambos vacíos." }, 400)
     }
 
     if (password.length < 8) {
@@ -122,7 +148,6 @@ Deno.serve(async (req) => {
       .insert({
         id_empresa: idEmpresa,
         id_usuario: userId,
-        legajo,
         nombre,
         apellido,
         telefono: body.telefono?.trim() || null,
