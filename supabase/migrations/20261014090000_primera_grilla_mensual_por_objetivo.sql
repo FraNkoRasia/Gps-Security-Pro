@@ -31,7 +31,8 @@ FROM public.turnos t
 GROUP BY t.id_objetivo, date_trunc('month', t.fecha)::date, t.id_empresa
 ON CONFLICT (id_objetivo, mes) DO NOTHING;
 
--- El trigger general mantiene la excepción de hoy para el flujo autorizado de cambios de turno.\n-- La RPC de la grilla bloquea hoy y fechas anteriores por objetivo/mes.
+-- El trigger general mantiene la excepción de hoy para el flujo autorizado de cambios de turno.
+-- La RPC de la grilla bloquea hoy y fechas anteriores por objetivo/mes.
 CREATE OR REPLACE FUNCTION public.proteger_turnos_de_dias_pasados()
 RETURNS trigger
 LANGUAGE plpgsql
