@@ -44,7 +44,7 @@ DECLARE
   v_solo_horas_extra boolean;
   v_aprobacion_valida boolean;
 BEGIN
-  IF OLD.fecha >= v_fecha_hoy THEN
+  IF OLD.fecha >= v_fecha_hoy AND NEW.fecha >= v_fecha_hoy THEN
     RETURN NEW;
   END IF;
 
