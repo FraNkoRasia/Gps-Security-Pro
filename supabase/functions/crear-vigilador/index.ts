@@ -212,7 +212,7 @@ Deno.serve(async (req) => {
       accion: "CREAR_VIGILADOR",
       entidad: "Vigilador",
       entidad_id: vigilador.id,
-      detalle: { nombre, apellido, email },
+      detalle: { nombre, apellido, email, legajo: vigilador.legajo },
     })
 
     if (auditError) {
