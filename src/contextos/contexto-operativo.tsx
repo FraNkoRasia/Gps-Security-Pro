@@ -63,6 +63,7 @@ const editarVigilador=async(id:string,d:Partial<Usuario> & {password?:string;dni
   if(data?.error)return String(data.error)
  }else{
   if(d.password)return 'Este registro no tiene cuenta de acceso vinculada; no se puede cambiar su contraseña desde aquí.'
+  if(d.email?.trim() && d.email.trim()!==(v.email||'').trim())return 'Este registro no tiene cuenta de acceso vinculada; primero debe vincularse una cuenta para asignarle un correo de acceso.'
   const {error:operativoError}=await supabase.from('vigiladores').update({
    ...('nombre' in d?{nombre:d.nombre}:{}),...('apellido' in d?{apellido:d.apellido}:{}),
    ...('telefono' in d?{telefono:d.telefono||null}:{}),
