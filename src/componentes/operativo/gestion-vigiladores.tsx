@@ -183,8 +183,8 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
     e.preventDefault()
     setError(null)
 
-    if (!nombre.trim() || !apellido.trim() || !email.trim() || (!vigiladorEditando && !password)) {
-      setError('Nombre, apellido, correo electrónico y contraseña son obligatorios.')
+    if (!nombre.trim() || !apellido.trim() || ((!vigiladorEditando || vigiladorEditando.id_usuario) && !email.trim()) || (!vigiladorEditando && !password)) {
+      setError('Nombre y apellido son obligatorios. El correo es obligatorio para cuentas de acceso y la contraseña para altas nuevas.')
       return
     }
 
