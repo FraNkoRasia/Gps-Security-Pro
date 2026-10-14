@@ -131,7 +131,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
     }
 
     if (vigiladorEditando) {
-      editarVigilador(vigiladorEditando.id, {
+      const errorEdicion = await editarVigilador(vigiladorEditando.id, {
         nombre: nombre.trim(),
         apellido: apellido.trim(),
         email: email.trim().toLowerCase(),
@@ -139,7 +139,12 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
         legajo: legajo.trim(),
         ...(password.trim() ? { password: password.trim() } : {})
       })
+      if (errorEdicion) {
+        setError(errorEdicion)
+        return
+      }
       setModalNuevoAbierto(false)
+      setPassword('')
       return
     }
 
