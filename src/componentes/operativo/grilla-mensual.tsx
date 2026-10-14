@@ -81,7 +81,6 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   const turnosVisibles = [
     ...turnos.filter(t => t.id_objetivo !== objetivoSeleccionado || !t.fecha.startsWith(mesSeleccionado) || !Object.prototype.hasOwnProperty.call(borradores, claveBorrador(t.id_vigilador, t.fecha))),
     ...Object.values(borradores).filter(op => op.codigo !== 'borrar').map(op => {
-      const vig = vigiladores.find(v => v.id === op.id_vigilador)
       const tipoAtajo = op.id_tipo_turno ? tiposTurno.find(t => t.id === op.id_tipo_turno) : null
       let tipo: Turno['tipo'] = 'diurno', horas = 12, inicio = '07:00', fin = '19:00', diurnas = 12, nocturnas = 0
       if (tipoAtajo) { horas = tipoAtajo.horas; tipo = tipoAtajo.tipo === 'mixto' ? 'especial' : tipoAtajo.tipo === 'franco' ? 'franco' : tipoAtajo.tipo; inicio = tipoAtajo.hora_inicio || '00:00'; fin = tipoAtajo.hora_fin || '00:00'; diurnas = tipo === 'diurno' ? horas : 0; nocturnas = tipo === 'nocturno' ? horas : 0; if (tipo === 'franco') { horas = 0; diurnas = 0; nocturnas = 0 } }
@@ -97,10 +96,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   const nombreMesSeleccionado = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(fechaMesSeleccionado)
   const totalDiasMes = new Date(anioSeleccionado, numeroMesSeleccionado, 0).getDate()
 
-  const desplazarMes = (cantidad: number) => {
-    const nuevoMes = new Date(anioSeleccionado, numeroMesSeleccionado - 1 + cantidad, 1)
-    setMesSeleccionado(`${nuevoMes.getFullYear()}-${String(nuevoMes.getMonth() + 1).padStart(2, '0')}`)
-  }
+  const cambiarMes = (cantidad: number) => { const nuevoMes = new Date(anioSeleccionado, numeroMesSeleccionado - 1 + cantidad, 1); setMesSeleccionado(`${nuevoMes.getFullYear()}-${String(nuevoMes.getMonth() + 1).padStart(2, '0')}`) }
+  const desplazarMes = (cantidad: number) => { if (hayCambiosPendientes) { const nuevoMes = new Date(anioSeleccionado, numeroMesSeleccionado - 1 + cantidad, 1); setMesPendiente(`${nuevoMes.getFullYear()}-${String(nuevoMes.getMonth() + 1).padStart(2, '0')}`); setModalCambiosSinGuardar(true); return } cambiarMes(cantidad) }
   const claveFeriadosManuales = `${objetivoActual?.id_empresa || 'sin-empresa'}:${objetivoSeleccionado || 'sin-objetivo'}`
   const [feriadosManuales, setFeriadosManuales] = useState<string[]>([])
   const [feriadosNacionales, setFeriadosNacionales] = useState<Record<string, string>>({})
@@ -192,18 +189,17 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
 
   const aplicarCodigoTurno = (codigo: string, idTipoTurno?: string) => {
     if (!celdaEditando) return
-
-    const objId = objetivoSeleccionado || celdaEditando.turnoActual?.id_objetivo || ''
-    if (!objId) return
-
-    asignarTurnoGrilla({
+    const operacion: OperacionGrilla = {
       id_vigilador: celdaEditando.idVigilador,
-      id_objetivo: objId,
       fecha: celdaEditando.fecha,
       codigo,
       id_tipo_turno: idTipoTurno || null
-    })
-
+    }
+    setBorradores(actuales => ({
+      ...actuales,
+      [claveBorrador(celdaEditando.idVigilador, celdaEditando.fecha)]: operacion
+    }))
+    setErrorGuardado('')
     setModalEdicionAbierto(false)
   }
 
@@ -223,7 +219,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
 
   // Cálculos por vigilador (Sección 24)
   const calcularTotalesVigilador = (idVig: string) => {
-    const turnosVig = turnos.filter(
+    const turnosVig = turnosVisibles.filter(
       (t) => t.id_vigilador === idVig && t.id_objetivo === objetivoSeleccionado && t.fecha.startsWith(mesSeleccionado)
     )
 
@@ -254,7 +250,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   const calcularTotalDiario = (dia: number) => {
     const diaStr = dia < 10 ? `0${dia}` : `${dia}`
     const fecha = `${mesSeleccionado}-${diaStr}`
-    const turnosDia = turnos.filter((t) => t.id_objetivo === objetivoSeleccionado && t.fecha === fecha)
+    const turnosDia = turnosVisibles.filter((t) => t.id_objetivo === objetivoSeleccionado && t.fecha === fecha)
     return turnosDia.reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
   }
 
@@ -324,7 +320,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
       const filas = vigiladoresMostrados.map((vigilador) => {
         const celdas = dias.map((dia) => {
           const fecha = `${mesSeleccionado}-${String(dia).padStart(2, '0')}`
-          const turno = turnos.find((item) =>
+          const turno = turnosVisibles.find((item) =>
             item.id_vigilador === vigilador.id &&
             item.id_objetivo === objetivoSeleccionado &&
             item.fecha === fecha
@@ -449,7 +445,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
 
         <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto justify-between lg:justify-end">
           {!soloLectura && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Boton type="button" variante="primario" tamano="chico" disabled={!hayCambiosPendientes || cargandoEstadoGrilla} onClick={iniciarGuardado}>Guardar cambios{hayCambiosPendientes ? ` (${Object.keys(borradores).length})` : ''}</Boton>
               <Boton
                 type="button"
                 variante="secundario"
@@ -583,7 +580,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                     {Array.from({ length: totalDiasMes }, (_, i) => i + 1).map((dia) => {
                       const diaStr = dia < 10 ? `0${dia}` : `${dia}`
                       const fecha = `${mesSeleccionado}-${diaStr}`
-                      const turno = turnos.find(
+                      const turno = turnosVisibles.find(
                         (t) => t.id_vigilador === vig.id && t.id_objetivo === objetivoSeleccionado && t.fecha === fecha
                       )
                       const fechaCelda = fecha
