@@ -162,6 +162,28 @@ Deno.serve(async (req) => {
       return json({ error: vigiladorError?.message || "No se pudo crear la ficha del vigilador." }, 400)
     }
 
+    const { error: fichaError } = await admin.from("fichas_vigiladores").insert({
+      id_vigilador: vigilador.id,
+      id_empresa: idEmpresa,
+      dni,
+      fecha_nacimiento: fechaNacimiento,
+      domicilio,
+      contacto_emergencia_nombre: contactoEmergenciaNombre,
+      contacto_emergencia_telefono: contactoEmergenciaTelefono,
+      fecha_ingreso: fechaIngreso,
+      categoria,
+      tipo_contrato: tipoContrato,
+      fecha_fin_contrato: fechaFinContrato,
+      notas_administrativas: notasAdministrativas,
+    })
+
+    if (fichaError) {
+      await admin.from("vigiladores").delete().eq("id", vigilador.id)
+      await admin.from("perfiles").delete().eq("id", userId)
+      await admin.auth.admin.deleteUser(userId)
+      return json({ error: "No se pudo guardar la ficha personal y laboral: " + fichaError.message }, 400)
+    }
+
     let asignacion = null
     if (idObjetivo) {
       const { data, error } = await admin.from("asignaciones").insert({
