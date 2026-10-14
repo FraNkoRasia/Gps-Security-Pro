@@ -37,6 +37,20 @@ Deno.serve(async (req) => {
       return json({ error: "No hay un cambio obligatorio de contraseña pendiente." }, 409)
     }
 
+    // Evitar que el vigilador conserve el DNI como contraseña después del primer ingreso.
+    const { data: vigilador, error: vigiladorError } = await admin.from("vigiladores")
+      .select("id").eq("id_usuario", authData.user.id).single()
+    if (vigiladorError || !vigilador) {
+      return json({ error: "No se encontró el registro operativo del vigilador." }, 409)
+    }
+    const { data: ficha, error: fichaError } = await admin.from("fichas_vigiladores")
+      .select("dni").eq("id_vigilador", vigilador.id).maybeSingle()
+    if (fichaError) return json({ error: "No se pudo validar la contraseña inicial." }, 500)
+    const dniNormalizado = String(ficha?.dni || "").replace(/\D/g, "")
+    if (dniNormalizado && nueva === dniNormalizado) {
+      return json({ error: "La nueva contraseña no puede ser el DNI. Elegí una contraseña personal." }, 400)
+    }
+
     const { error: updateAuthError } = await admin.auth.admin.updateUserById(authData.user.id, { password: nueva })
     if (updateAuthError) return json({ error: updateAuthError.message }, 400)
 
