@@ -12,6 +12,7 @@ interface ContextoAutenticacionTipo {
   cerrarSesion: () => Promise<void>
   solicitarRecuperacion: (email: string) => Promise<{ exito: boolean; error?: string }>
   cambiarContrasena: (contrasenaActual: string, nuevaContrasena: string) => Promise<{ exito: boolean; error?: string }>
+  cambiarContrasenaObligatoria: (nuevaContrasena: string) => Promise<{ exito: boolean; error?: string }>
 }
 
 const ContextoAutenticacion = createContext<ContextoAutenticacionTipo | undefined>(undefined)
@@ -219,6 +220,31 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
     }
   }
 
+  const cambiarContrasenaObligatoria = async (nuevaContrasena: string) => {
+    if (!hayConexionSupabase || !supabase || !usuario) {
+      return { exito: false, error: 'No hay una sesión activa.' }
+    }
+    if (nuevaContrasena.length < 8) {
+      return { exito: false, error: 'La nueva contraseña debe tener al menos 8 caracteres.' }
+    }
+    try {
+      const { error: errorAuth } = await supabase.auth.updateUser({ password: nuevaContrasena })
+      if (errorAuth) return { exito: false, error: errorAuth.message }
+
+      const { error: errorPerfil } = await supabase
+        .from('perfiles')
+        .update({ debe_cambiar_contrasena: false })
+        .eq('id', usuario.id)
+      if (errorPerfil) {
+        return { exito: false, error: 'La contraseña se actualizó, pero no se pudo confirmar el cambio obligatorio. Cerrá sesión y volvé a ingresar; si el aviso continúa, contactá a administración.' }
+      }
+      setUsuario((actual) => actual ? { ...actual, debe_cambiar_contrasena: false } : actual)
+      return { exito: true }
+    } catch (err) {
+      return { exito: false, error: err instanceof Error ? err.message : 'No se pudo actualizar la contraseña.' }
+    }
+  }
+
   const cerrarSesion = async () => {
     setCargando(true)
     try {
@@ -261,7 +287,8 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
         iniciarSesion,
         cerrarSesion,
         solicitarRecuperacion,
-        cambiarContrasena
+        cambiarContrasena,
+        cambiarContrasenaObligatoria
       }}
     >
       {children}
