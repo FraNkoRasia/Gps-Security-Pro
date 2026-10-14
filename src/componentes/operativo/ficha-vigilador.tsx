@@ -132,7 +132,7 @@ export const FichaVigilador: React.FC<{
   const turnosVigilador = turnos.filter(t => t.id_vigilador === idVigiladorDb).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 20)
   const novedadesVigilador = novedades.filter(n => n.id_vigilador === idVigiladorDb).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 10)
   const extrasVigilador = horasExtra.filter(h => h.id_vigilador === idVigiladorDb).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 10)
-  const cambiosVigilador = cambios.filter(c => c.id_solicitante === vigilador?.id || c.id_destinatario === vigilador?.id).sort((a, b) => b.fecha_turno.localeCompare(a.fecha_turno)).slice(0, 10)
+  const cambiosVigilador = cambios.filter(c => c.id_solicitante === idVigiladorDb || c.id_destinatario === idVigiladorDb).sort((a, b) => b.fecha_turno.localeCompare(a.fecha_turno)).slice(0, 10)
   const cambiar = (key: keyof Ficha, value: string) => setFicha(prev => ({ ...prev, [key]: value }))
   const etiquetaInput = 'mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300'
   const claseInput = 'w-full min-h-[42px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-[#0A0F1A] dark:text-slate-100'
