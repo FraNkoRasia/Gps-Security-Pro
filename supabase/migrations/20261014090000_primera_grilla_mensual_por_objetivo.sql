@@ -31,7 +31,7 @@ FROM public.turnos t
 GROUP BY t.id_objetivo, date_trunc('month', t.fecha)::date, t.id_empresa
 ON CONFLICT (id_objetivo, mes) DO NOTHING;
 
--- La regla de bloqueo ahora incluye el día de hoy.
+-- El trigger general mantiene la excepción de hoy para el flujo autorizado de cambios de turno.\n-- La RPC de la grilla bloquea hoy y fechas anteriores por objetivo/mes.
 CREATE OR REPLACE FUNCTION public.proteger_turnos_de_dias_pasados()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -43,7 +43,7 @@ DECLARE
   v_solo_horas_extra boolean;
   v_aprobacion_valida boolean;
 BEGIN
-  IF OLD.fecha > v_fecha_hoy THEN
+  IF OLD.fecha >= v_fecha_hoy THEN
     RETURN NEW;
   END IF;
 
@@ -68,7 +68,7 @@ BEGIN
     END IF;
   END IF;
 
-  RAISE EXCEPTION 'No se pueden modificar turnos de hoy ni de días pasados. Las horas extra solo se actualizan al aprobar una solicitud válida.'
+  RAISE EXCEPTION 'No se pueden modificar turnos de días pasados. Las horas extra solo se actualizan al aprobar una solicitud válida.'
     USING ERRCODE = '42501';
 END;
 $$;
