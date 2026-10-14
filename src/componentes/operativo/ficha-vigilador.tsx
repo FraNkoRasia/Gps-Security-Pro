@@ -52,7 +52,6 @@ export const FichaVigilador: React.FC<{
 }> = ({ abierto, vigilador, alCerrar, asignaciones, objetivos, turnos, novedades, horasExtra, cambios }) => {
   const [ficha, setFicha] = useState<Ficha>(vacia)
   const [cabecera, setCabecera] = useState<CabeceraVigilador>({ nombre: '', apellido: '', email: '', telefono: '', legajo: '' })
-  const [idVigiladorDb, setIdVigiladorDb] = useState<string | null>(null)
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState('')
   const [pestana, setPestana] = useState<'personal' | 'laboral' | 'objetivos' | 'actividad' | 'documentacion'>('personal')
@@ -83,7 +82,6 @@ export const FichaVigilador: React.FC<{
           : Promise.resolve({ data: null, error: null })
       ])
       if (cancelado) return
-      setIdVigiladorDb(registro.id)
       const perfil = resultadoPerfil.data
       setCabecera({
         nombre: registro.nombre || perfil?.nombre || vigilador.nombre || '',
