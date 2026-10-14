@@ -193,7 +193,7 @@ Deno.serve(async (req) => {
         fecha_inicio: new Date().toISOString().slice(0, 10),
         activa: true,
         motivo_traslado: "Asignación inicial al dar de alta",
-        creado_por: userId,
+        creado_por: caller.id,
       }).select("*").single()
 
       if (error) {
