@@ -80,7 +80,7 @@ BEGIN
       AND NEW.fecha <= v_fecha_hoy
   ) INTO v_grilla_bloqueada;
 
-  IF OLD.fecha < v_fecha_hoy OR OLD.fecha = v_fecha_hoy OR v_grilla_bloqueada THEN
+  IF OLD.fecha <= v_fecha_hoy OR NEW.fecha <= v_fecha_hoy OR v_grilla_bloqueada THEN
     RAISE EXCEPTION 'No se pueden modificar turnos de hoy ni de días pasados en una grilla ya creada. Las horas extra solo se actualizan al aprobar una solicitud válida.'
       USING ERRCODE = '42501';
   END IF;
