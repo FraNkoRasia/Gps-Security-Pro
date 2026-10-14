@@ -30,9 +30,10 @@ Deno.serve(async (req) => {
       return json({ error: "Solo administración puede editar vigiladores." }, 403)
     }
 
-    let body: { vigilador_id?: string; nombre?: string; apellido?: string; email?: string; telefono?: string | null; password?: string; dni?: string; fecha_nacimiento?: string; domicilio?: string; contacto_emergencia_nombre?: string; contacto_emergencia_telefono?: string; fecha_ingreso?: string; categoria?: string; tipo_contrato?: string; fecha_fin_contrato?: string | null; notas_administrativas?: string }
+    let body: { vigilador_id?: string; vigilador_operativo_id?: string; nombre?: string; apellido?: string; email?: string; telefono?: string | null; password?: string; dni?: string; fecha_nacimiento?: string; domicilio?: string; contacto_emergencia_nombre?: string; contacto_emergencia_telefono?: string; fecha_ingreso?: string; categoria?: string; tipo_contrato?: string; fecha_fin_contrato?: string | null; notas_administrativas?: string }
     try { body = await req.json() } catch { return json({ error: "Datos inválidos." }, 400) }
     const targetId = body.vigilador_id?.trim()
+    const legacyOperationalId = body.vigilador_operativo_id?.trim()
     const nombre = body.nombre?.trim()
     const apellido = body.apellido?.trim()
     const email = body.email?.trim().toLowerCase()
@@ -52,13 +53,55 @@ Deno.serve(async (req) => {
       notas_administrativas: body.notas_administrativas?.trim() || null,
     }
 
-    if (!targetId || !nombre || !apellido || !email) return json({ error: "Vigilador, nombre, apellido y correo son obligatorios." }, 400)
+    if ((!targetId && !legacyOperationalId) || (targetId && legacyOperationalId) || !nombre || !apellido || (!legacyOperationalId && !email)) return json({ error: "Vigilador, nombre y apellido son obligatorios; el correo es obligatorio para cuentas vinculadas." }, 400)
     if (password && password.length < 8) return json({ error: "La contraseña debe tener al menos 8 caracteres." }, 400)
     if (incluyeFicha && (!ficha.dni || !ficha.fecha_nacimiento || !ficha.domicilio || !ficha.fecha_ingreso || !ficha.categoria || !ficha.tipo_contrato)) {
       return json({ error: "Completá DNI, fecha de nacimiento, domicilio y los datos laborales obligatorios." }, 400)
     }
     if (incluyeFicha && ((ficha.contacto_emergencia_nombre && !ficha.contacto_emergencia_telefono) || (!ficha.contacto_emergencia_nombre && ficha.contacto_emergencia_telefono))) {
       return json({ error: "Completá nombre y teléfono del contacto de emergencia, o dejá ambos vacíos." }, 400)
+    }
+
+    if (legacyOperationalId) {
+      if (password) return json({ error: "Este registro no tiene cuenta de acceso vinculada; no se puede cambiar su contraseña desde aquí." }, 400)
+      const { data: operationalLegacy, error: legacyError } = await admin.from("vigiladores")
+        .select("id,id_empresa,id_usuario")
+        .eq("id", legacyOperationalId)
+        .maybeSingle()
+      if (legacyError || !operationalLegacy) return json({ error: "No se encontró el registro operativo del vigilador." }, 404)
+      if (operationalLegacy.id_usuario) return json({ error: "El vigilador tiene una cuenta vinculada; actualizá su perfil por el flujo normal." }, 409)
+      if (caller.rol !== "super_administrador" && operationalLegacy.id_empresa !== caller.id_empresa) {
+        return json({ error: "No puede editar personal de otra empresa." }, 403)
+      }
+      if (!operationalLegacy.id_empresa) return json({ error: "El vigilador no tiene una empresa asociada." }, 409)
+
+      const { error: fichaError } = await admin.from("fichas_vigiladores").upsert({
+        id_vigilador: operationalLegacy.id,
+        id_empresa: operationalLegacy.id_empresa,
+        ...ficha,
+        actualizado_en: new Date().toISOString(),
+      }, { onConflict: "id_vigilador" })
+      if (fichaError) {
+        console.error("Error guardando ficha de vigilador sin cuenta:", fichaError.message)
+        return json({ error: "No se pudo guardar la ficha personal y laboral: " + fichaError.message }, 500)
+      }
+
+      const { error: legacyUpdateError } = await admin.from("vigiladores").update({
+        nombre, apellido, telefono,
+      }).eq("id", operationalLegacy.id)
+      if (legacyUpdateError) return json({ error: "La ficha se guardó, pero no se pudieron actualizar los datos operativos: " + legacyUpdateError.message }, 500)
+
+      const { error: auditError } = await admin.from("auditoria").insert({
+        id_empresa: operationalLegacy.id_empresa,
+        id_usuario: caller.id,
+        accion: "EDITAR_VIGILADOR",
+        entidad: "Vigilador",
+        entidad_id: operationalLegacy.id,
+        detalle: { texto: "Completó datos personales y laborales de un vigilador sin cuenta vinculada" },
+        fecha_hora: new Date().toISOString(),
+      })
+      if (auditError) console.error("No se pudo registrar auditoría:", auditError.message)
+      return json({ ok: true })
     }
 
     const { data: target, error: targetError } = await admin.from("perfiles")
