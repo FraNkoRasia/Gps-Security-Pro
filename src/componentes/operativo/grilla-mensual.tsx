@@ -14,6 +14,7 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 import { cargarFeriadosManuales, guardarFeriadosManuales } from '@/utilidades/feriados-manuales'
 import { cargarFeriadosArgentina } from '@/utilidades/feriados-argentina'
 import type { Turno } from '@/tipos'
+import { supabase } from '@/servicios/supabase'
 
 const formatearHorasMinutos = (horas: number) => {
   const minutosTotales = Math.round(horas * 60)
@@ -31,8 +32,10 @@ const formatearHorasCasillero = (turno: Turno) => {
 const fechaClave = (fecha: Date) =>
   `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`
 
-export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: boolean }> = ({ objetivoInicial = '', soloLectura = false }) => {
-  const { objetivos, vigiladores, asignaciones, turnos, tiposTurno, asignarTurnoGrilla } = useOperativo()
+type OperacionGrilla = { id_vigilador: string; fecha: string; codigo: string; id_tipo_turno?: string | null }
+
+export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: boolean; onCambiosPendientesChange?: (pendientes: boolean) => void }> = ({ objetivoInicial = '', soloLectura = false, onCambiosPendientesChange }) => {
+  const { objetivos, vigiladores, asignaciones, turnos, tiposTurno, guardarGrillaMensual } = useOperativo()
   const [objetivoSeleccionado] = useState(objetivoInicial)
   const objetivoActual = objetivos.find((objetivo) => objetivo.id === objetivoSeleccionado)
 
@@ -45,14 +48,56 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   const fechaHoyClave = fechaClave(hoy)
   const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`
   const soloLecturaEfectiva = soloLectura || mesSeleccionado < mesActual
+  const [grillaCreada, setGrillaCreada] = useState(false)
+  const [cargandoEstadoGrilla, setCargandoEstadoGrilla] = useState(true)
+  const [borradores, setBorradores] = useState<Record<string, OperacionGrilla>>({})
+  const [modalPrimeraCreacion, setModalPrimeraCreacion] = useState(false)
+  const [modalCambiosSinGuardar, setModalCambiosSinGuardar] = useState(false)
+  const [mesPendiente, setMesPendiente] = useState<string | null>(null)
+  const [avisoBloqueo, setAvisoBloqueo] = useState('')
+  const [errorGuardado, setErrorGuardado] = useState('')
+  const hayCambiosPendientes = Object.keys(borradores).length > 0
+  useEffect(() => { onCambiosPendientesChange?.(hayCambiosPendientes) }, [hayCambiosPendientes, onCambiosPendientesChange])
+  useEffect(() => {
+    let cancelado = false
+    setCargandoEstadoGrilla(true)
+    setGrillaCreada(false)
+    if (soloLectura || !supabase || !objetivoSeleccionado) { setGrillaCreada(true); setCargandoEstadoGrilla(false); return }
+    supabase.from('grillas_mensuales').select('mes').eq('id_objetivo', objetivoSeleccionado).eq('mes', `${mesSeleccionado}-01`).maybeSingle().then(({ data, error }) => {
+      if (cancelado) return
+      setGrillaCreada(error ? true : Boolean(data))
+      if (error) setErrorGuardado('No se pudo verificar el estado de esta grilla. Por seguridad, la edición de fechas bloqueadas queda deshabilitada.')
+      setCargandoEstadoGrilla(false)
+    })
+    return () => { cancelado = true }
+  }, [objetivoSeleccionado, mesSeleccionado, soloLectura])
+  useEffect(() => {
+    const antesDeSalir = (evento: BeforeUnloadEvent) => { if (!hayCambiosPendientes) return; evento.preventDefault(); evento.returnValue = '' }
+    window.addEventListener('beforeunload', antesDeSalir)
+    return () => window.removeEventListener('beforeunload', antesDeSalir)
+  }, [hayCambiosPendientes])
+  const mostrarAvisoBloqueo = () => { setAvisoBloqueo('No se puede editar un día anterior o igual al día de hoy.'); window.setTimeout(() => setAvisoBloqueo(''), 1600) }
+  const claveBorrador = (idVigilador: string, fecha: string) => `${idVigilador}:${fecha}`
+  const turnosVisibles = [
+    ...turnos.filter(t => t.id_objetivo !== objetivoSeleccionado || !t.fecha.startsWith(mesSeleccionado) || !Object.prototype.hasOwnProperty.call(borradores, claveBorrador(t.id_vigilador, t.fecha))),
+    ...Object.values(borradores).filter(op => op.codigo !== 'borrar').map(op => {
+      const tipoAtajo = op.id_tipo_turno ? tiposTurno.find(t => t.id === op.id_tipo_turno) : null
+      let tipo: Turno['tipo'] = 'diurno', horas = 12, inicio = '07:00', fin = '19:00', diurnas = 12, nocturnas = 0
+      if (tipoAtajo) { horas = tipoAtajo.horas; tipo = tipoAtajo.tipo === 'mixto' ? 'especial' : tipoAtajo.tipo === 'franco' ? 'franco' : tipoAtajo.tipo; inicio = tipoAtajo.hora_inicio || '00:00'; fin = tipoAtajo.hora_fin || '00:00'; diurnas = tipo === 'diurno' ? horas : 0; nocturnas = tipo === 'nocturno' ? horas : 0; if (tipo === 'franco') { horas = 0; diurnas = 0; nocturnas = 0 } }
+      else if (op.codigo === '12🌙') { tipo = 'nocturno'; inicio = '19:00'; fin = '07:00'; diurnas = 3; nocturnas = 9 }
+      else if (op.codigo === '10') { tipo = 'especial'; horas = 10; inicio = '08:00'; fin = '18:00'; diurnas = 10 }
+      else if (op.codigo === '8') { tipo = 'diurno'; horas = 8; inicio = '08:00'; fin = '16:00'; diurnas = 8 }
+      else if (op.codigo === 'F') { tipo = 'franco'; horas = 0; inicio = '00:00'; fin = '00:00'; diurnas = 0 }
+      const fechaObj = new Date(`${op.fecha}T12:00:00`)
+      return { id: `borrador:${claveBorrador(op.id_vigilador, op.fecha)}`, id_empresa: objetivoActual?.id_empresa || '', id_objetivo: objetivoSeleccionado, id_vigilador: op.id_vigilador, fecha: op.fecha, hora_inicio: inicio, hora_fin: fin, horas_totales: horas, tipo, horas_diurnas: diurnas, horas_nocturnas: nocturnas, es_feriado: false, es_domingo: fechaObj.getDay() === 0, horas_extra: 0, id_tipo_turno: op.id_tipo_turno || null, estado: 'programado' as const }
+    })
+  ]
   const fechaMesSeleccionado = new Date(anioSeleccionado, numeroMesSeleccionado - 1, 1)
   const nombreMesSeleccionado = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(fechaMesSeleccionado)
   const totalDiasMes = new Date(anioSeleccionado, numeroMesSeleccionado, 0).getDate()
 
-  const desplazarMes = (cantidad: number) => {
-    const nuevoMes = new Date(anioSeleccionado, numeroMesSeleccionado - 1 + cantidad, 1)
-    setMesSeleccionado(`${nuevoMes.getFullYear()}-${String(nuevoMes.getMonth() + 1).padStart(2, '0')}`)
-  }
+  const cambiarMes = (cantidad: number) => { const nuevoMes = new Date(anioSeleccionado, numeroMesSeleccionado - 1 + cantidad, 1); setMesSeleccionado(`${nuevoMes.getFullYear()}-${String(nuevoMes.getMonth() + 1).padStart(2, '0')}`) }
+  const desplazarMes = (cantidad: number) => { if (hayCambiosPendientes) { const nuevoMes = new Date(anioSeleccionado, numeroMesSeleccionado - 1 + cantidad, 1); setMesPendiente(`${nuevoMes.getFullYear()}-${String(nuevoMes.getMonth() + 1).padStart(2, '0')}`); setModalCambiosSinGuardar(true); return } cambiarMes(cantidad) }
   const claveFeriadosManuales = `${objetivoActual?.id_empresa || 'sin-empresa'}:${objetivoSeleccionado || 'sin-objetivo'}`
   const [feriadosManuales, setFeriadosManuales] = useState<string[]>([])
   const [feriadosNacionales, setFeriadosNacionales] = useState<Record<string, string>>({})
@@ -126,8 +171,9 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   const abrirEditarCelda = (idVig: string, nombreVig: string, dia: number) => {
     const diaStr = dia < 10 ? `0${dia}` : `${dia}`
     const fecha = `${mesSeleccionado}-${diaStr}`
-    if (soloLecturaEfectiva || fecha < fechaHoyClave) return
-    const turnoActual = turnos.find(
+    if (soloLecturaEfectiva || cargandoEstadoGrilla) return
+    if (grillaCreada && fecha <= fechaHoyClave) { mostrarAvisoBloqueo(); return }
+    const turnoActual = turnosVisibles.find(
       (t) => t.id_vigilador === idVig && t.id_objetivo === objetivoSeleccionado && t.fecha === fecha
     )
 
@@ -143,24 +189,56 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
 
   const aplicarCodigoTurno = (codigo: string, idTipoTurno?: string) => {
     if (!celdaEditando) return
+    const clave = claveBorrador(celdaEditando.idVigilador, celdaEditando.fecha)
+    const turnoOriginal = turnos.find(
+      (t) => t.id_vigilador === celdaEditando.idVigilador &&
+        t.id_objetivo === objetivoSeleccionado && t.fecha === celdaEditando.fecha
+    )
+    const codigoOriginal = turnoOriginal
+      ? turnoOriginal.tipo === 'franco' ? 'F'
+        : turnoOriginal.tipo === 'nocturno' ? '12🌙'
+        : turnoOriginal.tipo === 'especial' && Number(turnoOriginal.horas_totales) === 10 ? '10'
+        : turnoOriginal.tipo === 'diurno' && Number(turnoOriginal.horas_totales) === 8 ? '8'
+        : '12☀️'
+      : null
+    const esValorOriginal = turnoOriginal
+      ? (idTipoTurno
+          ? turnoOriginal.id_tipo_turno === idTipoTurno
+          : !turnoOriginal.id_tipo_turno && codigo === codigoOriginal)
+      : codigo === 'borrar'
 
-    const objId = objetivoSeleccionado || celdaEditando.turnoActual?.id_objetivo || ''
-    if (!objId) return
-
-    asignarTurnoGrilla({
-      id_vigilador: celdaEditando.idVigilador,
-      id_objetivo: objId,
-      fecha: celdaEditando.fecha,
-      codigo,
-      id_tipo_turno: idTipoTurno || null
+    setBorradores(actuales => {
+      const siguientes = { ...actuales }
+      if (esValorOriginal) delete siguientes[clave]
+      else siguientes[clave] = {
+        id_vigilador: celdaEditando.idVigilador,
+        fecha: celdaEditando.fecha,
+        codigo,
+        id_tipo_turno: idTipoTurno || null
+      }
+      return siguientes
     })
-
+    setErrorGuardado('')
     setModalEdicionAbierto(false)
   }
 
+  const guardarCambios = async () => {
+    if (!objetivoSeleccionado || !hayCambiosPendientes) return
+    setErrorGuardado('')
+    const operaciones = Object.values(borradores)
+    const error = await guardarGrillaMensual(objetivoSeleccionado, mesSeleccionado, operaciones)
+    if (error) { setErrorGuardado(error); return }
+    setBorradores({})
+    setGrillaCreada(true)
+    setModalPrimeraCreacion(false)
+    setModalCambiosSinGuardar(false)
+  }
+
+  const iniciarGuardado = () => { if (!hayCambiosPendientes || cargandoEstadoGrilla) return; if (!grillaCreada) setModalPrimeraCreacion(true); else void guardarCambios() }
+
   // Cálculos por vigilador (Sección 24)
   const calcularTotalesVigilador = (idVig: string) => {
-    const turnosVig = turnos.filter(
+    const turnosVig = turnosVisibles.filter(
       (t) => t.id_vigilador === idVig && t.id_objetivo === objetivoSeleccionado && t.fecha.startsWith(mesSeleccionado)
     )
 
@@ -191,7 +269,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
   const calcularTotalDiario = (dia: number) => {
     const diaStr = dia < 10 ? `0${dia}` : `${dia}`
     const fecha = `${mesSeleccionado}-${diaStr}`
-    const turnosDia = turnos.filter((t) => t.id_objetivo === objetivoSeleccionado && t.fecha === fecha)
+    const turnosDia = turnosVisibles.filter((t) => t.id_objetivo === objetivoSeleccionado && t.fecha === fecha)
     return turnosDia.reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
   }
 
@@ -261,7 +339,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
       const filas = vigiladoresMostrados.map((vigilador) => {
         const celdas = dias.map((dia) => {
           const fecha = `${mesSeleccionado}-${String(dia).padStart(2, '0')}`
-          const turno = turnos.find((item) =>
+          const turno = turnosVisibles.find((item) =>
             item.id_vigilador === vigilador.id &&
             item.id_objetivo === objetivoSeleccionado &&
             item.fecha === fecha
@@ -372,6 +450,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
 
   return (
     <div className="grilla-mensual space-y-5">
+      {avisoBloqueo && <div role="status" className="fixed bottom-5 left-1/2 z-[10000] -translate-x-1/2 rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white shadow-xl">{avisoBloqueo}</div>}
       {/* Controles de la grilla mensual */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div>
@@ -385,7 +464,8 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
 
         <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto justify-between lg:justify-end">
           {!soloLectura && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Boton type="button" variante="primario" tamano="chico" disabled={!hayCambiosPendientes || cargandoEstadoGrilla || soloLecturaEfectiva} onClick={iniciarGuardado}>Guardar cambios{hayCambiosPendientes ? ` (${Object.keys(borradores).length})` : ''}</Boton>
               <Boton
                 type="button"
                 variante="secundario"
@@ -519,19 +599,19 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                     {Array.from({ length: totalDiasMes }, (_, i) => i + 1).map((dia) => {
                       const diaStr = dia < 10 ? `0${dia}` : `${dia}`
                       const fecha = `${mesSeleccionado}-${diaStr}`
-                      const turno = turnos.find(
+                      const turno = turnosVisibles.find(
                         (t) => t.id_vigilador === vig.id && t.id_objetivo === objetivoSeleccionado && t.fecha === fecha
                       )
                       const fechaCelda = fecha
-                      const celdaBloqueada = soloLecturaEfectiva || fechaCelda < fechaHoyClave
+                      const celdaBloqueada = soloLecturaEfectiva || cargandoEstadoGrilla || (grillaCreada && fechaCelda <= fechaHoyClave)
                       const feriadoCelda = nombreFeriadoEnFecha(fechaCelda)
 
                       return (
                         <td
                           key={dia}
-                          onClick={() => !celdaBloqueada && abrirEditarCelda(vig.id, `${vig.nombre} ${vig.apellido}`, dia)}
+                          onClick={() => { if (celdaBloqueada) { if (!soloLectura && grillaCreada && fechaCelda <= fechaHoyClave) mostrarAvisoBloqueo(); return } abrirEditarCelda(vig.id, `${vig.nombre} ${vig.apellido}`, dia) }}
                           className={`p-1 text-center border-r border-slate-200 dark:border-slate-800/70 transition-colors select-none group ${feriadoCelda ? 'bg-amber-50 dark:bg-amber-950/20' : 'bg-white dark:bg-[#0C121E]'} ${celdaBloqueada ? '' : 'cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-800/80'}`}
-                          title={feriadoCelda ? `${feriadoCelda} · ${fechaCelda}` : celdaBloqueada ? 'Día pasado: turno bloqueado para edición' : 'Clic para modificar turno'}
+                          title={feriadoCelda ? `${feriadoCelda} · ${fechaCelda}` : celdaBloqueada ? 'Día bloqueado para edición' : 'Clic para modificar turno'}
                         >
                           <div
                             className={`h-10 sm:h-7 min-w-[38px] sm:min-w-0 flex items-center justify-center rounded-lg border transition-transform group-hover:scale-105 ${
@@ -599,6 +679,16 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
           </table>
         </div>
       </Tarjeta>
+
+      {errorGuardado && <div role="alert" className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">{errorGuardado}</div>}
+
+      <Dialogo abierto={modalPrimeraCreacion} alCerrar={() => setModalPrimeraCreacion(false)} titulo="Confirmar creación de grilla" subtitulo={nombreMesSeleccionado} tamano="medio">
+        <div className="space-y-4"><p className="text-sm leading-6 text-slate-600 dark:text-slate-300">Esta es la primera vez que se guarda la grilla de este objetivo para este mes. Después de guardar, las fechas que ya pasaron, incluido el día de hoy, quedarán bloqueadas y no podrán editarse. Esta regla no afectará las grillas de otros objetivos ni otros meses.</p><div className="flex justify-end gap-2"><Boton variante="secundario" onClick={() => setModalPrimeraCreacion(false)}>Cancelar</Boton><Boton variante="primario" onClick={() => void guardarCambios()}>Confirmar</Boton></div></div>
+      </Dialogo>
+
+      <Dialogo abierto={modalCambiosSinGuardar} alCerrar={() => setModalCambiosSinGuardar(false)} titulo="Hay cambios sin guardar" tamano="medio">
+        <div className="space-y-4"><p className="text-sm leading-6 text-slate-600 dark:text-slate-300">Si salís ahora, se perderán los cambios que hiciste en esta grilla.</p><div className="flex justify-end gap-2"><Boton variante="secundario" onClick={() => { setModalCambiosSinGuardar(false); setMesPendiente(null) }}>Seguir editando</Boton><Boton variante="peligro" onClick={() => { setBorradores({}); setModalCambiosSinGuardar(false); if (mesPendiente) setMesSeleccionado(mesPendiente); setMesPendiente(null); }}>Descartar cambios</Boton></div></div>
+      </Dialogo>
 
       {/* Modal Interactivo de Asignación / Edición de Celda de Turno */}
       <Dialogo
