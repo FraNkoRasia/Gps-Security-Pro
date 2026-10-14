@@ -368,7 +368,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    // No devolver la contraseña al cliente.
+    // No devolver la contraseña al cliente
     return json({
       vigilador,
       asignacion,
