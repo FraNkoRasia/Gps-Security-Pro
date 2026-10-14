@@ -48,8 +48,7 @@ const editarVigilador=async(id:string,d:Partial<Usuario> & {password?:string}):P
  if(v.id_usuario){
   const {data,error}=await supabase.functions.invoke('editar-vigilador',{body:{
    vigilador_id:v.id_usuario,nombre:d.nombre??v.nombre,apellido:d.apellido??v.apellido,
-   email:d.email??v.email,telefono:d.telefono??v.telefono??null,
-   legajo:('legajo' in d ? d.legajo : v.legajo)??null,password:d.password||''
+   email:d.email??v.email,telefono:d.telefono??v.telefono??null,password:d.password||''
   }})
   if(error){
    console.error('No se pudo editar el vigilador:',error)
@@ -62,7 +61,7 @@ const editarVigilador=async(id:string,d:Partial<Usuario> & {password?:string}):P
   if(d.email || d.password)return 'Este registro no tiene cuenta de acceso vinculada; no se puede cambiar su correo ni contraseña desde aquí.'
   const {error}=await supabase.from('vigiladores').update({
    ...('nombre' in d?{nombre:d.nombre}:{}),...('apellido' in d?{apellido:d.apellido}:{}),
-   ...('telefono' in d?{telefono:d.telefono||null}:{}),...('legajo' in d?{legajo:d.legajo||null}:{}),
+   ...('telefono' in d?{telefono:d.telefono||null}:{}),
   }).eq('id',v.id)
   if(error)return error.message
  }
