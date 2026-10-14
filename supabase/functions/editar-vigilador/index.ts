@@ -38,6 +38,7 @@ Deno.serve(async (req) => {
     const email = body.email?.trim().toLowerCase()
     const telefono = body.telefono?.trim() || null
     const password = body.password || ""
+    const incluyeFicha = ["dni", "fecha_nacimiento", "domicilio", "contacto_emergencia_nombre", "contacto_emergencia_telefono", "fecha_ingreso", "categoria", "tipo_contrato", "fecha_fin_contrato", "notas_administrativas"].some((key) => Object.prototype.hasOwnProperty.call(body, key))
     const ficha = {
       dni: body.dni?.trim() || null,
       fecha_nacimiento: body.fecha_nacimiento || null,
@@ -53,10 +54,10 @@ Deno.serve(async (req) => {
 
     if (!targetId || !nombre || !apellido || !email) return json({ error: "Vigilador, nombre, apellido y correo son obligatorios." }, 400)
     if (password && password.length < 8) return json({ error: "La contraseña debe tener al menos 8 caracteres." }, 400)
-    if (!ficha.dni || !ficha.fecha_nacimiento || !ficha.domicilio || !ficha.fecha_ingreso || !ficha.categoria || !ficha.tipo_contrato) {
+    if (incluyeFicha && (!ficha.dni || !ficha.fecha_nacimiento || !ficha.domicilio || !ficha.fecha_ingreso || !ficha.categoria || !ficha.tipo_contrato)) {
       return json({ error: "Completá DNI, fecha de nacimiento, domicilio y los datos laborales obligatorios." }, 400)
     }
-    if ((ficha.contacto_emergencia_nombre && !ficha.contacto_emergencia_telefono) || (!ficha.contacto_emergencia_nombre && ficha.contacto_emergencia_telefono)) {
+    if (incluyeFicha && ((ficha.contacto_emergencia_nombre && !ficha.contacto_emergencia_telefono) || (!ficha.contacto_emergencia_nombre && ficha.contacto_emergencia_telefono))) {
       return json({ error: "Completá nombre y teléfono del contacto de emergencia, o dejá ambos vacíos." }, 400)
     }
 
@@ -99,15 +100,17 @@ Deno.serve(async (req) => {
     }).eq("id", operational.id)
     if (operationalUpdateError) return json({ error: "El perfil se actualizó, pero falló la actualización operativa. Contacte a soporte." }, 500)
 
-    const { error: fichaError } = await admin.from("fichas_vigiladores").upsert({
-      id_vigilador: operational.id,
-      id_empresa: target.id_empresa,
-      ...ficha,
-      actualizado_en: new Date().toISOString(),
-    }, { onConflict: "id_vigilador" })
-    if (fichaError) {
-      console.error("Error guardando ficha personal/laboral:", fichaError.message)
-      return json({ error: "El perfil se actualizó, pero no se pudo guardar la ficha personal y laboral: " + fichaError.message }, 500)
+    if (incluyeFicha) {
+      const { error: fichaError } = await admin.from("fichas_vigiladores").upsert({
+        id_vigilador: operational.id,
+        id_empresa: target.id_empresa,
+        ...ficha,
+        actualizado_en: new Date().toISOString(),
+      }, { onConflict: "id_vigilador" })
+      if (fichaError) {
+        console.error("Error guardando ficha personal/laboral:", fichaError.message)
+        return json({ error: "El perfil se actualizó, pero no se pudo guardar la ficha personal y laboral: " + fichaError.message }, 500)
+      }
     }
 
     const { error: auditError } = await admin.from("auditoria").insert({
