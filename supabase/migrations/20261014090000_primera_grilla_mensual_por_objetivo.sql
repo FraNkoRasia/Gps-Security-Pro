@@ -256,7 +256,7 @@ BEGIN
       ELSIF v_codigo = '10' THEN
         v_tipo := 'especial'; v_horas := 10; v_inicio := '08:00'; v_fin := '18:00'; v_diurnas := 10; v_nocturnas := 0;
       ELSIF v_codigo = '8' THEN
-        v_tipo := 'especial'; v_horas := 8; v_inicio := '08:00'; v_fin := '16:00'; v_diurnas := 8; v_nocturnas := 0;
+        v_tipo := 'diurno'; v_horas := 8; v_inicio := '08:00'; v_fin := '16:00'; v_diurnas := 8; v_nocturnas := 0;
       ELSIF v_codigo = 'F' THEN
         v_tipo := 'franco'; v_horas := 0; v_inicio := '00:00'; v_fin := '00:00'; v_diurnas := 0; v_nocturnas := 0;
       ELSIF v_codigo NOT IN ('12☀️','12🌙','10','8','F') THEN
