@@ -41,6 +41,12 @@ const editarObjetivo=(id:string,d:Partial<Objetivo>)=>{void(async()=>{if(!supaba
 const eliminarObjetivo=(id:string)=>{void(async()=>{if(!supabase)return;const o=objetivos.find(x=>x.id===id),r=await supabase.from('objetivos').update({activo:false}).eq('id',id);if(r.error){console.error(r.error);return}setObjetivos(p=>p.map(x=>x.id===id?{...x,activo:false}:x));await audit('ELIMINAR_OBJETIVO','Objetivo','Desactivó objetivo '+id,id,o?.id_empresa)})()}
 const cambiarEstadoObjetivo=async(id:string,activo:boolean):Promise<string|null>=>{if(!supabase)return 'Supabase no está configurado.';const o=objetivos.find(x=>x.id===id);if(!o)return 'Objetivo no encontrado.';const r=await supabase.from('objetivos').update({activo}).eq('id',id);if(r.error)return r.error.message;setObjetivos(p=>p.map(x=>x.id===id?{...x,activo}:x));await audit(activo?'ALTA_OBJETIVO':'BAJA_OBJETIVO','Objetivo',(activo?'Activó ':'Desactivó ')+o.nombre,id,o.id_empresa);return null}
 const crearVigilador=async(d:{nombre:string;apellido:string;email:string;password:string;telefono?:string;dni:string;fecha_nacimiento:string;domicilio:string;contacto_emergencia_nombre?:string;contacto_emergencia_telefono?:string;fecha_ingreso:string;categoria:string;tipo_contrato:string;fecha_fin_contrato?:string|null;notas_administrativas?:string;id_empresa:string;id_objetivo_inicial?:string})=>{if(!supabase)return 'Supabase no está configurado.';try{const r=await supabase.functions.invoke('crear-vigilador',{body:d});if(r.error){console.error(r.error);const contexto=(r.error as {context?:Response}).context;if(contexto){try{const cuerpo=await contexto.clone().json() as {error?:string};if(cuerpo?.error)return String(cuerpo.error)}catch{}}return r.error.message||'No se pudo crear el vigilador.'}if(r.data?.error){console.error(r.data.error);return String(r.data.error)}await cargar();return null}catch(error){console.error(error);return error instanceof Error?error.message:'Error inesperado al crear el vigilador.'}}
+const traducirErrorCorreoVigilador=(mensaje:string):string=>{
+ const normalizado=mensaje.toLowerCase()
+ if(normalizado.includes('already registered')||normalizado.includes('already exists')||normalizado.includes('email_exists')||normalizado.includes('email address is already')||normalizado.includes('user already')) return 'Ese correo electrónico ya está registrado en otra cuenta. Verificá el correo ingresado o dejá el correo actual sin cambios.'
+ if(normalizado.includes('invalid email')) return 'El correo electrónico no tiene un formato válido.'
+ return mensaje
+}
 const editarVigilador=async(id:string,d:Partial<Usuario> & {password?:string;dni?:string;fecha_nacimiento?:string;domicilio?:string;contacto_emergencia_nombre?:string;contacto_emergencia_telefono?:string;fecha_ingreso?:string;categoria?:string;tipo_contrato?:string;fecha_fin_contrato?:string|null;notas_administrativas?:string}):Promise<string|null>=>{
  if(!supabase)return 'Supabase no está configurado.'
  const v=vigiladores.find(x=>x.id===id || x.id_usuario===id)
@@ -62,10 +68,12 @@ const editarVigilador=async(id:string,d:Partial<Usuario> & {password?:string;dni
  if(error){
   console.error('No se pudo editar el vigilador:',error)
   const contexto=(error as {context?:Response}).context
-  if(contexto){try{const cuerpo=await contexto.clone().json() as {error?:string};if(cuerpo?.error)return String(cuerpo.error)}catch{}}
-  return error.message||'No se pudo actualizar el vigilador.'
+  let mensaje=''
+  if(contexto){try{const cuerpo=await contexto.clone().json() as {error?:string};mensaje=String(cuerpo?.error||'')}catch{}}
+  mensaje=mensaje||error.message||'No se pudo actualizar el vigilador.'
+  return traducirErrorCorreoVigilador(mensaje)
  }
- if(data?.error)return String(data.error)
+ if(data?.error)return traducirErrorCorreoVigilador(String(data.error))
  await cargar()
  return null
 }

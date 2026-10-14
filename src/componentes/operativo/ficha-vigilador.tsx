@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Info, UserRound, Save, LoaderCircle } from 'lucide-react'
+import { Info, UserRound, LoaderCircle } from 'lucide-react'
 import { Dialogo } from '@/componentes/ui/dialogo'
 import { Boton } from '@/componentes/ui/boton'
 import type { Usuario, Asignacion, Objetivo, Turno, NovedadLibro, SolicitudHorasExtra, SolicitudCambio } from '@/tipos'
@@ -52,11 +52,8 @@ export const FichaVigilador: React.FC<{
 }> = ({ abierto, vigilador, alCerrar, asignaciones, objetivos, turnos, novedades, horasExtra, cambios }) => {
   const [ficha, setFicha] = useState<Ficha>(vacia)
   const [cabecera, setCabecera] = useState<CabeceraVigilador>({ nombre: '', apellido: '', email: '', telefono: '', legajo: '' })
-  const [idVigiladorDb, setIdVigiladorDb] = useState<string | null>(null)
   const [cargando, setCargando] = useState(false)
-  const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
-  const [mensaje, setMensaje] = useState('')
   const [pestana, setPestana] = useState<'personal' | 'laboral' | 'objetivos' | 'actividad' | 'documentacion'>('personal')
 
   useEffect(() => {
@@ -66,7 +63,6 @@ export const FichaVigilador: React.FC<{
     const cargar = async () => {
       setCargando(true)
       setError('')
-      setMensaje('')
       setFicha(vacia)
       setCabecera({ nombre: vigilador.nombre || '', apellido: vigilador.apellido || '', email: vigilador.email || '', telefono: vigilador.telefono || '', legajo: vigilador.legajo || '' })
       const consultaRegistro = db.from('vigiladores').select('id,id_empresa,id_usuario,legajo,nombre,apellido,telefono')
@@ -85,7 +81,6 @@ export const FichaVigilador: React.FC<{
           : Promise.resolve({ data: null, error: null })
       ])
       if (cancelado) return
-      setIdVigiladorDb(registro.id)
       const perfil = resultadoPerfil.data
       setCabecera({
         nombre: registro.nombre || perfil?.nombre || vigilador.nombre || '',
@@ -115,45 +110,12 @@ export const FichaVigilador: React.FC<{
     return () => { cancelado = true }
   }, [abierto, vigilador?.id, vigilador?.id_usuario])
 
-  const guardar = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!supabase || !vigilador || !idVigiladorDb || !vigilador.id_empresa) {
-      setError('No se pudo identificar la empresa y el registro del vigilador.')
-      return
-    }
-    setGuardando(true)
-    setError('')
-    setMensaje('')
-    const payload = {
-      id_vigilador: idVigiladorDb,
-      id_empresa: vigilador.id_empresa,
-      dni: ficha.dni.trim() || null,
-      fecha_nacimiento: ficha.fecha_nacimiento || null,
-      domicilio: ficha.domicilio.trim() || null,
-      contacto_emergencia_nombre: ficha.contacto_emergencia_nombre.trim() || null,
-      contacto_emergencia_telefono: ficha.contacto_emergencia_telefono.trim() || null,
-      fecha_ingreso: ficha.fecha_ingreso || null,
-      categoria: ficha.categoria.trim() || null,
-      tipo_contrato: ficha.tipo_contrato.trim() || null,
-      fecha_fin_contrato: ficha.fecha_fin_contrato || null,
-      notas_administrativas: ficha.notas_administrativas.trim() || null,
-      actualizado_en: new Date().toISOString()
-    }
-    const { error: errorGuardar } = await supabase.from('fichas_vigiladores')
-      .upsert(payload, { onConflict: 'id_vigilador' })
-    if (errorGuardar) setError(errorGuardar.message)
-    else setMensaje('Ficha guardada correctamente.')
-    setGuardando(false)
-  }
-
   const asignacionesVigilador = asignaciones.filter(a => a.id_vigilador === vigilador?.id).sort((a, b) => b.fecha_inicio.localeCompare(a.fecha_inicio))
   const turnosVigilador = turnos.filter(t => t.id_vigilador === vigilador?.id).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 20)
   const novedadesVigilador = novedades.filter(n => n.id_vigilador === vigilador?.id).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 10)
   const extrasVigilador = horasExtra.filter(h => h.id_vigilador === vigilador?.id).sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 10)
   const cambiosVigilador = cambios.filter(c => c.id_solicitante === vigilador?.id || c.id_destinatario === vigilador?.id).sort((a, b) => b.fecha_turno.localeCompare(a.fecha_turno)).slice(0, 10)
-  const cambiar = (key: keyof Ficha, value: string) => setFicha(prev => ({ ...prev, [key]: value }))
   const etiquetaInput = 'mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-300'
-  const claseInput = 'w-full min-h-[42px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-[#0A0F1A] dark:text-slate-100'
 
   return (
     <Dialogo
@@ -184,15 +146,15 @@ export const FichaVigilador: React.FC<{
         </div>
 
         {cargando ? <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-500"><LoaderCircle className="h-4 w-4 animate-spin" /> Cargando ficha…</div> : (
-          <form onSubmit={guardar} className="space-y-4">
+          <div className="space-y-4">
             {pestana === 'personal' ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {campos.slice(0, 5).map(c => <label key={c.key}><span className={etiquetaInput}>{c.label}</span><input type={c.type || 'text'} value={ficha[c.key]} onChange={e => cambiar(c.key, e.target.value)} className={claseInput} /></label>)}
+                {campos.slice(0, 5).map(c => <div key={c.key}><span className={etiquetaInput}>{c.label}</span><p className="min-h-[42px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-100">{ficha[c.key] || 'Sin datos registrados'}</p></div>)}
               </div>
             ) : pestana === 'laboral' ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {campos.slice(5).map(c => <label key={c.key}><span className={etiquetaInput}>{c.label}</span><input type={c.type || 'text'} value={ficha[c.key]} onChange={e => cambiar(c.key, e.target.value)} className={claseInput} /></label>)}
-                <label className="sm:col-span-2"><span className={etiquetaInput}>Notas administrativas</span><textarea rows={4} value={ficha.notas_administrativas} onChange={e => cambiar('notas_administrativas', e.target.value)} className={claseInput} /></label>
+                {campos.slice(5).map(c => <div key={c.key}><span className={etiquetaInput}>{c.label}</span><p className="min-h-[42px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-100">{ficha[c.key] || 'Sin datos registrados'}</p></div>)}
+                <div className="sm:col-span-2"><span className={etiquetaInput}>Notas administrativas</span><p className="min-h-[64px] whitespace-pre-wrap rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-100">{ficha.notas_administrativas || 'Sin notas administrativas'}</p></div>
               </div>
             ) : pestana === 'objetivos' ? (
               <div className="space-y-2">
@@ -217,14 +179,10 @@ export const FichaVigilador: React.FC<{
               </div>
             )}
             {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">{error}</p>}
-            {mensaje && <p role="status" className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">{mensaje}</p>}
-            <div className="flex flex-col-reverse justify-end gap-2 border-t border-slate-200 pt-3 sm:flex-row dark:border-slate-800">
+            <div className="flex justify-end border-t border-slate-200 pt-3 dark:border-slate-800">
               <Boton type="button" variante="secundario" onClick={alCerrar}>Cerrar</Boton>
-              <Boton type="submit" variante="primario" disabled={guardando || !idVigiladorDb}>
-                {guardando ? 'Guardando…' : <><Save className="mr-2 inline h-4 w-4" /> Guardar ficha</>}
-              </Boton>
             </div>
-          </form>
+          </div>
         )}
       </div>
     </Dialogo>
