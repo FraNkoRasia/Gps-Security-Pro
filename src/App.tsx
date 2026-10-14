@@ -27,10 +27,11 @@ const ContenidoAplicacion: React.FC = () => {
     )
   }
 
+  // El cambio obligatorio por DNI es exclusivo de los vigiladores.
   return (
     <DisposicionPrincipal>
       {estaAutenticado
-        ? usuario?.debe_cambiar_contrasena
+        ? usuario?.rol === 'vigilador' && usuario.debe_cambiar_contrasena
           ? <CambioContrasenaObligatorio />
           : <VistaPanelControl />
         : <VistaInicioSesion />}
@@ -41,9 +42,11 @@ const ContenidoAplicacion: React.FC = () => {
 const AplicacionConDatosOperativos: React.FC = () => {
   const { estaAutenticado, usuario } = useAutenticacion()
 
-  // No cargar datos operativos mientras la cuenta tenga pendiente el cambio
-  // obligatorio de contraseña.
-  if (estaAutenticado && usuario && !usuario.debe_cambiar_contrasena) {
+  // No cargar datos operativos mientras un vigilador tenga pendiente el cambio obligatorio.
+  const cambioPendienteDeVigilador =
+    usuario?.rol === 'vigilador' && usuario.debe_cambiar_contrasena
+
+  if (estaAutenticado && usuario && !cambioPendienteDeVigilador) {
     return (
       <ProveedorOperativo>
         <ContenidoAplicacion />
