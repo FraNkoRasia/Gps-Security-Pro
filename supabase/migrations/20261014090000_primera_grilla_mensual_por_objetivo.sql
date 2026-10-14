@@ -100,6 +100,33 @@ CREATE TRIGGER proteger_insercion_turnos_bloqueados
 BEFORE INSERT ON public.turnos
 FOR EACH ROW EXECUTE FUNCTION public.proteger_insercion_turnos_bloqueados();
 
+-- También impide borrar turnos de fechas bloqueadas por fuera de la RPC.
+CREATE OR REPLACE FUNCTION public.proteger_eliminacion_turnos_bloqueados()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $
+DECLARE
+  v_hoy date := (now() AT TIME ZONE 'America/Argentina/Buenos_Aires')::date;
+BEGIN
+  IF OLD.fecha <= v_hoy AND EXISTS (
+    SELECT 1 FROM public.grillas_mensuales g
+    WHERE g.id_objetivo = OLD.id_objetivo
+      AND g.mes = date_trunc('month', OLD.fecha)::date
+  ) THEN
+    RAISE EXCEPTION 'No se pueden borrar turnos de hoy ni de días pasados en una grilla ya creada.'
+      USING ERRCODE = '42501';
+  END IF;
+  RETURN OLD;
+END;
+$;
+
+DROP TRIGGER IF EXISTS proteger_eliminacion_turnos_bloqueados ON public.turnos;
+CREATE TRIGGER proteger_eliminacion_turnos_bloqueados
+BEFORE DELETE ON public.turnos
+FOR EACH ROW EXECUTE FUNCTION public.proteger_eliminacion_turnos_bloqueados();
+
 -- Guarda todos los cambios en una transacción y crea el marcador únicamente al confirmar.
 CREATE OR REPLACE FUNCTION public.guardar_grilla_mensual(
   p_id_objetivo uuid,
@@ -135,7 +162,7 @@ BEGIN
   IF v_usuario IS NULL THEN
     RAISE EXCEPTION 'Debe iniciar sesión para guardar la grilla.' USING ERRCODE = '42501';
   END IF;
-  IF p_mes IS NULL OR EXTRACT(DAY FROM p_mes) <> 1 OR jsonb_typeof(p_operaciones) <> 'array' THEN
+  IF p_mes IS NULL OR EXTRACT(DAY FROM p_mes) <> 1 OR coalesce(jsonb_typeof(p_operaciones), '') <> 'array' THEN
     RAISE EXCEPTION 'Mes u operaciones inválidos.' USING ERRCODE = '22023';
   END IF;
 
