@@ -38,14 +38,28 @@ const ContenidoAplicacion: React.FC = () => {
   )
 }
 
+const AplicacionConDatosOperativos: React.FC = () => {
+  const { estaAutenticado, usuario } = useAutenticacion()
+
+  // No cargar datos operativos mientras la cuenta tenga pendiente el cambio
+  // obligatorio de contraseña.
+  if (estaAutenticado && usuario && !usuario.debe_cambiar_contrasena) {
+    return (
+      <ProveedorOperativo>
+        <ContenidoAplicacion />
+      </ProveedorOperativo>
+    )
+  }
+
+  return <ContenidoAplicacion />
+}
+
 export function App() {
   return (
     <ProveedorTema>
       <ProveedorIdioma>
         <ProveedorAutenticacion>
-          <ProveedorOperativo>
-            <ContenidoAplicacion />
-          </ProveedorOperativo>
+          <AplicacionConDatosOperativos />
         </ProveedorAutenticacion>
       </ProveedorIdioma>
     </ProveedorTema>
