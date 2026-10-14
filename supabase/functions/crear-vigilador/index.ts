@@ -197,6 +197,7 @@ Deno.serve(async (req) => {
       }).select("*").single()
 
       if (error) {
+        await admin.from("fichas_vigiladores").delete().eq("id_vigilador", vigilador.id)
         await admin.from("vigiladores").delete().eq("id", vigilador.id)
         await admin.from("perfiles").delete().eq("id", userId)
         await admin.auth.admin.deleteUser(userId)
