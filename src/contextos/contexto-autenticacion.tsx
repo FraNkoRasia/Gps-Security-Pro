@@ -139,8 +139,47 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
       }
     })
 
+    // Revalidar el perfil al volver a la pestaña y periódicamente. Esto permite
+    // reflejar un restablecimiento de contraseña hecho por administración sin
+    // depender de que el vigilador cierre sesión manualmente.
+    const refrescarPerfilActual = async () => {
+      try {
+        const { data, error } = await clienteSupabase.auth.getUser()
+        if (error) throw error
+        if (!data.user) {
+          if (activo) setUsuario(null)
+          return
+        }
+        const perfil = await cargarPerfil(data.user)
+        if (activo) {
+          setUsuario(perfil)
+          setErrorAuth(null)
+        }
+      } catch (err) {
+        console.error('Error al revalidar el perfil:', err)
+        if (activo) {
+          setUsuario(null)
+          setErrorAuth(err instanceof Error ? err.message : 'No se pudo validar el perfil.')
+        }
+      }
+    }
+
+    const alVolverAFoco = () => { void refrescarPerfilActual() }
+    const alCambiarVisibilidad = () => {
+      if (document.visibilityState === 'visible') void refrescarPerfilActual()
+    }
+    const intervaloRevalidacion = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void refrescarPerfilActual()
+    }, 30_000)
+
+    window.addEventListener('focus', alVolverAFoco)
+    document.addEventListener('visibilitychange', alCambiarVisibilidad)
+
     return () => {
       activo = false
+      window.clearInterval(intervaloRevalidacion)
+      window.removeEventListener('focus', alVolverAFoco)
+      document.removeEventListener('visibilitychange', alCambiarVisibilidad)
       listener.subscription.unsubscribe()
     }
   }, [])
