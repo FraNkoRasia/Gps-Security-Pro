@@ -128,10 +128,10 @@ Deno.serve(async (req) => {
       )
     }
 
-    if (!dni || password.length < 6) {
+    if (!dni || password.length < 8) {
       return json(
         {
-          error: "El DNI debe contener al menos 6 dígitos.",
+          error: "El DNI normalizado debe contener al menos 8 dígitos para cumplir la longitud mínima de la contraseña inicial.",
         },
         400,
       )
