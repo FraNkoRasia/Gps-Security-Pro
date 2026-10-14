@@ -104,7 +104,7 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
     setVigiladorEditando(vig)
     setNombre(vig.nombre)
     setApellido(vig.apellido)
-    setEmail(vig.email)
+    setEmail(vig.email || '')
     setTelefono(vig.telefono || '')
     setPassword('')
     setDni('')
@@ -122,6 +122,22 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
       setError('Supabase no está configurado; no se pudo cargar la ficha del vigilador.')
       setModalNuevoAbierto(true)
       return
+    }
+    if (vig.id_usuario) {
+      const { data: correoCuenta, error: errorCorreo } = await supabase.functions.invoke('editar-vigilador', {
+        body: { accion: 'consultar_email', vigilador_id: vig.id_usuario }
+      })
+      if (errorCorreo || correoCuenta?.error) {
+        const contexto = (errorCorreo as { context?: Response } | null)?.context
+        let detalle = correoCuenta?.error as string | undefined
+        if (!detalle && contexto) {
+          try { detalle = ((await contexto.clone().json()) as { error?: string }).error } catch { /* respuesta sin JSON */ }
+        }
+        setError(detalle || 'No se pudo recuperar el correo actual de la cuenta. No lo cambies si no querés modificarlo.')
+        setModalNuevoAbierto(true)
+        return
+      }
+      if (typeof correoCuenta?.email === 'string') setEmail(correoCuenta.email)
     }
     const consultaVigilador = supabase.from('vigiladores').select('id,id_empresa')
     const { data: registro, error: errorRegistro } = vig.id_usuario
@@ -622,7 +638,8 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
             <Etiqueta requerido={!vigiladorEditando}>Correo Electrónico (Acceso Auth)</Etiqueta>
             <Entrada
               type="email"
-              autoComplete={vigiladorEditando ? "email" : "new-username"}
+              autoComplete="off"
+              name="correo-vigilador"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="franco.rasia@empresa.com"
