@@ -64,11 +64,6 @@ const editarVigilador=async(id:string,d:Partial<Usuario> & {password?:string;dni
  }else{
   if(d.password)return 'Este registro no tiene cuenta de acceso vinculada; no se puede cambiar su contraseña desde aquí.'
   if(d.email?.trim() && d.email.trim()!==(v.email||'').trim())return 'Este registro no tiene cuenta de acceso vinculada; primero debe vincularse una cuenta para asignarle un correo de acceso.'
-  const {error:operativoError}=await supabase.from('vigiladores').update({
-   ...('nombre' in d?{nombre:d.nombre}:{}),...('apellido' in d?{apellido:d.apellido}:{}),
-   ...('telefono' in d?{telefono:d.telefono||null}:{}),
-  }).eq('id',v.id)
-  if(operativoError)return operativoError.message
   const ficha={
    id_vigilador:v.id,id_empresa:v.id_empresa,
    dni:d.dni?.trim()||null,fecha_nacimiento:d.fecha_nacimiento||null,domicilio:d.domicilio?.trim()||null,
@@ -78,12 +73,18 @@ const editarVigilador=async(id:string,d:Partial<Usuario> & {password?:string;dni
    tipo_contrato:d.tipo_contrato?.trim()||null,fecha_fin_contrato:d.fecha_fin_contrato||null,
    notas_administrativas:d.notas_administrativas?.trim()||null,actualizado_en:new Date().toISOString()
   }
+  if(!v.id_empresa)return 'El vigilador no tiene una empresa asociada; no se puede guardar su ficha.'
   if(!ficha.dni||!ficha.fecha_nacimiento||!ficha.domicilio||!ficha.fecha_ingreso||!ficha.categoria||!ficha.tipo_contrato)
    return 'Completá DNI, fecha de nacimiento, domicilio y los datos laborales obligatorios.'
   if((ficha.contacto_emergencia_nombre&&!ficha.contacto_emergencia_telefono)||(!ficha.contacto_emergencia_nombre&&ficha.contacto_emergencia_telefono))
    return 'Completá nombre y teléfono del contacto de emergencia, o dejá ambos vacíos.'
   const {error:fichaError}=await supabase.from('fichas_vigiladores').upsert(ficha,{onConflict:'id_vigilador'})
   if(fichaError)return 'No se pudo guardar la ficha personal y laboral: '+fichaError.message
+  const {error:operativoError}=await supabase.from('vigiladores').update({
+   ...('nombre' in d?{nombre:d.nombre}:{}),...('apellido' in d?{apellido:d.apellido}:{}),
+   ...('telefono' in d?{telefono:d.telefono||null}:{}),
+  }).eq('id',v.id)
+  if(operativoError)return 'La ficha se guardó, pero no se pudieron actualizar los datos operativos: '+operativoError.message
  }
  await cargar()
  return null
