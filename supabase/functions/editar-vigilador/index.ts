@@ -88,7 +88,8 @@ Deno.serve(async (req) => {
       accion: "EDITAR_VIGILADOR",
       entidad: "Vigilador",
       entidad_id: operational.id,
-      detalle: { texto: "Actualizó datos de acceso y perfil", cambio_email: Boolean(authUpdates.email), cambio_password: Boolean(password), cambio_legajo: true },
+      detalle: { texto: "Actualizó datos de acceso y perfil", cambio_email: Boolean(authUpdates.email), cambio_password: Boolean(password), cambio_legajo: operational.legajo !== legajo },
+      fecha_hora: new Date().toISOString(),
     })
     if (auditError) console.error("No se pudo registrar auditoría:", auditError.message)
 
