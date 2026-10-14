@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
       return json({ error: "Solo administración puede editar vigiladores." }, 403)
     }
 
-    let body: { vigilador_id?: string; nombre?: string; apellido?: string; email?: string; telefono?: string | null; password?: string }
+    let body: { vigilador_id?: string; nombre?: string; apellido?: string; email?: string; telefono?: string | null; password?: string; dni?: string; fecha_nacimiento?: string; domicilio?: string; contacto_emergencia_nombre?: string; contacto_emergencia_telefono?: string; fecha_ingreso?: string; categoria?: string; tipo_contrato?: string; fecha_fin_contrato?: string | null; notas_administrativas?: string }
     try { body = await req.json() } catch { return json({ error: "Datos inválidos." }, 400) }
     const targetId = body.vigilador_id?.trim()
     const nombre = body.nombre?.trim()
@@ -38,9 +38,27 @@ Deno.serve(async (req) => {
     const email = body.email?.trim().toLowerCase()
     const telefono = body.telefono?.trim() || null
     const password = body.password || ""
+    const ficha = {
+      dni: body.dni?.trim() || null,
+      fecha_nacimiento: body.fecha_nacimiento || null,
+      domicilio: body.domicilio?.trim() || null,
+      contacto_emergencia_nombre: body.contacto_emergencia_nombre?.trim() || null,
+      contacto_emergencia_telefono: body.contacto_emergencia_telefono?.trim() || null,
+      fecha_ingreso: body.fecha_ingreso || null,
+      categoria: body.categoria?.trim() || null,
+      tipo_contrato: body.tipo_contrato?.trim() || null,
+      fecha_fin_contrato: body.fecha_fin_contrato || null,
+      notas_administrativas: body.notas_administrativas?.trim() || null,
+    }
 
     if (!targetId || !nombre || !apellido || !email) return json({ error: "Vigilador, nombre, apellido y correo son obligatorios." }, 400)
     if (password && password.length < 8) return json({ error: "La contraseña debe tener al menos 8 caracteres." }, 400)
+    if (!ficha.dni || !ficha.fecha_nacimiento || !ficha.domicilio || !ficha.fecha_ingreso || !ficha.categoria || !ficha.tipo_contrato) {
+      return json({ error: "Completá DNI, fecha de nacimiento, domicilio y los datos laborales obligatorios." }, 400)
+    }
+    if ((ficha.contacto_emergencia_nombre && !ficha.contacto_emergencia_telefono) || (!ficha.contacto_emergencia_nombre && ficha.contacto_emergencia_telefono)) {
+      return json({ error: "Completá nombre y teléfono del contacto de emergencia, o dejá ambos vacíos." }, 400)
+    }
 
     const { data: target, error: targetError } = await admin.from("perfiles")
       .select("id,id_empresa,rol,activo,email").eq("id", targetId).single()
