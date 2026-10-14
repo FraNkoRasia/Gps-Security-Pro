@@ -45,47 +45,27 @@ const editarVigilador=async(id:string,d:Partial<Usuario> & {password?:string;dni
  if(!supabase)return 'Supabase no está configurado.'
  const v=vigiladores.find(x=>x.id===id || x.id_usuario===id)
  if(!v)return 'No se encontró el vigilador.'
- if(v.id_usuario){
-  const {data,error}=await supabase.functions.invoke('editar-vigilador',{body:{
-   vigilador_id:v.id_usuario,nombre:d.nombre??v.nombre,apellido:d.apellido??v.apellido,
-   email:d.email??v.email,telefono:d.telefono??v.telefono??null,password:d.password||'',
-   dni:d.dni,fecha_nacimiento:d.fecha_nacimiento,domicilio:d.domicilio,
-   contacto_emergencia_nombre:d.contacto_emergencia_nombre,contacto_emergencia_telefono:d.contacto_emergencia_telefono,
-   fecha_ingreso:d.fecha_ingreso,categoria:d.categoria,tipo_contrato:d.tipo_contrato,
-   fecha_fin_contrato:d.fecha_fin_contrato,notas_administrativas:d.notas_administrativas
-  }})
-  if(error){
-   console.error('No se pudo editar el vigilador:',error)
-   const contexto=(error as {context?:Response}).context
-   if(contexto){try{const cuerpo=await contexto.clone().json() as {error?:string};if(cuerpo?.error)return String(cuerpo.error)}catch{}}
-   return error.message||'No se pudo actualizar el vigilador.'
-  }
-  if(data?.error)return String(data.error)
- }else{
-  if(d.password)return 'Este registro no tiene cuenta de acceso vinculada; no se puede cambiar su contraseña desde aquí.'
-  if(d.email?.trim() && d.email.trim()!==(v.email||'').trim())return 'Este registro no tiene cuenta de acceso vinculada; primero debe vincularse una cuenta para asignarle un correo de acceso.'
-  const ficha={
-   id_vigilador:v.id,id_empresa:v.id_empresa,
-   dni:d.dni?.trim()||null,fecha_nacimiento:d.fecha_nacimiento||null,domicilio:d.domicilio?.trim()||null,
-   contacto_emergencia_nombre:d.contacto_emergencia_nombre?.trim()||null,
-   contacto_emergencia_telefono:d.contacto_emergencia_telefono?.trim()||null,
-   fecha_ingreso:d.fecha_ingreso||null,categoria:d.categoria?.trim()||null,
-   tipo_contrato:d.tipo_contrato?.trim()||null,fecha_fin_contrato:d.fecha_fin_contrato||null,
-   notas_administrativas:d.notas_administrativas?.trim()||null,actualizado_en:new Date().toISOString()
-  }
-  if(!v.id_empresa)return 'El vigilador no tiene una empresa asociada; no se puede guardar su ficha.'
-  if(!ficha.dni||!ficha.fecha_nacimiento||!ficha.domicilio||!ficha.fecha_ingreso||!ficha.categoria||!ficha.tipo_contrato)
-   return 'Completá DNI, fecha de nacimiento, domicilio y los datos laborales obligatorios.'
-  if((ficha.contacto_emergencia_nombre&&!ficha.contacto_emergencia_telefono)||(!ficha.contacto_emergencia_nombre&&ficha.contacto_emergencia_telefono))
-   return 'Completá nombre y teléfono del contacto de emergencia, o dejá ambos vacíos.'
-  const {error:fichaError}=await supabase.from('fichas_vigiladores').upsert(ficha,{onConflict:'id_vigilador'})
-  if(fichaError)return 'No se pudo guardar la ficha personal y laboral: '+fichaError.message
-  const {error:operativoError}=await supabase.from('vigiladores').update({
-   ...('nombre' in d?{nombre:d.nombre}:{}),...('apellido' in d?{apellido:d.apellido}:{}),
-   ...('telefono' in d?{telefono:d.telefono||null}:{}),
-  }).eq('id',v.id)
-  if(operativoError)return 'La ficha se guardó, pero no se pudieron actualizar los datos operativos: '+operativoError.message
+ if(!v.id_usuario&&!v.id_empresa)return 'El vigilador no tiene una empresa asociada; no se puede guardar su ficha.'
+ const body={
+  ...(v.id_usuario?{vigilador_id:v.id_usuario}:{vigilador_operativo_id:v.id}),
+  nombre:d.nombre??v.nombre,
+  apellido:d.apellido??v.apellido,
+  ...(v.id_usuario?{email:d.email??v.email}:{}),
+  telefono:d.telefono??v.telefono??null,
+  password:d.password||'',
+  dni:d.dni,fecha_nacimiento:d.fecha_nacimiento,domicilio:d.domicilio,
+  contacto_emergencia_nombre:d.contacto_emergencia_nombre,contacto_emergencia_telefono:d.contacto_emergencia_telefono,
+  fecha_ingreso:d.fecha_ingreso,categoria:d.categoria,tipo_contrato:d.tipo_contrato,
+  fecha_fin_contrato:d.fecha_fin_contrato,notas_administrativas:d.notas_administrativas
  }
+ const {data,error}=await supabase.functions.invoke('editar-vigilador',{body})
+ if(error){
+  console.error('No se pudo editar el vigilador:',error)
+  const contexto=(error as {context?:Response}).context
+  if(contexto){try{const cuerpo=await contexto.clone().json() as {error?:string};if(cuerpo?.error)return String(cuerpo.error)}catch{}}
+  return error.message||'No se pudo actualizar el vigilador.'
+ }
+ if(data?.error)return String(data.error)
  await cargar()
  return null
 }
