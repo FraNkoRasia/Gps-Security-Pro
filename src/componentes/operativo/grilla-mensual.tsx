@@ -463,20 +463,20 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
         </div>
 
         <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto justify-between lg:justify-end">
-          {!soloLectura && (
-            <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            {!soloLectura && (
               <Boton type="button" variante="primario" tamano="chico" disabled={!hayCambiosPendientes || cargandoEstadoGrilla || soloLecturaEfectiva} onClick={iniciarGuardado}>Guardar cambios{hayCambiosPendientes ? ` (${Object.keys(borradores).length})` : ''}</Boton>
-              <Boton
-                type="button"
-                variante="secundario"
-                tamano="chico"
-                onClick={descargarGrilla}
-                icono={<Download className="w-3.5 h-3.5 text-blue-500" />}
-              >
-                Descargar Grilla
-              </Boton>
-            </div>
-          )}
+            )}
+            <Boton
+              type="button"
+              variante="secundario"
+              tamano="chico"
+              onClick={descargarGrilla}
+              icono={<Download className="w-3.5 h-3.5 text-blue-500" />}
+            >
+              Descargar Grilla
+            </Boton>
+          </div>
         </div>
       </div>
 
