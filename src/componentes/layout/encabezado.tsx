@@ -15,9 +15,10 @@ interface EventoInstalacionPWA extends Event {
 interface PropiedadesEncabezado {
   alIrAInicio?: () => void
   alAbrirPerfil?: () => void
+  ubicacionActual?: 'inicio' | 'perfil'
 }
 
-export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbrirPerfil }) => {
+export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbrirPerfil, ubicacionActual = 'inicio' }) => {
   const { usuario, estaAutenticado, cerrarSesion } = useAutenticacion()
   const { t, idioma, cambiarIdioma } = useTraduccion()
   const { temaActual, cambiarTema } = useTema()
@@ -188,7 +189,9 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbr
                       setMenuMovilAbierto(false)
                       alIrAInicio()
                     }}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl bg-slate-500/10 dark:bg-slate-500/10 text-slate-700 dark:text-slate-300 border border-slate-400/70 dark:border-slate-600 hover:bg-slate-500/20 hover:border-slate-500 transition-colors cursor-pointer shadow-sm"
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-colors cursor-pointer shadow-sm ${ubicacionActual === 'inicio'
+                      ? 'bg-slate-500/10 dark:bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-400/70 dark:border-slate-600 hover:bg-slate-500/20 hover:border-slate-500'
+                      : 'bg-blue-500/10 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/70 hover:bg-blue-500/20 hover:border-blue-400'}`}
                   >
                     <span className="w-9 h-9 rounded-lg bg-slate-500/10 flex items-center justify-center shrink-0">
                       <span className="text-base leading-none">⌂</span>
@@ -207,7 +210,9 @@ export const Encabezado: React.FC<PropiedadesEncabezado> = ({ alIrAInicio, alAbr
                       setMenuMovilAbierto(false)
                       alAbrirPerfil()
                     }}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl bg-blue-500/10 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/70 hover:bg-blue-500/20 hover:border-blue-400 transition-colors cursor-pointer shadow-sm"
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-colors cursor-pointer shadow-sm ${ubicacionActual === 'perfil'
+                      ? 'bg-slate-500/10 dark:bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-400/70 dark:border-slate-600 hover:bg-slate-500/20 hover:border-slate-500'
+                      : 'bg-blue-500/10 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/70 hover:bg-blue-500/20 hover:border-blue-400'}`}
                   >
                     <span className="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
                       <UserRound className="w-4 h-4" />
