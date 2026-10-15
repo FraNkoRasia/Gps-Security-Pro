@@ -157,8 +157,8 @@ export const VistaPerfil: React.FC<PropiedadesPerfil> = ({
       return
     }
 
-    if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(nuevaContrasena)) {
-      setError('La nueva contraseña debe tener al menos 8 caracteres alfanuméricos, una letra y un número.')
+    if (!(/^[0-9]{6,}$/.test(nuevaContrasena) || /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(nuevaContrasena))) {
+      setError('Usá al menos 6 números, o 8 caracteres alfanuméricos que incluyan una letra y un número.')
       return
     }
 
@@ -342,13 +342,12 @@ export const VistaPerfil: React.FC<PropiedadesPerfil> = ({
               onChange={setNuevaContrasena}
               mostrar={mostrarNueva}
               cambiarMostrar={() => setMostrarNueva((v) => !v)}
-              placeholder="Mínimo 8 caracteres alfanuméricos"
+              placeholder="6 o más números, o una clave alfanumérica"
               obligatorio
             />
             <div className="mt-2 space-y-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-              <p>• Al menos 8 caracteres</p>
-              <p>• Contiene al menos una letra</p>
-              <p>• Contiene al menos un número</p>
+              <p>• Podés usar una clave numérica de al menos 6 dígitos</p>
+              <p>• O una clave alfanumérica de al menos 8 caracteres, con letras y números</p>
             </div>
           </div>
 
