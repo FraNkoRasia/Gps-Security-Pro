@@ -536,7 +536,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                       title={nombreFeriado}
                       aria-label={`${dia} de ${nombreMesSeleccionado}${nombreFeriado ? `, feriado: ${nombreFeriado}` : ''}`}
                       className={`p-1.5 text-center border-r border-slate-200 dark:border-slate-800/80 font-semibold ${
-                        'min-w-[30px] max-w-[30px]'
+                        'min-w-[42px] max-w-[42px]'
                       } ${
                         esFeriado
                           ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300'
@@ -619,7 +619,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                           title={feriadoCelda ? `${feriadoCelda} · ${fechaCelda}` : celdaBloqueada ? 'Día bloqueado para edición' : 'Clic para modificar turno'}
                         >
                           <div
-                            className={`h-10 sm:h-7 min-w-[38px] sm:min-w-0 flex items-center justify-center rounded-lg border transition-transform group-hover:scale-105 ${
+                            className={`h-10 min-w-[38px] flex items-center justify-center rounded-lg border transition-transform group-hover:scale-105 ${
                               !turno
                                 ? 'border-transparent'
                                 : turno.tipo === 'franco'
