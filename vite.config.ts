@@ -11,6 +11,9 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      // El Service Worker se registra explícitamente desde src/main.tsx.
+      // Evita que el plugin inyecte un segundo registro en index.html.
+      injectRegister: null,
       workbox: {
         cleanupOutdatedCaches: true,
         clientsClaim: true,
@@ -26,25 +29,27 @@ export default defineConfig({
         scope: '/',
         theme_color: '#080C14',
         background_color: '#080C14',
-        display_override: ['standalone'],
         display: 'standalone',
+        display_override: ['standalone'],
         orientation: 'portrait-primary',
         icons: [
           {
             src: '/Escudo.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
             src: '/logoAPP.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
             src: '/Escudo.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'maskable'
           }
         ]
       }
