@@ -140,12 +140,12 @@ export const LibroNovedades: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h3 className="text-xl font-black text-slate-900 dark:text-white font-['Outfit']">
+      <div className="flex min-w-0 flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+        <div className="min-w-0 w-full lg:flex-1">
+          <h3 className="break-words text-xl font-black text-slate-900 dark:text-white font-['Outfit']">
             Libro Digital de Novedades
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="max-w-full break-words text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Registro operativo oficial e inmutable de guardia por objetivo (Sección 32).
           </p>
         </div>
@@ -161,8 +161,8 @@ export const LibroNovedades: React.FC = () => {
       </div>
 
       {/* Barra de Filtros y Búsqueda */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1">
+      <div className="flex min-w-0 flex-col gap-3 lg:flex-row">
+        <div className="min-w-0 w-full lg:flex-1">
           <Entrada
             placeholder="Buscar por vigilador, informe o palabras clave..."
             value={busqueda}
@@ -170,18 +170,18 @@ export const LibroNovedades: React.FC = () => {
             iconoIzquierda={<Search className="w-4 h-4" />}
           />
         </div>
-        <div className="grid grid-cols-2 sm:flex gap-3">
-          <div className="min-w-0">
+        <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:w-[min(100%,24rem)] lg:shrink-0">
+          <div className="min-w-0 w-full">
             <label htmlFor="novedades-desde" className="mb-1 block text-[11px] font-semibold text-slate-500">Desde</label>
             <Entrada id="novedades-desde" type="date" value={fechaDesde} onChange={(e) => setFechaDesde(e.target.value)} />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 w-full">
             <label htmlFor="novedades-hasta" className="mb-1 block text-[11px] font-semibold text-slate-500">Hasta</label>
             <Entrada id="novedades-hasta" type="date" value={fechaHasta} min={fechaDesde || undefined} onChange={(e) => setFechaHasta(e.target.value)} />
           </div>
         </div>
         {usuario?.rol !== 'vigilador' && (
-          <div className="w-full sm:w-64">
+          <div className="min-w-0 w-full lg:w-64 lg:shrink-0">
             <select
               value={filtroObjetivo}
               onChange={(e) => setFiltroObjetivo(e.target.value)}
@@ -206,7 +206,7 @@ export const LibroNovedades: React.FC = () => {
               No se encontraron registros de novedades con los filtros seleccionados.
             </TarjetaContenido>
           </Tarjeta>
-        ) : usuario?.rol === 'vigilador' ? (
+        ) : (usuario?.rol === 'vigilador' || usuario?.rol === 'administrador') ? (
           diasNovedades.map((dia) => (
             <details key={dia} className="group rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0C121E] overflow-hidden">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 sm:p-5 hover:bg-slate-50 dark:hover:bg-slate-900/60">
