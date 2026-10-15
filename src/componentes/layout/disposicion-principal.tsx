@@ -22,6 +22,7 @@ export const DisposicionPrincipal: React.FC<PropiedadesDisposicionPrincipal> = (
       <Encabezado
         alIrAInicio={() => setSubVista('ninguna')}
         alAbrirPerfil={() => setSubVista('perfil')}
+        ubicacionActual={subVista === 'perfil' ? 'perfil' : 'inicio'}
       />
 
       {/* Contenido Principal con soporte desde 320px */}
