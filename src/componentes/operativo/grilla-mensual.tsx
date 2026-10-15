@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Download,
   Edit3,
@@ -41,6 +41,48 @@ type OperacionGrilla = { id_vigilador: string; fecha: string; codigo: string; id
 
 export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: boolean; onCambiosPendientesChange?: (pendientes: boolean) => void }> = ({ objetivoInicial = '', soloLectura = false, onCambiosPendientesChange }) => {
   const { objetivos, vigiladores, asignaciones, turnos, tiposTurno, guardarGrillaMensual } = useOperativo()
+  const contenedorDesplazamientoRef = useRef<HTMLDivElement>(null)
+  const arrastreRef = useRef({ activo: false, inicioX: 0, scrollInicial: 0, seMovio: false })
+  const suprimirClickRef = useRef(false)
+
+  const iniciarArrastre = (evento: React.PointerEvent<HTMLDivElement>) => {
+    if (evento.button !== 0) return
+    const contenedor = contenedorDesplazamientoRef.current
+    if (!contenedor) return
+    arrastreRef.current = {
+      activo: true,
+      inicioX: evento.clientX,
+      scrollInicial: contenedor.scrollLeft,
+      seMovio: false,
+    }
+  }
+
+  const moverArrastre = (evento: React.PointerEvent<HTMLDivElement>) => {
+    const arrastre = arrastreRef.current
+    const contenedor = contenedorDesplazamientoRef.current
+    if (!arrastre.activo || !contenedor) return
+    const desplazamiento = evento.clientX - arrastre.inicioX
+    if (Math.abs(desplazamiento) > 5) {
+      arrastre.seMovio = true
+      suprimirClickRef.current = true
+      contenedor.scrollLeft = arrastre.scrollInicial - desplazamiento
+    }
+  }
+
+  const finalizarArrastre = () => {
+    if (arrastreRef.current.seMovio) {
+      // Evita que el gesto de arrastre active accidentalmente un casillero.
+      suprimirClickRef.current = true
+    }
+    arrastreRef.current.activo = false
+  }
+
+  const controlarClickTrasArrastre = (evento: React.MouseEvent<HTMLDivElement>) => {
+    if (!suprimirClickRef.current) return
+    evento.preventDefault()
+    evento.stopPropagation()
+    suprimirClickRef.current = false
+  }
   const [objetivoSeleccionado] = useState(objetivoInicial)
   const objetivoActual = objetivos.find((objetivo) => objetivo.id === objetivoSeleccionado)
 
@@ -517,7 +559,17 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
 
       {/* Tabla de la grilla mensual con desplazamiento horizontal */}
       <Tarjeta className="overflow-hidden rounded-2xl border-slate-200 dark:border-slate-800">
-        <div className="overflow-x-auto max-w-full scrollbar-thin">
+        <div
+          ref={contenedorDesplazamientoRef}
+          onPointerDown={iniciarArrastre}
+          onPointerMove={moverArrastre}
+          onPointerUp={finalizarArrastre}
+          onPointerCancel={finalizarArrastre}
+          onClickCapture={controlarClickTrasArrastre}
+          className="max-w-full overflow-x-auto scrollbar-thin cursor-grab active:cursor-grabbing select-none touch-pan-x"
+          style={{ overscrollBehaviorX: 'contain' }}
+          aria-label="Grilla mensual. Deslizá o arrastrá para ver todos los días."
+        >
           <table className="w-max min-w-full text-xs text-left border-separate border-spacing-0 bg-white dark:bg-[#0C121E]">
             <thead>
               <tr className="bg-slate-100 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px] select-none">
