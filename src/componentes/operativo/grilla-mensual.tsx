@@ -23,6 +23,11 @@ const formatearHorasMinutos = (horas: number) => {
   return `${horasEnteras}.${String(minutosRestantes).padStart(2, '0')}`
 }
 
+const formatearTotalDiario = (horas: number) => {
+  const redondeado = Math.round((horas + Number.EPSILON) * 100) / 100
+  return Number.isInteger(redondeado) ? String(redondeado) : redondeado.toFixed(2)
+}
+
 const formatearHorasCasillero = (turno: Turno) => {
   if (turno.horas_extra <= 0) return String(turno.horas_totales)
   const minutos = Math.round((turno.horas_totales + turno.horas_extra) * 60)
@@ -385,7 +390,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
       const filasVacias = vigiladoresMostrados.length === 0
         ? `<tr><td colspan="${dias.length + 2}" class="vacio">No hay vigiladores asignados a este objetivo.</td></tr>`
         : filas
-      const totalesDiarios = dias.map((dia) => `<td>${formatearHorasMinutos(calcularTotalDiario(dia))}h</td>`).join('')
+      const totalesDiarios = dias.map((dia) => `<td>${formatearTotalDiario(calcularTotalDiario(dia))}h</td>`).join('')
 
       return `<section class="quincena"><header><h2>${quincena.titulo}</h2><p>${quincena.inicio} al ${quincena.fin} de ${escaparHtml(nombreMes)}</p></header><table><thead><tr><th>Vigilador</th>${encabezados}<th>Horas</th></tr></thead><tbody>${filasVacias}</tbody><tfoot><tr><th>Total Día</th>${totalesDiarios}<td>Total</td></tr></tfoot></table></section>`
     }).join('')
@@ -463,20 +468,20 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
         </div>
 
         <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto justify-between lg:justify-end">
-          {!soloLectura && (
-            <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            {!soloLectura && (
               <Boton type="button" variante="primario" tamano="chico" disabled={!hayCambiosPendientes || cargandoEstadoGrilla || soloLecturaEfectiva} onClick={iniciarGuardado}>Guardar cambios{hayCambiosPendientes ? ` (${Object.keys(borradores).length})` : ''}</Boton>
-              <Boton
-                type="button"
-                variante="secundario"
-                tamano="chico"
-                onClick={descargarGrilla}
-                icono={<Download className="w-3.5 h-3.5 text-blue-500" />}
-              >
-                Descargar Grilla
-              </Boton>
-            </div>
-          )}
+            )}
+            <Boton
+              type="button"
+              variante="secundario"
+              tamano="chico"
+              onClick={descargarGrilla}
+              icono={<Download className="w-3.5 h-3.5 text-blue-500" />}
+            >
+              Descargar Grilla
+            </Boton>
+          </div>
         </div>
       </div>
 
@@ -667,7 +672,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                       key={dia}
                       className="p-1 text-center border-r border-slate-200 dark:border-slate-800/70 text-blue-700 dark:text-blue-400 font-mono bg-slate-50 dark:bg-[#101827]"
                     >
-                      {formatearHorasMinutos(total)}h
+                      {formatearTotalDiario(total)}h
                     </td>
                   )
                 })}
