@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Eye, EyeOff, Lock, Mail, Phone, Shield, UserRound } from 'lucide-react'
 import { Dialogo } from '@/componentes/ui/dialogo'
 import { Boton } from '@/componentes/ui/boton'
 import { Insignia } from '@/componentes/ui/insignia'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import { useTraduccion } from '@/i18n'
+import { supabase } from '@/servicios/supabase'
 
 interface PropiedadesPerfil {
   alAbrirCambioContrasena?: boolean
@@ -28,6 +29,45 @@ export const VistaPerfil: React.FC<PropiedadesPerfil> = ({
   const [error, setError] = useState('')
   const [exito, setExito] = useState('')
   const [guardando, setGuardando] = useState(false)
+  const [fichaTecnica, setFichaTecnica] = useState<Record<string, string>>({})
+  const [cargandoFicha, setCargandoFicha] = useState(false)
+
+  useEffect(() => {
+    if (!usuario || !supabase) return
+    const db = supabase
+    let cancelado = false
+    const cargarFichaTecnica = async () => {
+      setCargandoFicha(true)
+      setFichaTecnica({})
+      try {
+        const { data: vigilador } = await db
+          .from('vigiladores')
+          .select('id')
+          .eq('id_usuario', usuario.id)
+          .maybeSingle()
+
+        if (!vigilador || cancelado) return
+
+        const { data: ficha } = await db
+          .from('fichas_vigiladores')
+          .select('dni,fecha_nacimiento,domicilio,contacto_emergencia_nombre,contacto_emergencia_telefono,fecha_ingreso,categoria,tipo_contrato,fecha_fin_contrato,notas_administrativas')
+          .eq('id_vigilador', vigilador.id)
+          .maybeSingle()
+
+        if (ficha && !cancelado) {
+          setFichaTecnica(Object.fromEntries(
+            Object.entries(ficha).filter(([, valor]) => valor !== null && valor !== undefined && String(valor).trim() !== '').map(([clave, valor]) => [clave, String(valor)])
+          ))
+        }
+      } catch (error) {
+        console.error('No se pudo cargar la ficha técnica del perfil:', error)
+      } finally {
+        if (!cancelado) setCargandoFicha(false)
+      }
+    }
+    void cargarFichaTecnica()
+    return () => { cancelado = true }
+  }, [usuario?.id])
 
   if (!usuario) return null
 
@@ -151,6 +191,53 @@ export const VistaPerfil: React.FC<PropiedadesPerfil> = ({
           Consultá tus datos personales y de acceso a GSP Security Pro.
         </p>
       </div>
+
+      <section className="rounded-2xl bg-white dark:bg-[#0C121E] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800">
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">Datos de la ficha técnica</h3>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Información personal y laboral registrada en el sistema.</p>
+        </div>
+        {cargandoFicha ? (
+          <p className="p-5 text-sm text-slate-500">Cargando datos de la ficha técnica…</p>
+        ) : (
+          <div className="p-5 sm:p-6 space-y-5">
+            <div>
+              <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Datos personales</h4>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {([
+                  ['DNI', 'dni'],
+                  ['Fecha de nacimiento', 'fecha_nacimiento'],
+                  ['Domicilio', 'domicilio'],
+                  ['Nombre del contacto de emergencia', 'contacto_emergencia_nombre'],
+                  ['Teléfono del contacto de emergencia', 'contacto_emergencia_telefono']
+                ] as const).map(([etiqueta, clave]) => (
+                  <div key={clave} className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/40">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{etiqueta}</p>
+                    <p className="mt-2 break-words text-sm font-semibold text-slate-800 dark:text-slate-200">{fichaTecnica[clave] || 'Sin datos registrados'}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h4 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Datos laborales</h4>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {([
+                  ['Fecha de ingreso', 'fecha_ingreso'],
+                  ['Categoría laboral', 'categoria'],
+                  ['Tipo de contrato', 'tipo_contrato'],
+                  ['Fin de contrato', 'fecha_fin_contrato'],
+                  ['Notas administrativas', 'notas_administrativas']
+                ] as const).map(([etiqueta, clave]) => (
+                  <div key={clave} className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950/40">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{etiqueta}</p>
+                    <p className="mt-2 whitespace-pre-wrap break-words text-sm font-semibold text-slate-800 dark:text-slate-200">{fichaTecnica[clave] || 'Sin datos registrados'}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <section className="rounded-2xl bg-white dark:bg-[#0C121E] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
