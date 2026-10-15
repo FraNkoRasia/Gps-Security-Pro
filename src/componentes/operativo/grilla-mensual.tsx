@@ -49,6 +49,7 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
     if (evento.button !== 0) return
     const contenedor = contenedorDesplazamientoRef.current
     if (!contenedor) return
+    evento.currentTarget.setPointerCapture(evento.pointerId)
     arrastreRef.current = {
       activo: true,
       inicioX: evento.clientX,
