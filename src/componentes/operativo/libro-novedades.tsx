@@ -161,16 +161,18 @@ export const LibroNovedades: React.FC = () => {
       </div>
 
       {/* Barra de Filtros y Búsqueda */}
-      <div className="flex min-w-0 flex-col gap-3 lg:flex-row">
-        <div className="min-w-0 w-full lg:flex-1">
+      <div className="grid min-w-0 grid-cols-1 items-end gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_16rem]">
+        <div className="min-w-0 w-full">
+          <label htmlFor="novedades-busqueda" className="mb-1 block text-[11px] font-semibold text-slate-500">Buscar</label>
           <Entrada
+            id="novedades-busqueda"
             placeholder="Buscar por vigilador, informe o palabras clave..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             iconoIzquierda={<Search className="w-4 h-4" />}
           />
         </div>
-        <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:w-[min(100%,24rem)] lg:shrink-0">
+        <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="min-w-0 w-full">
             <label htmlFor="novedades-desde" className="mb-1 block text-[11px] font-semibold text-slate-500">Desde</label>
             <Entrada id="novedades-desde" type="date" value={fechaDesde} onChange={(e) => setFechaDesde(e.target.value)} />
@@ -181,11 +183,13 @@ export const LibroNovedades: React.FC = () => {
           </div>
         </div>
         {usuario?.rol !== 'vigilador' && (
-          <div className="min-w-0 w-full lg:w-64 lg:shrink-0">
+          <div className="min-w-0 w-full">
+            <label htmlFor="novedades-objetivo" className="mb-1 block text-[11px] font-semibold text-slate-500">Objetivo</label>
             <select
+              id="novedades-objetivo"
               value={filtroObjetivo}
               onChange={(e) => setFiltroObjetivo(e.target.value)}
-              className="w-full min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700/80 px-3 py-2.5 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
+              className="w-full min-w-0 min-h-[46px] rounded-xl bg-white dark:bg-[#0A0F1A] border border-slate-300 dark:border-slate-700/80 px-3 py-2.5 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
             >
               <option value="todos">Todos los objetivos</option>
               {objetivos.map((o) => (
