@@ -206,7 +206,7 @@ export const LibroNovedades: React.FC = () => {
               No se encontraron registros de novedades con los filtros seleccionados.
             </TarjetaContenido>
           </Tarjeta>
-        ) : usuario?.rol === 'vigilador' ? (
+        ) : (usuario?.rol === 'vigilador' || usuario?.rol === 'administrador') ? (
           diasNovedades.map((dia) => (
             <details key={dia} className="group rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0C121E] overflow-hidden">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 sm:p-5 hover:bg-slate-50 dark:hover:bg-slate-900/60">
