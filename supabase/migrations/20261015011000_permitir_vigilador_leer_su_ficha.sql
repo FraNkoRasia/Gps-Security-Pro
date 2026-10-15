@@ -1,5 +1,7 @@
 -- Permite que cada vigilador lea únicamente la ficha técnica vinculada a su propia cuenta.
 -- La política de lectura para Administración/Super Administración permanece sin cambios.
+drop policy if exists "vigilador lee su propia ficha" on public.fichas_vigiladores;
+
 create policy "vigilador lee su propia ficha"
 on public.fichas_vigiladores
 for select
