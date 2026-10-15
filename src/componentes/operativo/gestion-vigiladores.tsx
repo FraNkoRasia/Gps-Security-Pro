@@ -409,7 +409,8 @@ export const GestionVigiladores: React.FC<{ idEmpresaSeleccionada?: string; idOb
 
                   {!modoConsulta && (
                   <div className="flex items-center gap-1">
-                    <button type="button" onClick={() => { setVigiladorFicha(vig); setModalFichaAbierto(true) }} className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Ver ficha del vigilador" aria-label={`Ver ficha de ${vig.nombre} ${vig.apellido}`}>
+                    <button type="button" onClick={() => { setVigiladorFicha(vig); setModalFichaAbierto(true) }} className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-1.5 text-emerald-800 transition-colors hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-950/70" title="Ver ficha del vigilador" aria-label={`Ver ficha de ${vig.nombre} ${vig.apellido}`}>
+                      <span className="hidden md:inline text-xs font-semibold">Ficha Técnica</span>
                       <Info className="w-4 h-4" />
                     </button>
                   </div>
