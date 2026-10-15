@@ -31,7 +31,9 @@ export const DisposicionPrincipal: React.FC<PropiedadesDisposicionPrincipal> = (
     // Mantiene un estado interno en el historial para interceptar Atrás
     // sin sacar al usuario de la aplicación cuando navega por sus vistas.
     if (!window.history.state?.gspVistaInterna) {
-      window.history.replaceState({ gspVistaInterna: 'ninguna' }, '')
+      // Crea una entrada centinela para que el primer Atrás también quede
+      // dentro de la aplicación en lugar de abandonar directamente la página.
+      window.history.pushState({ gspVistaInterna: 'ninguna' }, '')
     }
 
     const manejarAtras = () => {
