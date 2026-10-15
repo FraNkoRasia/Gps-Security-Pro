@@ -6,10 +6,11 @@ import { ProveedorOperativo } from '@/contextos/contexto-operativo'
 import { DisposicionPrincipal } from '@/componentes/layout/disposicion-principal'
 import { VistaInicioSesion } from '@/vistas/inicio-sesion'
 import { VistaPanelControl } from '@/vistas/panel-control'
+import { CambioContrasenaObligatorio } from '@/componentes/autenticacion/cambio-contrasena-obligatorio'
 import './App.css'
 
 const ContenidoAplicacion: React.FC = () => {
-  const { estaAutenticado, cargando } = useAutenticacion()
+  const { estaAutenticado, cargando, usuario } = useAutenticacion()
 
   if (cargando) {
     return (
@@ -26,11 +27,34 @@ const ContenidoAplicacion: React.FC = () => {
     )
   }
 
+  // El cambio obligatorio por DNI es exclusivo de los vigiladores.
   return (
     <DisposicionPrincipal>
-      {estaAutenticado ? <VistaPanelControl /> : <VistaInicioSesion />}
+      {estaAutenticado
+        ? usuario?.rol === 'vigilador' && usuario.debe_cambiar_contrasena
+          ? <CambioContrasenaObligatorio />
+          : <VistaPanelControl />
+        : <VistaInicioSesion />}
     </DisposicionPrincipal>
   )
+}
+
+const AplicacionConDatosOperativos: React.FC = () => {
+  const { estaAutenticado, usuario } = useAutenticacion()
+
+  // No cargar datos operativos mientras un vigilador tenga pendiente el cambio obligatorio.
+  const cambioPendienteDeVigilador =
+    usuario?.rol === 'vigilador' && usuario.debe_cambiar_contrasena
+
+  if (estaAutenticado && usuario && !cambioPendienteDeVigilador) {
+    return (
+      <ProveedorOperativo>
+        <ContenidoAplicacion />
+      </ProveedorOperativo>
+    )
+  }
+
+  return <ContenidoAplicacion />
 }
 
 export function App() {
@@ -38,9 +62,7 @@ export function App() {
     <ProveedorTema>
       <ProveedorIdioma>
         <ProveedorAutenticacion>
-          <ProveedorOperativo>
-            <ContenidoAplicacion />
-          </ProveedorOperativo>
+          <AplicacionConDatosOperativos />
         </ProveedorAutenticacion>
       </ProveedorIdioma>
     </ProveedorTema>

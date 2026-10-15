@@ -12,6 +12,7 @@ interface ContextoAutenticacionTipo {
   cerrarSesion: () => Promise<void>
   solicitarRecuperacion: (email: string) => Promise<{ exito: boolean; error?: string }>
   cambiarContrasena: (contrasenaActual: string, nuevaContrasena: string) => Promise<{ exito: boolean; error?: string }>
+  cambiarContrasenaObligatoria: (nuevaContrasena: string) => Promise<{ exito: boolean; error?: string }>
 }
 
 const ContextoAutenticacion = createContext<ContextoAutenticacionTipo | undefined>(undefined)
@@ -138,8 +139,47 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
       }
     })
 
+    // Revalidar el perfil al volver a la pestaña y periódicamente. Esto permite
+    // reflejar un restablecimiento de contraseña hecho por administración sin
+    // depender de que el vigilador cierre sesión manualmente.
+    const refrescarPerfilActual = async () => {
+      try {
+        const { data, error } = await clienteSupabase.auth.getUser()
+        if (error) throw error
+        if (!data.user) {
+          if (activo) setUsuario(null)
+          return
+        }
+        const perfil = await cargarPerfil(data.user)
+        if (activo) {
+          setUsuario(perfil)
+          setErrorAuth(null)
+        }
+      } catch (err) {
+        console.error('Error al revalidar el perfil:', err)
+        if (activo) {
+          setUsuario(null)
+          setErrorAuth(err instanceof Error ? err.message : 'No se pudo validar el perfil.')
+        }
+      }
+    }
+
+    const alVolverAFoco = () => { void refrescarPerfilActual() }
+    const alCambiarVisibilidad = () => {
+      if (document.visibilityState === 'visible') void refrescarPerfilActual()
+    }
+    const intervaloRevalidacion = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void refrescarPerfilActual()
+    }, 30_000)
+
+    window.addEventListener('focus', alVolverAFoco)
+    document.addEventListener('visibilitychange', alCambiarVisibilidad)
+
     return () => {
       activo = false
+      window.clearInterval(intervaloRevalidacion)
+      window.removeEventListener('focus', alVolverAFoco)
+      document.removeEventListener('visibilitychange', alCambiarVisibilidad)
       listener.subscription.unsubscribe()
     }
   }, [])
@@ -219,6 +259,32 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
     }
   }
 
+  const cambiarContrasenaObligatoria = async (nuevaContrasena: string) => {
+    if (!hayConexionSupabase || !supabase || !usuario) {
+      return { exito: false, error: 'No hay una sesión activa.' }
+    }
+    if (nuevaContrasena.length < 8) {
+      return { exito: false, error: 'La nueva contraseña debe tener al menos 8 caracteres.' }
+    }
+    try {
+      const { data, error } = await supabase.functions.invoke('cambiar-contrasena-obligatoria', {
+        body: { nueva_contrasena: nuevaContrasena }
+      })
+      if (error || data?.error) {
+        const contexto = (error as { context?: Response } | null)?.context
+        let detalle = typeof data?.error === 'string' ? data.error : ''
+        if (!detalle && contexto) {
+          try { detalle = ((await contexto.clone().json()) as { error?: string }).error || '' } catch { /* respuesta sin JSON */ }
+        }
+        return { exito: false, error: detalle || error?.message || 'No se pudo actualizar la contraseña.' }
+      }
+      setUsuario((actual) => actual ? { ...actual, debe_cambiar_contrasena: false } : actual)
+      return { exito: true }
+    } catch (err) {
+      return { exito: false, error: err instanceof Error ? err.message : 'No se pudo actualizar la contraseña.' }
+    }
+  }
+
   const cerrarSesion = async () => {
     setCargando(true)
     try {
@@ -261,7 +327,8 @@ export const ProveedorAutenticacion: React.FC<{ children: React.ReactNode }> = (
         iniciarSesion,
         cerrarSesion,
         solicitarRecuperacion,
-        cambiarContrasena
+        cambiarContrasena,
+        cambiarContrasenaObligatoria
       }}
     >
       {children}
