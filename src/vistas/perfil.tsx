@@ -34,12 +34,13 @@ export const VistaPerfil: React.FC<PropiedadesPerfil> = ({
 
   useEffect(() => {
     if (!usuario || !supabase) return
+    const db = supabase
     let cancelado = false
     const cargarFichaTecnica = async () => {
       setCargandoFicha(true)
       setFichaTecnica({})
       try {
-        const { data: vigilador } = await supabase
+        const { data: vigilador } = await db
           .from('vigiladores')
           .select('id')
           .eq('id_usuario', usuario.id)
@@ -47,7 +48,7 @@ export const VistaPerfil: React.FC<PropiedadesPerfil> = ({
 
         if (!vigilador || cancelado) return
 
-        const { data: ficha } = await supabase
+        const { data: ficha } = await db
           .from('fichas_vigiladores')
           .select('dni,fecha_nacimiento,domicilio,contacto_emergencia_nombre,contacto_emergencia_telefono,fecha_ingreso,categoria,tipo_contrato,fecha_fin_contrato,notas_administrativas')
           .eq('id_vigilador', vigilador.id)
