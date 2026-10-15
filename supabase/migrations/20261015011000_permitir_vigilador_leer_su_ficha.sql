@@ -14,3 +14,14 @@ using (
       and v.id_usuario = (select auth.uid())
   )
 );
+
+
+-- Permite resolver el vínculo entre la cuenta autenticada y su registro de vigilador.
+-- La condición limita la lectura al registro del propio usuario.
+drop policy if exists "vigilador lee su propio registro" on public.vigiladores;
+
+create policy "vigilador lee su propio registro"
+on public.vigiladores
+for select
+to authenticated
+using (id_usuario = (select auth.uid()));
