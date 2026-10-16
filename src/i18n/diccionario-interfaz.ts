@@ -285,7 +285,6 @@ export const traduccionesInterfazEn: Record<string, string> = {
   'Total Día': 'Daily Total',
   'Feriado': 'Holiday',
   'Feriados': 'Holidays',
-  'F': 'D',
   'Novedad': 'Log Entry',
   'Novedades': 'Log Entries',
   'Publicar aviso': 'Publish Notice',
