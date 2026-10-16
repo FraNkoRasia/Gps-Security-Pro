@@ -829,6 +829,16 @@ export const traduccionesInterfazEn: Record<string, string> = {
   'Publicado por: ': 'Published by: ',
   'Fecha del turno: ': 'Shift date: ',
   'Motivo: ': 'Reason: ',
+  'Personal': 'Personal',
+  'Laboral': 'Employment',
+  'Actividad': 'Activity',
+  'Documentación': 'Documentation',
+  'Ficha del vigilador:': 'Security Guard File:',
+  'Finalizada': 'Completed',
+  'Diurna': 'Day Shift',
+  'Nocturna': 'Night Shift',
+  '12🌙 Nocturno (19:00 - 07:00)': '12🌙 Night Shift (19:00 - 07:00)',
+  '12☀️ Diurno (07:00 - 19:00)': '12☀️ Day Shift (07:00 - 19:00)',
 }
 
 const traduccionesAtributosEn: Record<string, string> = {
@@ -910,6 +920,23 @@ export function traducirTextoInterfaz(texto: string): string {
     const inicio = texto.match(/^\s*/)?.[0] ?? ''
     const fin = texto.match(/\s*$/)?.[0] ?? ''
     return inicio + traducido + fin
+  }
+
+  // Traduce la categoría de turno en etiquetas generadas por el sistema,
+  // conservando el horario y cualquier otro dato que acompañe al tipo.
+  const turnoTraducido = normalizado.replace(/\b(Nocturnas|Nocturna|Nocturno|Nocturnos|Diurnas|Diurna|Diurno|Diurnos)\b/gi, (tipo) => {
+    const clave = tipo.toLowerCase()
+    const traducciones: Record<string, string> = {
+      nocturno: 'Night Shift', nocturna: 'Night Shift', nocturnos: 'Night Shifts', nocturnas: 'Night Shifts',
+      diurno: 'Day Shift', diurna: 'Day Shift', diurnos: 'Day Shifts', diurnas: 'Day Shifts',
+    }
+    const resultado = traducciones[clave] ?? tipo
+    return tipo[0] === tipo[0].toUpperCase() ? resultado : resultado.toLowerCase()
+  })
+  if (turnoTraducido !== normalizado) {
+    const inicio = texto.match(/^\s*/)?.[0] ?? ''
+    const fin = texto.match(/\s*$/)?.[0] ?? ''
+    return inicio + turnoTraducido + fin
   }
 
   const fechaTraducida = traducirFechaInterfaz(normalizado)
