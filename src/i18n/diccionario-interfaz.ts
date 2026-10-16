@@ -899,8 +899,6 @@ export const traduccionesInterfazEn: Record<string, string> = {
   'registros de turno': 'shift records',
   'Gestión Global de Empresas': 'Global Company Management',
   'Administración de compañías clientes y aislamiento multitenant de seguridad.': 'Management of client companies and security tenant isolation.',
-  'puestos': 'posts',
-  'asignados': 'assigned',
   'Ingresar a la Empresa': 'Enter Company',
   'Ingresar a la empresa': 'Enter Company',
   'CUIT:': 'Tax ID:',
