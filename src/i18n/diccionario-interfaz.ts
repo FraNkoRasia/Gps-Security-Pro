@@ -690,6 +690,10 @@ export const traduccionesInterfazEn: Record<string, string> = {
   'Activos (': 'Active (',
   'Inactivos (': 'Inactive (',
   '¿Deseas ': 'Do you want to ',
+  'dar de baja': 'deactivate',
+  'dar de alta': 'activate',
+  'a': ' ',
+  'No hay tipos de turno configurados.': 'No shift types have been configured.',
 }
 
 const traduccionesAtributosEn: Record<string, string> = {
@@ -724,7 +728,7 @@ export function traducirTextoInterfaz(texto: string): string {
   if (!normalizado) return texto
 
   const traduccion = traduccionesInterfazEn[normalizado]
-  if (traduccion) {
+  if (traduccion !== undefined) {
     // Preserva espacios que separan fragmentos JSX de texto dinámico
     // (por ejemplo, "¿Deseas " + estado + " a " + nombre).
     const inicio = texto.match(/^\s*/)?.[0] ?? ''
