@@ -831,16 +831,16 @@ const MESES_EN: Record<string, string> = {
 function traducirFechaInterfaz(texto: string): string {
   const normalizado = texto.replace(/\s+/g, ' ').trim()
   const meses = Object.keys(MESES_EN).join('|')
-  const fecha = normalizado.match(new RegExp(\`^(\\d{1,2}) de (\${meses})(?: de (\\d{4}))?(?:, feriado: (.+))?$\`, 'i'))
+  const fecha = normalizado.match(new RegExp('^(\\d{1,2}) de (' + meses + ')(?: de (\\d{4}))?(?:, feriado: (.+))?$', 'i'))
   if (fecha) {
     const dia = Number(fecha[1])
     const mes = MESES_EN[fecha[2].toLowerCase()]
     const año = fecha[3]
-    const fechaEn = año ? \`\${mes} \${dia}, \${año}\` : \`\${mes} \${dia}\`
-    return fecha[4] ? \`\${fechaEn}, holiday: \${fecha[4]}\` : fechaEn
+    const fechaEn = año ? mes + ' ' + dia + ', ' + año : mes + ' ' + dia
+    return fecha[4] ? fechaEn + ', holiday: ' + fecha[4] : fechaEn
   }
-  const mesAño = normalizado.match(new RegExp(\`^(\${meses}) de (\\d{4})$\`, 'i'))
-  if (mesAño) return \`\${MESES_EN[mesAño[1].toLowerCase()]} \${mesAño[2]}\`
+  const mesAño = normalizado.match(new RegExp('^(' + meses + ') de (\\d{4})$', 'i'))
+  if (mesAño) return MESES_EN[mesAño[1].toLowerCase()] + ' ' + mesAño[2]
   return texto
 }
 
@@ -852,7 +852,7 @@ export function traducirTextoInterfaz(texto: string): string {
   if (fechaTraducida !== normalizado) {
     const inicio = texto.match(/^\s*/)?.[0] ?? ''
     const fin = texto.match(/\s*$/)?.[0] ?? ''
-    return \`\${inicio}\${fechaTraducida}\${fin}\`
+    return inicio + fechaTraducida + fin
   }
 
   const traduccion = traduccionesInterfazEn[normalizado]
