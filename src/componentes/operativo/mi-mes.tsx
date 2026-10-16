@@ -4,7 +4,7 @@ import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import { useTraduccion } from '@/i18n'
-import { eliminarTurnosDuplicados, obtenerResumenHorasMes, turnoSeSuperponeConMes } from '@/utilidades/calculo-horas-mes'
+import { eliminarTurnosDuplicados, obtenerHorasProgramadasEnMes, obtenerIntervaloTurno, obtenerResumenHorasMes, turnoSeSuperponeConMes } from '@/utilidades/calculo-horas-mes'
 
 const formatearHorasMinutos = (horas: number) => {
   const minutosTotales = Math.round(horas * 60)
@@ -44,7 +44,15 @@ export const MiMes: React.FC = () => {
   const turnosContables = eliminarTurnosDuplicados(turnosMes.filter(t => t.estado !== 'reemplazado'))
 
   // El objetivo conserva las horas programadas; las horas realizadas se calculan solo al finalizar.
-  const horasObjetivoMes = turnosContables.reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
+  const horasObjetivoMes = turnosContables.reduce((acc, t) => {
+    const horasProgramadas = obtenerHorasProgramadasEnMes(t, mesSeleccionado)
+    const { fin } = obtenerIntervaloTurno(t)
+    const [anio, mes] = mesSeleccionado.split('-').map(Number)
+    const inicioMes = new Date(anio, mes - 1, 1)
+    const finMes = new Date(anio, mes, 1)
+    const extrasDelMes = fin >= inicioMes && fin < finMes ? t.horas_extra : 0
+    return acc + horasProgramadas + extrasDelMes
+  }, 0)
   const resumenHoras = obtenerResumenHorasMes(turnosContables, mesSeleccionado, ahora)
   const horasTrabajadasAlMomento = resumenHoras.horasTurno + resumenHoras.horasExtra
   const horasDiurnas = resumenHoras.horasDiurnas
