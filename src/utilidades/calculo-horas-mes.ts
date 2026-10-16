@@ -22,7 +22,7 @@ export const eliminarTurnosDuplicados = (turnos: Turno[]) => {
   const ids = new Set<string>()
   const clavesHorario = new Set<string>()
   // Si hay un duplicado reemplazado y otro vigente, conservar el vigente.
-  const ordenados = [...turnos].sort((a, b) => Number(a.estado === 'reemplazado') - Number(b.estado === 'reemplazado'))
+  const ordenados = [...turnos].sort((a, b) => Number(a.estado === 'reemplazado' || a.estado === 'ausente') - Number(b.estado === 'reemplazado' || b.estado === 'ausente'))
   return ordenados.filter(turno => {
     if (ids.has(turno.id)) return false
     ids.add(turno.id)
@@ -68,7 +68,7 @@ export const obtenerResumenHorasMes = (turnos: Turno[], mes: string, ahora = new
   const resumen: ResumenHorasMes = { horasTurno: 0, horasDiurnas: 0, horasNocturnas: 0, horasExtra: 0, turnosFinalizados: [] }
 
   for (const turno of eliminarTurnosDuplicados(turnos)) {
-    if (turno.tipo === 'franco' || turno.estado === 'reemplazado' || turno.horas_totales <= 0) continue
+    if (turno.tipo === 'franco' || turno.estado === 'reemplazado' || turno.estado === 'ausente' || turno.horas_totales <= 0) continue
 
     const { inicio, fin } = obtenerIntervaloTurno(turno)
     // No se contabilizan turnos futuros ni turnos que todavía están en curso.
