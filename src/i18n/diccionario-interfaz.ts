@@ -903,8 +903,8 @@ export function traducirAtributoInterfaz(texto: string): string {
     [/^Ver ficha de (.+)$/, (m) => `View personnel file for ${m[1]}`],
     [/^Ver ficha del vigilador$/, () => 'View security guard file'],
     [/^Restablecer contraseña de (.+)$/, (m) => `Reset password for ${m[1]}`],
-    [/^Quitar feriado el (.+)$/, (m) => `Remove holiday on ${m[1]}`],
-    [/^Marcar feriado el (.+)$/, (m) => `Mark holiday on ${m[1]}`],
+    [/^Quitar feriado el (.+)$/, (m) => `Remove holiday on ${traducirFechaInterfaz(m[1])}`],
+    [/^Marcar feriado el (.+)$/, (m) => `Mark holiday on ${traducirFechaInterfaz(m[1])}`],
     [/^(.+) de (.+), feriado: (.+)$/, (m) => `${m[1]} ${m[2]}, holiday: ${m[3]}`],
     [/^(.+) de (.+)$/, (m) => `${m[1]} of ${m[2]}`],
   ]
