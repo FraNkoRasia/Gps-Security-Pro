@@ -4,6 +4,7 @@ import { Dialogo } from '@/componentes/ui/dialogo'
 import { Boton } from '@/componentes/ui/boton'
 import type { Usuario, Asignacion, Objetivo, Turno, NovedadLibro, SolicitudHorasExtra, SolicitudCambio } from '@/tipos'
 import { supabase } from '@/servicios/supabase'
+import { useTraduccion } from '@/i18n'
 
 type CabeceraVigilador = { nombre: string; apellido: string; email: string; telefono: string; legajo: string }
 
@@ -50,6 +51,7 @@ export const FichaVigilador: React.FC<{
   horasExtra: SolicitudHorasExtra[]
   cambios: SolicitudCambio[]
 }> = ({ abierto, vigilador, alCerrar, asignaciones, objetivos, turnos, novedades, horasExtra, cambios }) => {
+  const { idioma } = useTraduccion()
   const [ficha, setFicha] = useState<Ficha>(vacia)
   const [cabecera, setCabecera] = useState<CabeceraVigilador>({ nombre: '', apellido: '', email: '', telefono: '', legajo: '' })
   const [cargando, setCargando] = useState(false)
@@ -140,8 +142,11 @@ export const FichaVigilador: React.FC<{
 
         <div className="flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-800">
           {([
-            ['personal', 'Personal'], ['laboral', 'Laboral'], ['objetivos', 'Objetivos'],
-            ['actividad', 'Actividad'], ['documentacion', 'Documentación']
+            ['personal', idioma === 'en' ? 'Personal' : 'Personal'],
+            ['laboral', idioma === 'en' ? 'Employment' : 'Laboral'],
+            ['objetivos', idioma === 'en' ? 'Sites' : 'Objetivos'],
+            ['actividad', idioma === 'en' ? 'Activity' : 'Actividad'],
+            ['documentacion', idioma === 'en' ? 'Documentation' : 'Documentación']
           ] as const).map(([key, label]) => <button key={key} type="button" onClick={() => setPestana(key)} className={`shrink-0 border-b-2 px-3 py-2 text-sm font-semibold ${pestana === key ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500'}`}>{label}</button>)}
         </div>
 

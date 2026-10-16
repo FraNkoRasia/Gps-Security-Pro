@@ -9,10 +9,13 @@ import { Etiqueta } from '@/componentes/ui/etiqueta'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { NovedadLibro } from '@/tipos'
+import { useTraduccion } from '@/i18n'
+import { traducirTextoInterfaz } from '@/i18n/diccionario-interfaz'
 
 export const LibroNovedades: React.FC = () => {
   const { novedades, objetivos, crearNovedad, editarNovedad, marcarNovedadLeida, novedadesLeidas } = useOperativo()
   const { usuario } = useAutenticacion()
+  const { idioma } = useTraduccion()
 
   const [modalNuevoAbierto, setModalNuevoAbierto] = useState(false)
   const [modalEditarAbierto, setModalEditarAbierto] = useState(false)
@@ -216,7 +219,7 @@ export const LibroNovedades: React.FC = () => {
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 sm:p-5 hover:bg-slate-50 dark:hover:bg-slate-900/60">
                 <div className="min-w-0">
                   <div className="font-bold text-sm text-slate-900 dark:text-white">{formatearDia(dia)}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{novedadesPorDia[dia].length} {novedadesPorDia[dia].length === 1 ? 'novedad' : 'novedades'}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{novedadesPorDia[dia].length} {idioma === 'en' ? (novedadesPorDia[dia].length === 1 ? 'entry' : 'entries') : (novedadesPorDia[dia].length === 1 ? 'novedad' : 'novedades')}</div>
                 </div>
                 <ChevronDown className="w-5 h-5 shrink-0 text-slate-500 transition-transform group-open:rotate-180" />
               </summary>
@@ -230,7 +233,7 @@ export const LibroNovedades: React.FC = () => {
                         <div className="min-w-0 space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-bold text-sm text-slate-900 dark:text-white">{nov.hora} hs</span>
-                            <Insignia variante="azul">{nov.turno}</Insignia>
+                            <Insignia variante="azul">{idioma === 'en' ? traducirTextoInterfaz(nov.turno) : nov.turno}</Insignia>
                             {noLeida && <Insignia variante="verde">Nueva</Insignia>}
                           </div>
                           <div className="text-xs text-slate-500 dark:text-slate-400">{obj?.nombre || 'Objetivo'} · {nov.nombre_vigilante}</div>
@@ -264,7 +267,7 @@ export const LibroNovedades: React.FC = () => {
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-bold text-slate-900 dark:text-white text-sm">{obj?.nombre || 'Objetivo'}</span>
-                      <Insignia variante="azul">{nov.turno}</Insignia>
+                      <Insignia variante="azul">{idioma === 'en' ? traducirTextoInterfaz(nov.turno) : nov.turno}</Insignia>
                       {nov.id_vigilador !== usuario?.id && !novedadesLeidas.includes(nov.id) ? <Insignia variante="verde">Nueva</Insignia> : null}
                     </div>
                     <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
