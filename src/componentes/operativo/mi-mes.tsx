@@ -27,6 +27,10 @@ export const MiMes: React.FC = () => {
   }, [])
   const mesActual = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`
   const [mesSeleccionado, setMesSeleccionado] = useState(mesActual)
+  // Al cambiar de mes calendario, Mi Mes pasa automáticamente al nuevo mes.
+  useEffect(() => {
+    setMesSeleccionado(mesActual)
+  }, [mesActual])
   const mesesDisponibles = useMemo(() => {
     const anios = new Set(turnos.filter(t => t.id_vigilador === idVig).map(t => t.fecha.slice(0, 4)))
     anios.add(String(ahora.getFullYear()))
@@ -47,10 +51,7 @@ export const MiMes: React.FC = () => {
   const horasObjetivoMes = turnosContables.reduce((acc, t) => {
     const horasProgramadas = obtenerHorasProgramadasEnMes(t, mesSeleccionado)
     const { fin } = obtenerIntervaloTurno(t)
-    const [anio, mes] = mesSeleccionado.split('-').map(Number)
-    const inicioMes = new Date(anio, mes - 1, 1)
-    const finMes = new Date(anio, mes, 1)
-    const extrasDelMes = fin >= inicioMes && fin < finMes ? t.horas_extra : 0
+    const extrasDelMes = t.fecha.startsWith(mesSeleccionado) ? t.horas_extra : 0
     return acc + horasProgramadas + extrasDelMes
   }, 0)
   const resumenHoras = obtenerResumenHorasMes(turnosContables, mesSeleccionado, ahora)
