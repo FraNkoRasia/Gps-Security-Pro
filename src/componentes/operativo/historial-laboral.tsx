@@ -4,44 +4,11 @@ import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import { useTraduccion } from '@/i18n'
+import { obtenerMesesDeTurnos, obtenerResumenHorasMes, turnoFinalizado, turnoSeSuperponeConMes } from '@/utilidades/calculo-horas-mes'
 
 const formatearHoras = (horas: number) => {
   const minutos = Math.round(horas * 60)
   return `${Math.floor(minutos / 60)}.${String(minutos % 60).padStart(2, '0')}`
-}
-
-const turnoYaFinalizo = (turno: { fecha: string; hora_inicio: string; hora_fin: string }) => {
-  const ahora = new Date()
-  const [anio, mes, dia] = turno.fecha.split('-').map(Number)
-  const [horaInicio, minutoInicio] = turno.hora_inicio.slice(0, 5).split(':').map(Number)
-  const [horaFin, minutoFin] = turno.hora_fin.slice(0, 5).split(':').map(Number)
-  const inicio = new Date(anio, mes - 1, dia, horaInicio, minutoInicio)
-  const fin = new Date(anio, mes - 1, dia, horaFin, minutoFin)
-  if (fin <= inicio) fin.setDate(fin.getDate() + 1)
-  return fin <= ahora
-}
-
-
-const calcularHorasPorFranja = (turno: { fecha: string; hora_inicio: string; hora_fin: string }) => {
-  const [anio, mes, dia] = turno.fecha.split('-').map(Number)
-  const [horaInicio, minutoInicio] = turno.hora_inicio.slice(0, 5).split(':').map(Number)
-  const [horaFin, minutoFin] = turno.hora_fin.slice(0, 5).split(':').map(Number)
-  const inicio = new Date(anio, mes - 1, dia, horaInicio, minutoInicio || 0, 0, 0)
-  let fin = new Date(anio, mes - 1, dia, horaFin, minutoFin || 0, 0, 0)
-  if (fin.getTime() <= inicio.getTime()) fin = new Date(fin.getTime() + 24 * 60 * 60 * 1000)
-
-  let minutosDiurnos = 0
-  let minutosNocturnos = 0
-  for (let cursor = inicio.getTime(); cursor < fin.getTime(); cursor += 60000) {
-    const hora = new Date(cursor).getHours()
-    if (hora >= 21 || hora < 6) minutosNocturnos++
-    else minutosDiurnos++
-  }
-  return {
-    diurnas: minutosDiurnos / 60,
-    nocturnas: minutosNocturnos / 60,
-    total: (minutosDiurnos + minutosNocturnos) / 60,
-  }
 }
 
 export const HistorialLaboral: React.FC = () => {
@@ -49,30 +16,43 @@ export const HistorialLaboral: React.FC = () => {
   const { usuario } = useAutenticacion()
   const { idioma } = useTraduccion()
   const idVigilador = usuario?.id || ''
-  const ahora = new Date()
+  const [ahora, setAhora] = useState(() => new Date())
+  React.useEffect(() => {
+    const intervalo = window.setInterval(() => setAhora(new Date()), 60_000)
+    return () => window.clearInterval(intervalo)
+  }, [])
   const mesActual = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`
   const [mesSeleccionado, setMesSeleccionado] = useState(mesActual)
 
-  const turnosVigilador = useMemo(
-    () => turnos.filter(t => t.id_vigilador === idVigilador).sort((a, b) => b.fecha.localeCompare(a.fecha)),
-    [turnos, idVigilador]
-  )
-  const anios = useMemo(() => {
-    const lista = new Set(turnosVigilador.map(t => t.fecha.slice(0, 4)))
-    lista.add(String(ahora.getFullYear()))
+  const turnosVigilador = useMemo(() => {
+    const unicos = new Map(turnos.filter(t => t.id_vigilador === idVigilador).map(t => [t.id, t]))
+    return Array.from(unicos.values()).sort((a, b) => b.fecha.localeCompare(a.fecha))
+  }, [turnos, idVigilador])
+
+  const mesesDisponibles = useMemo(() => {
+    const lista = new Set(obtenerMesesDeTurnos(turnosVigilador).filter(m => m <= mesActual))
+    lista.add(mesActual)
     return Array.from(lista).sort((a, b) => b.localeCompare(a))
-  }, [turnosVigilador, ahora.getFullYear()])
-  const meses = anios.flatMap(anio => Array.from({ length: 12 }, (_, i) => {
-    const valor = `${anio}-${String(i + 1).padStart(2, '0')}`
-    return { valor, etiqueta: new Intl.DateTimeFormat(idioma === 'en' ? 'en-US' : 'es-AR', { month: 'long', year: 'numeric' }).format(new Date(Number(anio), i, 1)) }
-  }).filter(m => m.valor <= mesActual)).sort((a, b) => b.valor.localeCompare(a.valor))
-  const turnosMes = turnosVigilador.filter(t => t.fecha.startsWith(mesSeleccionado) && turnoYaFinalizo(t))
-  const horasNormales = turnosMes.reduce((s, t) => s + calcularHorasPorFranja(t).total, 0)
-  const horasExtra = turnosMes.reduce((s, t) => s + t.horas_extra, 0)
-  const horasDiurnas = turnosMes.reduce((s, t) => s + calcularHorasPorFranja(t).diurnas, 0)
-  const horasNocturnas = turnosMes.reduce((s, t) => s + calcularHorasPorFranja(t).nocturnas, 0)
-  const horasFeriado = turnosMes.reduce((s, t) => s + (t.es_feriado ? t.horas_totales : 0), 0)
-  const diasTrabajados = turnosMes.filter(t => t.horas_totales > 0).length
+  }, [turnosVigilador, mesActual])
+  const meses = mesesDisponibles.map(valor => ({
+    valor,
+    etiqueta: new Intl.DateTimeFormat(idioma === 'en' ? 'en-US' : 'es-AR', { month: 'long', year: 'numeric' }).format(
+      new Date(Number(valor.slice(0, 4)), Number(valor.slice(5, 7)) - 1, 1)
+    ),
+  }))
+
+  const turnosMes = turnosVigilador.filter(t =>
+    t.estado !== 'reemplazado' && turnoFinalizado(t, ahora) && turnoSeSuperponeConMes(t, mesSeleccionado)
+  )
+  const resumen = obtenerResumenHorasMes(turnosVigilador, mesSeleccionado, ahora)
+  const horasNormales = resumen.horasTurno
+  const horasExtra = resumen.horasExtra
+  const horasDiurnas = resumen.horasDiurnas
+  const horasNocturnas = resumen.horasNocturnas
+  const horasFeriado = resumen.turnosFinalizados
+    .filter(t => t.es_feriado)
+    .reduce((s, t) => s + t.horas_totales, 0)
+  const diasTrabajados = resumen.turnosFinalizados.length
   const nombreMes = new Intl.DateTimeFormat(idioma === 'en' ? 'en-US' : 'es-AR', { month: 'long', year: 'numeric' }).format(
     new Date(Number(mesSeleccionado.slice(0, 4)), Number(mesSeleccionado.slice(5, 7)) - 1, 1)
   )
