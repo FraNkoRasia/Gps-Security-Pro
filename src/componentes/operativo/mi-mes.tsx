@@ -4,7 +4,7 @@ import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import { useTraduccion } from '@/i18n'
-import { eliminarTurnosDuplicados, obtenerHorasProgramadasEnMes, obtenerIntervaloTurno, obtenerResumenHorasMes, turnoSeSuperponeConMes } from '@/utilidades/calculo-horas-mes'
+import { eliminarTurnosDuplicados, obtenerHorasProgramadasEnMes, obtenerResumenHorasMes, turnoSeSuperponeConMes } from '@/utilidades/calculo-horas-mes'
 
 const formatearHorasMinutos = (horas: number) => {
   const minutosTotales = Math.round(horas * 60)
