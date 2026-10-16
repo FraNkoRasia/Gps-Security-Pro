@@ -13,18 +13,9 @@ const ContenidoAplicacion: React.FC = () => {
   const { estaAutenticado, cargando, usuario } = useAutenticacion()
 
   if (cargando) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4">
-        <div className="relative">
-          <div className="w-16 h-16 rounded-2xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-blue-500/40 flex items-center justify-center p-2 animate-pulse shadow-xl">
-            <img src="/Escudo.png" alt="GSP Logo" className="w-full h-full object-contain" />
-          </div>
-        </div>
-        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-wider uppercase animate-pulse">
-          Iniciando GSP Security Pro...
-        </p>
-      </div>
-    )
+    // Evita una segunda pantalla con un logo distinto mientras se restaura la sesión.
+    // El logo principal se muestra una sola vez en la pantalla de acceso.
+    return <div className="min-h-screen flex-1 bg-[#080C14]" aria-label="Iniciando GSP Security Pro" />
   }
 
   // El cambio obligatorio por DNI es exclusivo de los vigiladores.
