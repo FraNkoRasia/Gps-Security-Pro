@@ -115,7 +115,7 @@ export const MiTurno: React.FC = () => {
                   {turnoVisible ? `${turnoVisible.hora_inicio} → ${turnoVisible.hora_fin}` : (idioma === 'en' ? 'No shift today' : 'Sin turno hoy')}
                 </span>
                 <span className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold block mt-0.5">
-                  {turnoVisible ? (turnoVisible.tipo === 'nocturno' ? (idioma === 'en' ? (tiposTurno.find(t => t.id === turnoVisible.id_tipo_turno)?.nombre?.replace(/\\bnocturno\\b/gi, 'Night Shift') || 'Night Shift') : tiposTurno.find(t => t.id === turnoVisible.id_tipo_turno)?.nombre || 'Turno nocturno') : turnoVisible.tipo === 'diurno' ? (idioma === 'en' ? (tiposTurno.find(t => t.id === turnoVisible.id_tipo_turno)?.nombre?.replace(/\\bdiurno\\b/gi, 'Day Shift') || 'Day Shift') : tiposTurno.find(t => t.id === turnoVisible.id_tipo_turno)?.nombre || 'Turno diurno') : (idioma === 'en' ? 'Day Off' : 'Franco')) : (idioma === 'en' ? 'No shift scheduled' : 'Sin guardia programada')}
+                  {turnoVisible ? (turnoVisible.tipo === 'nocturno' ? (idioma === 'en' ? (tiposTurno.find(t => t.id === turnoVisible.id_tipo_turno)?.nombre?.replace(/nocturno/gi, 'Night Shift') || 'Night Shift') : tiposTurno.find(t => t.id === turnoVisible.id_tipo_turno)?.nombre || 'Turno nocturno') : turnoVisible.tipo === 'diurno' ? (idioma === 'en' ? (tiposTurno.find(t => t.id === turnoVisible.id_tipo_turno)?.nombre?.replace(/diurno/gi, 'Day Shift') || 'Day Shift') : tiposTurno.find(t => t.id === turnoVisible.id_tipo_turno)?.nombre || 'Turno diurno') : (idioma === 'en' ? 'Day Off' : 'Franco')) : (idioma === 'en' ? 'No shift scheduled' : 'Sin guardia programada')}
                 </span>
               </div>
 
@@ -164,7 +164,7 @@ export const MiTurno: React.FC = () => {
                 const esFranco = !turno || turno.tipo === 'franco' || turno.horas_totales === 0
                 const nombreConfigurado = turno ? tiposTurno.find(t => t.id === turno.id_tipo_turno)?.nombre : undefined
                 const nombreTurno = turno
-                  ? turno.tipo === 'nocturno' ? (idioma === 'en' ? (nombreConfigurado?.replace(/\\bnocturno\\b/gi, 'Night Shift') || '12🌙 Night Shift') : nombreConfigurado || '12🌙 Nocturno') : turno.tipo === 'diurno' ? (idioma === 'en' ? (nombreConfigurado?.replace(/\\bdiurno\\b/gi, 'Day Shift') || '12☀️ Day Shift') : nombreConfigurado || '12☀️ Diurno') : turno.tipo === 'franco' ? (idioma === 'en' ? 'Day Off' : nombreConfigurado || 'Franco') : nombreConfigurado || turno.tipo
+                  ? turno.tipo === 'nocturno' ? (idioma === 'en' ? (nombreConfigurado?.replace(/nocturno/gi, 'Night Shift') || '12🌙 Night Shift') : nombreConfigurado || '12🌙 Nocturno') : turno.tipo === 'diurno' ? (idioma === 'en' ? (nombreConfigurado?.replace(/diurno/gi, 'Day Shift') || '12☀️ Day Shift') : nombreConfigurado || '12☀️ Diurno') : turno.tipo === 'franco' ? (idioma === 'en' ? 'Day Off' : nombreConfigurado || 'Franco') : nombreConfigurado || turno.tipo
                   : (idioma === 'en' ? 'Day Off' : 'Franco')
                 return (
                   <div key={fecha} className="py-3 flex items-center justify-between gap-3">
