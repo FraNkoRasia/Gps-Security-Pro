@@ -36,13 +36,6 @@ export const eliminarTurnosDuplicados = (turnos: Turno[]) => {
 export const turnoFinalizado = (turno: Pick<Turno, 'fecha' | 'hora_inicio' | 'hora_fin'>, ahora = new Date()) =>
   obtenerIntervaloTurno(turno).fin.getTime() <= ahora.getTime()
 
-const obtenerLimitesMes = (mes: string) => {
-  const [anio, numeroMes] = mes.split('-').map(Number)
-  return {
-    inicio: new Date(anio, numeroMes - 1, 1, 0, 0, 0, 0),
-    fin: new Date(anio, numeroMes, 1, 0, 0, 0, 0),
-  }
-}
 
 export const turnoSeSuperponeConMes = (
   turno: Pick<Turno, 'fecha' | 'hora_inicio' | 'hora_fin' | 'tipo'>,
@@ -62,7 +55,6 @@ export const obtenerHorasProgramadasEnMes = (turno: Turno, mes: string) => {
 }
 
 export const obtenerResumenHorasMes = (turnos: Turno[], mes: string, ahora = new Date()): ResumenHorasMes => {
-  const limites = obtenerLimitesMes(mes)
   const resumen: ResumenHorasMes = { horasTurno: 0, horasDiurnas: 0, horasNocturnas: 0, horasExtra: 0, turnosFinalizados: [] }
 
   for (const turno of eliminarTurnosDuplicados(turnos)) {
