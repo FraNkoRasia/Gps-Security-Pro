@@ -835,13 +835,27 @@ export function traducirTextoInterfaz(texto: string): string {
     return `${inicio}${traduccion}${fin}`
   }
 
-  // Algunos botones combinan una etiqueta estática con un contador React.
-  // Solo traducimos el prefijo de interfaz; el valor dinámico queda intacto.
-  if (normalizado.startsWith('Activos (')) {
-    return texto.replace('Activos (', 'Active (')
-  }
-  if (normalizado.startsWith('Inactivos (')) {
-    return texto.replace('Inactivos (', 'Inactive (')
+  // Algunos nodos incluyen una etiqueta fija seguida de datos dinámicos.
+  // Solo traducimos el prefijo conocido y dejamos nombres/valores intactos.
+  const prefijosDinamicos: Array<[string, string]> = [
+    ['Activos (', 'Active ('],
+    ['Inactivos (', 'Inactive ('],
+    ['Ficha del vigilador:', 'Security Guard File:'],
+    ['Historial operativo:', 'Operational History:'],
+    ['Historial de Asignaciones:', 'Assignment History:'],
+    ['Reasignación de servicio para', 'Service reassignment for'],
+    ['No se pudo cargar la ficha técnica del perfil:', 'Could not load the profile personnel file:'],
+    ['No se pudo cargar el registro del vigilador:', 'Could not load the security guard record:'],
+    ['No se pudo cargar la ficha:', 'Could not load the file:'],
+    ['Error al invocar instalación PWA:', 'Error launching PWA installation:'],
+  ]
+  for (const [prefijo, traduccionPrefijo] of prefijosDinamicos) {
+    if (normalizado.startsWith(prefijo)) {
+      const inicio = texto.match(/^\\s*/)?.[0] ?? ''
+      const fin = texto.match(/\\s*$/)?.[0] ?? ''
+      const contenido = texto.trim()
+      return `${inicio}${contenido.replace(prefijo, traduccionPrefijo)}${fin}`
+    }
   }
 
   return texto
