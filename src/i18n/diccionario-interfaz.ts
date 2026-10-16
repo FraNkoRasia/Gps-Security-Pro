@@ -877,8 +877,6 @@ export const traduccionesInterfazEn: Record<string, string> = {
   'Wednesday': 'Wednesday',
   'Thursday': 'Thursday',
   'Friday': 'Friday',
-  'Franco': 'Day Off',
-  'franco': 'day off',
   'diurno': 'day shift',
   'nocturno': 'night shift',
   'No se encontraron registros de novedades con los filtros seleccionados.': 'No logbook entries match the selected filters.',
