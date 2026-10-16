@@ -137,8 +137,8 @@ export const MiMes: React.FC = () => {
               </span>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {horasObjetivoMes > 0 && horasTrabajadasAlMomento >= horasObjetivoMes
-                  ? 'Objetivo mensual alcanzado'
-                  : `Faltan ${formatearHorasMinutos(horasPendientes)} hs para cumplir el objetivo`}
+                  ? (idioma === 'en' ? 'Monthly target reached' : 'Objetivo mensual alcanzado')
+                  : idioma === 'en' ? `${formatearHorasMinutos(horasPendientes)} h remaining to reach the target` : `Faltan ${formatearHorasMinutos(horasPendientes)} hs para cumplir el objetivo`}
               </p>
             </div>
           </div>
