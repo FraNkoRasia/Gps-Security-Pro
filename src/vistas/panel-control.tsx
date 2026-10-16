@@ -30,7 +30,7 @@ import { useOperativo } from '@/contextos/contexto-operativo'
 
 export const VistaPanelControl: React.FC = () => {
   const { usuario } = useAutenticacion()
-  const { t } = useTraduccion()
+  const { t, idioma } = useTraduccion()
 
   const [pestanaActiva, setPestanaActiva] = useState<string>('objetivos')
   const [objetivoGrillaId, setObjetivoGrillaId] = useState<string | null>(null)
@@ -145,7 +145,7 @@ export const VistaPanelControl: React.FC = () => {
                     setEmpresaSeleccionadaId(null)
                   }}
                 >
-                  ← Volver a Empresas
+                  ← {idioma === 'en' ? 'Back to Companies' : 'Volver a Empresas'}
                 </Boton>
                 <Insignia variante="azul">Vista de Empresa</Insignia>
               </div>
@@ -163,7 +163,7 @@ export const VistaPanelControl: React.FC = () => {
                       tamano="chico"
                       onClick={() => setObjetivoSeleccionadoId(null)}
                     >
-                      ← Volver a Objetivos
+                      ← {idioma === 'en' ? 'Back to Sites' : 'Volver a Objetivos'}
                     </Boton>
                   </div>
                   <GestionVigiladores
@@ -215,7 +215,7 @@ export const VistaPanelControl: React.FC = () => {
               if (vistaObjetivo === 'vigiladores') return (
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <Boton variante="secundario" tamano="chico" onClick={() => setVistaObjetivo('detalle')} icono={<ArrowLeft className="w-4 h-4" />}>Volver al objetivo</Boton>
+                    <Boton variante="secundario" tamano="chico" onClick={() => setVistaObjetivo('detalle')} icono={<ArrowLeft className="w-4 h-4" />}>{idioma === 'en' ? 'Back to Site' : 'Volver al objetivo'}</Boton>
                     <Insignia variante="azul">Vigiladores del objetivo</Insignia>
                   </div>
                   <GestionVigiladores idEmpresaSeleccionada={objetivo.id_empresa} idObjetivoSeleccionado={objetivo.id} modoConsulta />

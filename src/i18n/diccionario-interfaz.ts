@@ -902,6 +902,11 @@ export const traduccionesInterfazEn: Record<string, string> = {
   'Ingresar a la Empresa': 'Enter Company',
   'Ingresar a la empresa': 'Enter Company',
   'CUIT:': 'Tax ID:',
+  'Preferencias': 'Preferences',
+  'Personal:': 'Staff:',
+  '← Volver a Empresas': '← Back to Companies',
+  '← Volver a Objetivos': '← Back to Sites',
+  '← Volver al objetivo': '← Back to Site',
 }
 
 const traduccionesAtributosEn: Record<string, string> = {
