@@ -31,7 +31,21 @@ function traducirNodoTexto(nodo: Text, idioma: Idioma) {
     textosOriginales.set(nodo, original)
   }
 
-  const resultado = idioma === 'en' ? traducirTextoInterfaz(original) : original
+  let resultado = idioma === 'en' ? traducirTextoInterfaz(original) : original
+
+  // "Franco" es un tipo de turno, pero también puede ser un nombre propio.
+  // Traducirlo solo dentro de una opción de selección evita alterar nombres
+  // de vigiladores o administradores mostrados en el resto de la aplicación.
+  if (
+    idioma === 'en' &&
+    original.replace(/\\s+/g, ' ').trim() === 'Franco' &&
+    nodo.parentElement?.closest('option, [role="option"]')
+  ) {
+    const inicio = original.match(/^\\s*/)?.[0] ?? ''
+    const fin = original.match(/\\s*$/)?.[0] ?? ''
+    resultado = `${inicio}Day Off${fin}`
+  }
+
   textosAplicados.set(nodo, resultado)
   if (nodo.data !== resultado) nodo.data = resultado
 }
