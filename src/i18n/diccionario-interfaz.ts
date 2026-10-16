@@ -821,9 +821,39 @@ const traduccionesAtributosEn: Record<string, string> = {
   'Select English language': 'Select English language'
 }
 
+const MESES_EN: Record<string, string> = {
+  enero: 'January', febrero: 'February', marzo: 'March', abril: 'April',
+  mayo: 'May', junio: 'June', julio: 'July', agosto: 'August',
+  septiembre: 'September', setiembre: 'September', octubre: 'October',
+  noviembre: 'November', diciembre: 'December',
+}
+
+function traducirFechaInterfaz(texto: string): string {
+  const normalizado = texto.replace(/\s+/g, ' ').trim()
+  const meses = Object.keys(MESES_EN).join('|')
+  const fecha = normalizado.match(new RegExp('^(\\d{1,2}) de (' + meses + ')(?: de (\\d{4}))?(?:, feriado: (.+))?$', 'i'))
+  if (fecha) {
+    const dia = Number(fecha[1])
+    const mes = MESES_EN[fecha[2].toLowerCase()]
+    const año = fecha[3]
+    const fechaEn = año ? mes + ' ' + dia + ', ' + año : mes + ' ' + dia
+    return fecha[4] ? fechaEn + ', holiday: ' + fecha[4] : fechaEn
+  }
+  const mesAño = normalizado.match(new RegExp('^(' + meses + ') de (\\d{4})$', 'i'))
+  if (mesAño) return MESES_EN[mesAño[1].toLowerCase()] + ' ' + mesAño[2]
+  return texto
+}
+
 export function traducirTextoInterfaz(texto: string): string {
   const normalizado = texto.replace(/\s+/g, ' ').trim()
   if (!normalizado) return texto
+
+  const fechaTraducida = traducirFechaInterfaz(normalizado)
+  if (fechaTraducida !== normalizado) {
+    const inicio = texto.match(/^\s*/)?.[0] ?? ''
+    const fin = texto.match(/\s*$/)?.[0] ?? ''
+    return inicio + fechaTraducida + fin
+  }
 
   const traduccion = traduccionesInterfazEn[normalizado]
   if (traduccion !== undefined) {
@@ -850,8 +880,8 @@ export function traducirTextoInterfaz(texto: string): string {
   ]
   for (const [prefijo, traduccionPrefijo] of prefijosDinamicos) {
     if (normalizado.startsWith(prefijo)) {
-      const inicio = texto.match(/^\\s*/)?.[0] ?? ''
-      const fin = texto.match(/\\s*$/)?.[0] ?? ''
+      const inicio = texto.match(/^\s*/)?.[0] ?? ''
+      const fin = texto.match(/\s*$/)?.[0] ?? ''
       const contenido = texto.trim()
       return `${inicio}${contenido.replace(prefijo, traduccionPrefijo)}${fin}`
     }
@@ -862,6 +892,8 @@ export function traducirTextoInterfaz(texto: string): string {
 
 export function traducirAtributoInterfaz(texto: string): string {
   const normalizado = texto.replace(/\s+/g, ' ').trim()
+  const fechaTraducida = traducirFechaInterfaz(normalizado)
+  if (fechaTraducida !== normalizado) return fechaTraducida
   const exacta = traduccionesAtributosEn[normalizado] ?? traduccionesInterfazEn[normalizado]
   if (exacta) return exacta
 
@@ -871,8 +903,8 @@ export function traducirAtributoInterfaz(texto: string): string {
     [/^Ver ficha de (.+)$/, (m) => `View personnel file for ${m[1]}`],
     [/^Ver ficha del vigilador$/, () => 'View security guard file'],
     [/^Restablecer contraseña de (.+)$/, (m) => `Reset password for ${m[1]}`],
-    [/^Quitar feriado el (.+)$/, (m) => `Remove holiday on ${m[1]}`],
-    [/^Marcar feriado el (.+)$/, (m) => `Mark holiday on ${m[1]}`],
+    [/^Quitar feriado el (.+)$/, (m) => `Remove holiday on ${traducirFechaInterfaz(m[1])}`],
+    [/^Marcar feriado el (.+)$/, (m) => `Mark holiday on ${traducirFechaInterfaz(m[1])}`],
     [/^(.+) de (.+), feriado: (.+)$/, (m) => `${m[1]} ${m[2]}, holiday: ${m[3]}`],
     [/^(.+) de (.+)$/, (m) => `${m[1]} of ${m[2]}`],
   ]
