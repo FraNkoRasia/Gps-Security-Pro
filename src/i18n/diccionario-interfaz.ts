@@ -791,7 +791,6 @@ export const traduccionesInterfazEn: Record<string, string> = {
   'Las nuevas contraseñas no coinciden.': 'The new passwords do not match.',
   'No se pudo cargar la ficha técnica del perfil:': 'Could not load the profile personnel file:',
   'No se pudo cargar la ficha técnica del perfil': 'Could not load the profile personnel file',
-  'Franco Rasia': 'Franco Rasia',
   'Sin turno registrado (Franco o libre)': 'No shift recorded (day off or free)',
 }
 
@@ -799,7 +798,7 @@ const traduccionesAtributosEn: Record<string, string> = {
   'Buscar por vigilador, informe o palabras clave...': 'Search by guard, report, or keywords...',
   'Buscar por nombre o apellido...': 'Search by first or last name...',
   'Buscar por nombre, DNI o legajo...': 'Search by name, ID, or employee number...',
-  'Ej: MercadoLibre Río Cuarto': 'E.g. MercadoLibre Rio Cuarto',
+  'Ej: MercadoLibre Río Cuarto': 'E.g., MercadoLibre Río Cuarto',
   'Ej: Refuerzo de control vehicular por evento': 'E.g. Additional vehicle control for an event',
   'Detallá la instrucción, alcance o normativa a cumplir...': 'Describe the instruction, scope, or rules to follow...',
   'Seleccioná un vigilador...': 'Select a security guard...',
