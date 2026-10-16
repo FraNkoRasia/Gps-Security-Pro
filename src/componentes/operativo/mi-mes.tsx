@@ -4,6 +4,7 @@ import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import { useTraduccion } from '@/i18n'
+import { obtenerResumenHorasMes } from '@/utilidades/calculo-horas-mes'
 
 const formatearHorasMinutos = (horas: number) => {
   const minutosTotales = Math.round(horas * 60)
@@ -12,39 +13,6 @@ const formatearHorasMinutos = (horas: number) => {
   return `${horasEnteras}.${String(minutosRestantes).padStart(2, '0')}`
 }
 
-
-const calcularHorasPorFranja = (
-  turno: { fecha: string; hora_inicio: string; hora_fin: string },
-  limite?: Date
-) => {
-  const [anio, mes, dia] = turno.fecha.split('-').map(Number)
-  const [horaInicio, minutoInicio] = turno.hora_inicio.slice(0, 5).split(':').map(Number)
-  const [horaFin, minutoFin] = turno.hora_fin.slice(0, 5).split(':').map(Number)
-  const inicio = new Date(anio, mes - 1, dia, horaInicio, minutoInicio || 0, 0, 0)
-  let fin = new Date(anio, mes - 1, dia, horaFin, minutoFin || 0, 0, 0)
-  if (fin.getTime() <= inicio.getTime()) fin = new Date(fin.getTime() + 24 * 60 * 60 * 1000)
-
-  let finContable = fin
-  if (limite && limite.getTime() < finContable.getTime()) {
-    const minutosTranscurridos = Math.max(0, Math.floor((limite.getTime() - inicio.getTime()) / 60000))
-    finContable = new Date(inicio.getTime() + minutosTranscurridos * 60000)
-  }
-  if (finContable.getTime() <= inicio.getTime()) return { diurnas: 0, nocturnas: 0, total: 0 }
-
-  let minutosDiurnos = 0
-  let minutosNocturnos = 0
-  for (let cursor = inicio.getTime(); cursor < finContable.getTime(); cursor += 60000) {
-    const hora = new Date(cursor).getHours()
-    if (hora >= 21 || hora < 6) minutosNocturnos++
-    else minutosDiurnos++
-  }
-
-  return {
-    diurnas: minutosDiurnos / 60,
-    nocturnas: minutosNocturnos / 60,
-    total: (minutosDiurnos + minutosNocturnos) / 60,
-  }
-}
 
 export const MiMes: React.FC = () => {
   const { turnos } = useOperativo()
@@ -72,46 +40,26 @@ export const MiMes: React.FC = () => {
     (t) => t.id_vigilador === idVig && t.fecha.startsWith(mesSeleccionado)
   )
 
-  // Los turnos reemplazados no forman parte de las horas ni del objetivo de este vigilador.
-  // Si el turno sigue asignado al vigilador, su estado debe ser "programado".
-  const turnosContables = turnosMes.filter((t) => t.estado !== 'reemplazado')
+  // Excluye reemplazos y evita duplicar registros antes de aplicar el cálculo compartido.
+  const turnosContables = Array.from(
+    new Map(turnosMes.filter(t => t.estado !== 'reemplazado').map(t => [t.id, t])).values()
+  )
 
-  // Objetivo mensual: suma de los turnos válidos de la grilla, incluidas las extras aprobadas.
+  // El objetivo conserva las horas programadas; las horas realizadas se calculan solo al finalizar.
   const horasObjetivoMes = turnosContables.reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
-
-  // Horas trabajadas hasta la fecha: se cuenta solo el tiempo transcurrido de cada turno.
-  // Las horas extra autorizadas se agregan cuando finaliza el turno, como antes.
-  const horasTrabajadasAlMomento = turnosContables.reduce((acc, t) => {
-    if (t.tipo === 'franco' || t.horas_totales <= 0) return acc
-    if (mesSeleccionado > mesActual) return acc
-    const resultado = calcularHorasPorFranja(t, mesSeleccionado === mesActual ? ahora : undefined)
-    const [anio, mes, dia] = t.fecha.split('-').map(Number)
-    const [horaInicio, minutoInicio] = t.hora_inicio.slice(0, 5).split(':').map(Number)
-    const [horaFin, minutoFin] = t.hora_fin.slice(0, 5).split(':').map(Number)
-    const inicio = new Date(anio, mes - 1, dia, horaInicio, minutoInicio || 0, 0, 0)
-    let fin = new Date(anio, mes - 1, dia, horaFin, minutoFin || 0, 0, 0)
-    if (fin.getTime() <= inicio.getTime()) fin = new Date(fin.getTime() + 24 * 60 * 60 * 1000)
-    const extrasFinalizadas = ahora.getTime() >= fin.getTime() ? t.horas_extra : 0
-    return acc + resultado.total + extrasFinalizadas
-  }, 0)
-
-  const horasDiurnas = turnosContables.reduce((acc, t) => {
-    if (t.tipo === 'franco' || t.horas_totales <= 0 || mesSeleccionado > mesActual) return acc
-    return acc + calcularHorasPorFranja(t, mesSeleccionado === mesActual ? ahora : undefined).diurnas
-  }, 0)
-  const horasNocturnas = turnosContables.reduce((acc, t) => {
-    if (t.tipo === 'franco' || t.horas_totales <= 0 || mesSeleccionado > mesActual) return acc
-    return acc + calcularHorasPorFranja(t, mesSeleccionado === mesActual ? ahora : undefined).nocturnas
-  }, 0)
-  const horasDomingos = turnosContables
-    .filter((t) => t.es_domingo)
+  const resumenHoras = obtenerResumenHorasMes(turnosContables, mesSeleccionado, ahora)
+  const horasTrabajadasAlMomento = resumenHoras.horasTurno + resumenHoras.horasExtra
+  const horasDiurnas = resumenHoras.horasDiurnas
+  const horasNocturnas = resumenHoras.horasNocturnas
+  const horasDomingos = resumenHoras.turnosFinalizados
+    .filter(t => t.es_domingo)
     .reduce((acc, t) => acc + t.horas_totales, 0)
-  const horasFeriados = turnosContables
-    .filter((t) => t.es_feriado)
+  const horasFeriados = resumenHoras.turnosFinalizados
+    .filter(t => t.es_feriado)
     .reduce((acc, t) => acc + t.horas_totales, 0)
-  const horasExtra = turnosContables.reduce((acc, t) => acc + t.horas_extra, 0)
-  const francos = turnosContables.filter((t) => t.tipo === 'franco').length
-  const diasTrabajados = turnosContables.filter((t) => t.horas_totales > 0).length
+  const horasExtra = resumenHoras.horasExtra
+  const francos = turnosContables.filter(t => t.tipo === 'franco' && t.fecha <= ahora.toISOString().slice(0, 10)).length
+  const diasTrabajados = resumenHoras.turnosFinalizados.length
 
   const porcentajeCumplimiento = horasObjetivoMes > 0
     ? Math.min(100, Math.round((horasTrabajadasAlMomento / horasObjetivoMes) * 100))
