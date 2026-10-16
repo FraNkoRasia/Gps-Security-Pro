@@ -23,7 +23,7 @@ export const GestionTiposTurno:React.FC<{objetivoId:string;alCerrar:()=>void}>=(
  const cambiarInicio=(v:string)=>{setInicio(v);setHoraInicio(v.split(':')[0]||'00');setMinutoInicio(v.split(':')[1]||'00');setFin(calcularFin(v,horas))}
  const cambiarHora=(h:string,m:string)=>{const v=h+':'+m;setHoraInicio(h);setMinutoInicio(m);cambiarInicio(v)}
  const cambiarHoras=(v:string)=>{setHoras(v);setFin(calcularFin(inicio,v))}
- const abrir=(t?:TipoTurnoPersonalizado)=>{setEditando(t||null);setHoras(t?String(t.horas):'');setTipo(t?.tipo||'especial');const h=t?.hora_inicio||'00:00';setInicio(h);setHoraInicio(h.split(':')[0]||'00');setMinutoInicio(h.split(':')[1]||'00');setFin(t?.hora_fin||'');setError('');setModal(true)}
+ const abrir=(t?:TipoTurnoPersonalizado)=>{setEditando(t||null);setHoras(t?String(t.horas):'');setTipo(t?.tipo||'especial');const h=t?.hora_inicio||'00:00';setInicio(t?.hora_inicio||'');setHoraInicio(h.split(':')[0]||'00');setMinutoInicio(h.split(':')[1]||'00');setFin(t?.hora_fin||'');setError('');setModal(true)}
  const guardar=async(e:React.FormEvent)=>{
   e.preventDefault();setError('')
   const h=Number(horas)
