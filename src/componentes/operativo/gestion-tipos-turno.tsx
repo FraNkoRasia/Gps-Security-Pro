@@ -11,7 +11,7 @@ import type {TipoTurnoPersonalizado} from '@/tipos'
 export const GestionTiposTurno:React.FC<{objetivoId:string;alCerrar:()=>void}>=({objetivoId,alCerrar})=>{
  const {usuario}=useAutenticacion(); const {tiposTurno,crearTipoTurno,editarTipoTurno,eliminarTipoTurno}=useOperativo()
  const [editando,setEditando]=useState<TipoTurnoPersonalizado|null>(null); const [modal,setModal]=useState(false)
- const [horas,setHoras]=useState(''); const [tipo,setTipo]=useState<TipoTurnoPersonalizado['tipo']>('especial'); const [inicio,setInicio]=useState(''); const [fin,setFin]=useState(''); const [error,setError]=useState(''); const [confirmando,setConfirmando]=useState<TipoTurnoPersonalizado|null>(null); const [horaInicio,setHoraInicio]=useState('07'); const [minutoInicio,setMinutoInicio]=useState('00')
+ const [horas,setHoras]=useState(''); const [tipo,setTipo]=useState<TipoTurnoPersonalizado['tipo']>('especial'); const [inicio,setInicio]=useState(''); const [fin,setFin]=useState(''); const [error,setError]=useState(''); const [confirmando,setConfirmando]=useState<TipoTurnoPersonalizado|null>(null); const [horaInicio,setHoraInicio]=useState('00'); const [minutoInicio,setMinutoInicio]=useState('00')
  const disponibles=tiposTurno.filter(t=>t.activo&&(t.id_objetivo===objetivoId||t.id_objetivo===null))
  const calcularFin=(hora:string,h:string)=>{
   if(!hora||!h)return ''
@@ -20,16 +20,17 @@ export const GestionTiposTurno:React.FC<{objetivoId:string;alCerrar:()=>void}>=(
   const minutos=(hh*60+mm+Math.round(cantidad*60))%(24*60)
   return String(Math.floor(minutos/60)).padStart(2,'0')+':'+String(minutos%60).padStart(2,'0')
  }
- const cambiarInicio=(v:string)=>{setInicio(v);setHoraInicio(v.split(':')[0]||'07');setMinutoInicio(v.split(':')[1]||'00');setFin(calcularFin(v,horas))}
+ const cambiarInicio=(v:string)=>{setInicio(v);setHoraInicio(v.split(':')[0]||'00');setMinutoInicio(v.split(':')[1]||'00');setFin(calcularFin(v,horas))}
  const cambiarHora=(h:string,m:string)=>{const v=h+':'+m;setHoraInicio(h);setMinutoInicio(m);cambiarInicio(v)}
  const cambiarHoras=(v:string)=>{setHoras(v);setFin(calcularFin(inicio,v))}
- const abrir=(t?:TipoTurnoPersonalizado)=>{setEditando(t||null);setHoras(t?String(t.horas):'');setTipo(t?.tipo||'especial');const h=t?.hora_inicio||'07:00';setInicio(h);setHoraInicio(h.split(':')[0]||'07');setMinutoInicio(h.split(':')[1]||'00');setFin(t?.hora_fin||'');setError('');setModal(true)}
+ const abrir=(t?:TipoTurnoPersonalizado)=>{setEditando(t||null);setHoras(t?String(t.horas):'');setTipo(t?.tipo||'especial');const h=t?.hora_inicio||'00:00';setInicio(h);setHoraInicio(h.split(':')[0]||'00');setMinutoInicio(h.split(':')[1]||'00');setFin(t?.hora_fin||'');setError('');setModal(true)}
  const guardar=async(e:React.FormEvent)=>{
   e.preventDefault();setError('')
   const h=Number(horas)
   if(!Number.isFinite(h)||h<0){setError('Completá una cantidad válida de horas.');return}
   const finCalculado=tipo==='franco'?'':calcularFin(inicio,String(h))
   if(tipo!=='franco'&&!inicio){setError('Indicá la hora de inicio.');return}
+   if(tipo==='nocturno'){const [hh,mm]=inicio.split(':').map(Number);const duracionMinutos=Math.round(h*60);const inicioMinutos=hh*60+mm;let tieneHorasNocturnas=false;for(let minuto=0;minuto<duracionMinutos;minuto++){const horaDelDia=(inicioMinutos+minuto)%(24*60);if(horaDelDia>=21*60||horaDelDia<6*60){tieneHorasNocturnas=true;break}}if(!tieneHorasNocturnas){setError('Un turno nocturno debe incluir horas dentro de la franja nocturna: de 21:00 a 06:00. Revisá la hora de inicio o la cantidad de horas.');return}}
   const d={nombre:tipo==='franco'?'Franco':(h+'Hs '+(tipo==='diurno'?'Diurno':tipo==='nocturno'?'Nocturno':tipo==='mixto'?'Mixto':'Especial')),abreviatura:tipo==='franco'?'F':tipo==='diurno'?'☀️':tipo==='nocturno'?'🌙':(h+'h'+tipo.charAt(0).toUpperCase()),horas:h,tipo,hora_inicio:inicio||null,hora_fin:finCalculado||null,color:null,id_objetivo:objetivoId}
   const r=editando?await editarTipoTurno(editando.id,d):await crearTipoTurno(d);if(r){setError(r);return};setModal(false)
  }
