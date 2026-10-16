@@ -54,12 +54,9 @@ export const turnoSeSuperponeConMes = (
 
 export const obtenerResumenHorasMes = (turnos: Turno[], mes: string, ahora = new Date()): ResumenHorasMes => {
   const limites = obtenerLimitesMes(mes)
-  const idsProcesados = new Set<string>()
   const resumen: ResumenHorasMes = { horasTurno: 0, horasDiurnas: 0, horasNocturnas: 0, horasExtra: 0, turnosFinalizados: [] }
 
-  for (const turno of turnos) {
-    if (idsProcesados.has(turno.id)) continue
-    idsProcesados.add(turno.id)
+  for (const turno of eliminarTurnosDuplicados(turnos)) {
     if (turno.tipo === 'franco' || turno.estado === 'reemplazado' || turno.horas_totales <= 0) continue
 
     const { inicio, fin } = obtenerIntervaloTurno(turno)
