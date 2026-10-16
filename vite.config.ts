@@ -32,24 +32,14 @@ export default defineConfig({
         display: 'standalone',
         display_override: ['standalone'],
         orientation: 'portrait-primary',
+        // Usar el logo oficial de la pantalla de acceso y evitar el icono maskable
+        // del escudo, que Android puede recortar al generar la pantalla de inicio.
         icons: [
-          {
-            src: '/Escudo.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any'
-          },
           {
             src: '/logoAPP.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any'
-          },
-          {
-            src: '/Escudo.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable'
           }
         ]
       }
