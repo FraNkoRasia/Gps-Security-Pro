@@ -54,6 +54,15 @@ export const turnoSeSuperponeConMes = (
   return inicio < limites.fin && fin > limites.inicio
 }
 
+export const obtenerHorasProgramadasEnMes = (turno: Turno, mes: string) => {
+  if (turno.tipo === 'franco' || turno.horas_totales <= 0 || turno.estado === 'reemplazado') return 0
+  const { inicio, fin } = obtenerIntervaloTurno(turno)
+  const limites = obtenerLimitesMes(mes)
+  const inicioMes = Math.max(inicio.getTime(), limites.inicio.getTime())
+  const finMes = Math.min(fin.getTime(), limites.fin.getTime())
+  return Math.max(0, finMes - inicioMes) / 3600000
+}
+
 export const obtenerResumenHorasMes = (turnos: Turno[], mes: string, ahora = new Date()): ResumenHorasMes => {
   const limites = obtenerLimitesMes(mes)
   const resumen: ResumenHorasMes = { horasTurno: 0, horasDiurnas: 0, horasNocturnas: 0, horasExtra: 0, turnosFinalizados: [] }
