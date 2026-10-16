@@ -3,6 +3,7 @@ import { Sun, Moon } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
+import { useTraduccion } from '@/i18n'
 
 const formatearHorasMinutos = (horas: number) => {
   const minutosTotales = Math.round(horas * 60)
@@ -14,6 +15,7 @@ const formatearHorasMinutos = (horas: number) => {
 export const MiMes: React.FC = () => {
   const { turnos } = useOperativo()
   const { usuario } = useAutenticacion()
+  const { idioma } = useTraduccion()
 
   const idVig = usuario?.id || 'usr-vig-01'
   const [ahora, setAhora] = useState(() => new Date())
@@ -29,7 +31,7 @@ export const MiMes: React.FC = () => {
     return Array.from(anios).sort((a, b) => b.localeCompare(a))
   }, [turnos, idVig, ahora.getFullYear()])
   const fechaMesSeleccionado = new Date(Number(mesSeleccionado.slice(0, 4)), Number(mesSeleccionado.slice(5, 7)) - 1, 1)
-  const nombreMesSeleccionado = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(fechaMesSeleccionado)
+  const nombreMesSeleccionado = new Intl.DateTimeFormat(idioma === 'en' ? 'en-US' : 'es-AR', { month: 'long', year: 'numeric' }).format(fechaMesSeleccionado)
 
   // Turnos del mes seleccionado para este vigilador
   const turnosMes = turnos.filter(
@@ -104,7 +106,7 @@ export const MiMes: React.FC = () => {
           >
             {mesesDisponibles.flatMap(anio => Array.from({ length: 12 }, (_, i) => {
               const valor = `${anio}-${String(i + 1).padStart(2, '0')}`
-              const etiqueta = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(new Date(Number(anio), i, 1))
+              const etiqueta = new Intl.DateTimeFormat(idioma === 'en' ? 'en-US' : 'es-AR', { month: 'long', year: 'numeric' }).format(new Date(Number(anio), i, 1))
               return { valor, etiqueta }
             }).filter(m => m.valor <= mesActual))
               .sort((a, b) => b.valor.localeCompare(a.valor))
