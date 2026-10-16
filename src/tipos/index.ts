@@ -63,7 +63,7 @@ export interface TipoTurnoPersonalizado {
   nombre: string
   abreviatura: string
   horas: number
-  tipo: 'diurno' | 'nocturno' | 'mixto' | 'franco' | 'especial'
+  tipo: 'diurno' | 'nocturno' | 'franco'
   hora_inicio?: string | null
   hora_fin?: string | null
   color?: string | null
