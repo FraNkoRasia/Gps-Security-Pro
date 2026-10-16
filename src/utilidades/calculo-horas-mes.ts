@@ -21,7 +21,9 @@ export const obtenerIntervaloTurno = (turno: Pick<Turno, 'fecha' | 'hora_inicio'
 export const eliminarTurnosDuplicados = (turnos: Turno[]) => {
   const ids = new Set<string>()
   const clavesHorario = new Set<string>()
-  return turnos.filter(turno => {
+  // Si hay un duplicado reemplazado y otro vigente, conservar el vigente.
+  const ordenados = [...turnos].sort((a, b) => Number(a.estado === 'reemplazado') - Number(b.estado === 'reemplazado'))
+  return ordenados.filter(turno => {
     if (ids.has(turno.id)) return false
     ids.add(turno.id)
     const clave = [turno.id_empresa, turno.id_vigilador, turno.id_objetivo, turno.fecha, turno.hora_inicio.slice(0, 5), turno.hora_fin.slice(0, 5)].join('|')
