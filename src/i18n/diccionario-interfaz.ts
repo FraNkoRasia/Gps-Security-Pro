@@ -297,9 +297,7 @@ export const traduccionesInterfazEn: Record<string, string> = {
   'Ocurrió un error inesperado': 'An unexpected error occurred',
   'Modo oscuro': 'Dark mode',
   'Modo claro': 'Light mode',
-  'Idioma': 'Language'
-}
-
+  'Idioma': 'Language',
   'Confirmar contraseña': 'Confirm Password',
   'Guardar contraseña y continuar': 'Save Password and Continue',
   'Experiencia nativa para guardias y administración': 'A native experience for security guards and administrators',
@@ -534,7 +532,6 @@ export const traduccionesInterfazEn: Record<string, string> = {
   'Gestión de Seguridad Profesional': 'Professional Security Management',
   'GSP Security Pro — Construido para una gestión de seguridad confiable, escalable y sin fisuras operativas.': 'GSP Security Pro — Built for reliable, scalable security management with seamless operations.',
 }
-
 const traduccionesAtributosEn: Record<string, string> = {
   'Buscar por vigilador, informe o palabras clave...': 'Search by guard, report, or keywords...',
   'Buscar por nombre o apellido...': 'Search by first or last name...',
