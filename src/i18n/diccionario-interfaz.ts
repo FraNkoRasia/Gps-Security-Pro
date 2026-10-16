@@ -885,6 +885,33 @@ export function traducirTextoInterfaz(texto: string): string {
   const normalizado = texto.replace(/\s+/g, ' ').trim()
   if (!normalizado) return texto
 
+  // Fechas de grupos del libro: el día y la fecha se generan dinámicamente.
+  const fechaConDia = normalizado.match(/^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo),?\s+(\d{1,2})\/(\d{1,2})\/(\d{4})$/i)
+  if (fechaConDia) {
+    const dias: Record<string, string> = {
+      lunes: 'Monday', martes: 'Tuesday', miércoles: 'Wednesday',
+      miercoles: 'Wednesday', jueves: 'Thursday', viernes: 'Friday',
+      sábado: 'Saturday', sabado: 'Saturday', domingo: 'Sunday',
+    }
+    const meses = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    const fechaEn = meses[Number(fechaConDia[3]) - 1]
+      ? meses[Number(fechaConDia[3]) - 1] + ' ' + Number(fechaConDia[2]) + ', ' + fechaConDia[4]
+      : fechaConDia[2] + '/' + fechaConDia[3] + '/' + fechaConDia[4]
+    const inicio = texto.match(/^\s*/)?.[0] ?? ''
+    const fin = texto.match(/\s*$/)?.[0] ?? ''
+    return inicio + dias[fechaConDia[1].toLowerCase()] + ', ' + fechaEn + fin
+  }
+
+  // Los contadores de novedades cambian según los registros de cada día.
+  const contadorNovedades = normalizado.match(/^(\d+)\s+novedades?$/i)
+  if (contadorNovedades) {
+    const cantidad = Number(contadorNovedades[1])
+    const traducido = cantidad === 1 ? '1 entry' : cantidad + ' entries'
+    const inicio = texto.match(/^\s*/)?.[0] ?? ''
+    const fin = texto.match(/\s*$/)?.[0] ?? ''
+    return inicio + traducido + fin
+  }
+
   const fechaTraducida = traducirFechaInterfaz(normalizado)
   if (fechaTraducida !== normalizado) {
     const inicio = texto.match(/^\s*/)?.[0] ?? ''
@@ -906,6 +933,12 @@ export function traducirTextoInterfaz(texto: string): string {
   const prefijosDinamicos: Array<[string, string]> = [
     ['Activos (', 'Active ('],
     ['Inactivos (', 'Inactive ('],
+    ['Publicado por:', 'Published by:'],
+    ['Fecha del turno:', 'Shift date:'],
+    ['Motivo:', 'Reason:'],
+    ['Fecha del Turno:', 'Shift Date:'],
+    ['Publicados desde', 'Published from'],
+    ['Publicados hasta', 'Published until'],
     ['Ficha del vigilador:', 'Security Guard File:'],
     ['Historial operativo:', 'Operational History:'],
     ['Historial de Asignaciones:', 'Assignment History:'],
