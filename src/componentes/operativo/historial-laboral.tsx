@@ -4,7 +4,7 @@ import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import { useTraduccion } from '@/i18n'
-import { obtenerMesesDeTurnos, obtenerResumenHorasMes, turnoFinalizado, turnoSeSuperponeConMes } from '@/utilidades/calculo-horas-mes'
+import { eliminarTurnosDuplicados, obtenerMesesDeTurnos, obtenerResumenHorasMes, turnoFinalizado, turnoSeSuperponeConMes } from '@/utilidades/calculo-horas-mes'
 
 const formatearHoras = (horas: number) => {
   const minutos = Math.round(horas * 60)
@@ -24,10 +24,10 @@ export const HistorialLaboral: React.FC = () => {
   const mesActual = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`
   const [mesSeleccionado, setMesSeleccionado] = useState(mesActual)
 
-  const turnosVigilador = useMemo(() => {
-    const unicos = new Map(turnos.filter(t => t.id_vigilador === idVigilador).map(t => [t.id, t]))
-    return Array.from(unicos.values()).sort((a, b) => b.fecha.localeCompare(a.fecha))
-  }, [turnos, idVigilador])
+  const turnosVigilador = useMemo(
+    () => eliminarTurnosDuplicados(turnos.filter(t => t.id_vigilador === idVigilador)).sort((a, b) => b.fecha.localeCompare(a.fecha)),
+    [turnos, idVigilador]
+  )
 
   const mesesDisponibles = useMemo(() => {
     const lista = new Set(obtenerMesesDeTurnos(turnosVigilador).filter(m => m <= mesActual))
