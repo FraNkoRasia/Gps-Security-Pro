@@ -881,6 +881,19 @@ export const traduccionesInterfazEn: Record<string, string> = {
   'franco': 'day off',
   'diurno': 'day shift',
   'nocturno': 'night shift',
+  'No se encontraron registros de novedades con los filtros seleccionados.': 'No logbook entries match the selected filters.',
+  'Seleccioná el código de guardia para esta jornada:': 'Select the shift code for this day:',
+  'hs': 'h',
+  'Faltan horas para cumplir el objetivo': 'Hours remaining to reach the target',
+  'No hay turno hoy': 'No shift today',
+  'No hay turno asignado': 'No shift assigned',
+  'No se pudo guardar la novedad.': 'Could not save the logbook entry.',
+  'Asentar Corrección Auditada': 'Save Audited Correction',
+  'No hay turnos para este mes.': 'No shifts for this month.',
+  'No hay solicitudes pendientes.': 'No pending requests.',
+  'Actualizar': 'Update',
+  'Modificar': 'Edit',
+  'Leer': 'Read',
 }
 
 const traduccionesAtributosEn: Record<string, string> = {
