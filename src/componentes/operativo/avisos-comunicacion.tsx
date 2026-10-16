@@ -9,10 +9,12 @@ import { Etiqueta } from '@/componentes/ui/etiqueta'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import type { Aviso } from '@/tipos'
+import { useTraduccion } from '@/i18n'
 
 export const AvisosComunicacion: React.FC = () => {
   const { avisos, objetivos, crearAviso, marcarAvisoLeido } = useOperativo()
   const { usuario } = useAutenticacion()
+  const { idioma } = useTraduccion()
 
   const [modalAbierto, setModalAbierto] = useState(false)
   const [titulo, setTitulo] = useState('')
@@ -136,7 +138,7 @@ export const AvisosComunicacion: React.FC = () => {
 
                 <div className="pt-2 flex items-center justify-between text-xs border-t border-slate-200 dark:border-slate-800">
                   <span className="text-[11px] text-slate-400">
-                    {new Date(av.creado_en).toLocaleString()}
+                    {new Date(av.creado_en).toLocaleString(idioma === 'en' ? 'en-US' : 'es-AR')}
                   </span>
 
                   {av.leido ? (
