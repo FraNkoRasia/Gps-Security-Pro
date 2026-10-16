@@ -49,18 +49,16 @@ export const turnoSeSuperponeConMes = (
   mes: string
 ) => {
   if (turno.tipo === 'franco') return turno.fecha.startsWith(mes)
-  const { inicio, fin } = obtenerIntervaloTurno(turno)
-  const limites = obtenerLimitesMes(mes)
-  return inicio < limites.fin && fin > limites.inicio
+  // Cada turno pertenece al mes de su fecha de inicio, aunque termine al mes siguiente.
+  return turno.fecha.startsWith(mes)
 }
 
 export const obtenerHorasProgramadasEnMes = (turno: Turno, mes: string) => {
   if (turno.tipo === 'franco' || turno.horas_totales <= 0 || turno.estado === 'reemplazado') return 0
+  if (!turno.fecha.startsWith(mes)) return 0
   const { inicio, fin } = obtenerIntervaloTurno(turno)
-  const limites = obtenerLimitesMes(mes)
-  const inicioMes = Math.max(inicio.getTime(), limites.inicio.getTime())
-  const finMes = Math.min(fin.getTime(), limites.fin.getTime())
-  return Math.max(0, finMes - inicioMes) / 3600000
+  // Se imputa el turno completo al mes en que comienza, sin cortarlo a medianoche.
+  return Math.max(0, fin.getTime() - inicio.getTime()) / 3600000
 }
 
 export const obtenerResumenHorasMes = (turnos: Turno[], mes: string, ahora = new Date()): ResumenHorasMes => {
@@ -70,16 +68,15 @@ export const obtenerResumenHorasMes = (turnos: Turno[], mes: string, ahora = new
   for (const turno of eliminarTurnosDuplicados(turnos)) {
     if (turno.tipo === 'franco' || turno.estado === 'reemplazado' || turno.estado === 'ausente' || turno.horas_totales <= 0) continue
 
+    // El mes se determina por la fecha de inicio del turno, no por cada tramo horario.
+    if (!turno.fecha.startsWith(mes)) continue
     const { inicio, fin } = obtenerIntervaloTurno(turno)
     // No se contabilizan turnos futuros ni turnos que todavía están en curso.
     if (fin.getTime() > ahora.getTime()) continue
-    const inicioMes = new Date(Math.max(inicio.getTime(), limites.inicio.getTime()))
-    const finMes = new Date(Math.min(fin.getTime(), limites.fin.getTime()))
-    if (finMes.getTime() <= inicioMes.getTime()) continue
 
     let minutosDiurnos = 0
     let minutosNocturnos = 0
-    for (let cursor = inicioMes.getTime(); cursor < finMes.getTime(); cursor += 60000) {
+    for (let cursor = inicio.getTime(); cursor < fin.getTime(); cursor += 60000) {
       const hora = new Date(cursor).getHours()
       if (hora >= 21 || hora < 6) minutosNocturnos++
       else minutosDiurnos++
@@ -90,9 +87,8 @@ export const obtenerResumenHorasMes = (turnos: Turno[], mes: string, ahora = new
     resumen.horasTurno += (minutosDiurnos + minutosNocturnos) / 60
     resumen.turnosFinalizados.push(turno)
 
-    // horas_extra ya representa minutos aprobados convertidos a horas en contexto-operativo.
-    // Se suma una vez y al mes en que finalizó el turno, sin incorporarla al desglose diurno/nocturno.
-    if (fin >= limites.inicio && fin < limites.fin) resumen.horasExtra += Number(turno.horas_extra || 0)
+    // Las horas extra aprobadas se atribuyen al mes de inicio del turno.
+    resumen.horasExtra += Number(turno.horas_extra || 0)
   }
   return resumen
 }
@@ -100,13 +96,9 @@ export const obtenerResumenHorasMes = (turnos: Turno[], mes: string, ahora = new
 export const obtenerMesesDeTurnos = (turnos: Turno[]) => {
   const meses = new Set<string>()
   for (const turno of turnos) {
-    const { inicio, fin } = obtenerIntervaloTurno(turno)
-    const cursor = new Date(inicio.getFullYear(), inicio.getMonth(), 1)
-    const ultimo = new Date(fin.getFullYear(), fin.getMonth(), 1)
-    while (cursor <= ultimo) {
-      meses.add(`${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`)
-      cursor.setMonth(cursor.getMonth() + 1)
-    }
+    // Un turno, incluso si cruza medianoche o de mes, solo pertenece al mes de inicio.
+    const [anio, numeroMes] = turno.fecha.split('-').map(Number)
+    meses.add(`${anio}-${String(numeroMes).padStart(2, '0')}`)
   }
   return Array.from(meses).sort((a, b) => b.localeCompare(a))
 }
