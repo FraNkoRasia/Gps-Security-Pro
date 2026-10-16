@@ -12,7 +12,7 @@ export const GestionTiposTurno:React.FC<{objetivoId:string;alCerrar:()=>void}>=(
  const {usuario}=useAutenticacion(); const {tiposTurno,crearTipoTurno,editarTipoTurno,eliminarTipoTurno}=useOperativo()
  const [editando,setEditando]=useState<TipoTurnoPersonalizado|null>(null); const [modal,setModal]=useState(false)
  const [horas,setHoras]=useState(''); const [tipo,setTipo]=useState<TipoTurnoPersonalizado['tipo']>('diurno'); const [inicio,setInicio]=useState(''); const [fin,setFin]=useState(''); const [error,setError]=useState(''); const [confirmando,setConfirmando]=useState<TipoTurnoPersonalizado|null>(null); const [horaInicio,setHoraInicio]=useState('00'); const [minutoInicio,setMinutoInicio]=useState('00')
- const disponibles=tiposTurno.filter(t=>t.activo&&(t.id_objetivo===objetivoId||t.id_objetivo===null))
+ const disponibles=tiposTurno.filter(t=>t.activo&&t.tipo!=='mixto'&&t.tipo!=='especial'&&(t.id_objetivo===objetivoId||t.id_objetivo===null))
  const calcularFin=(hora:string,h:string)=>{
   if(!hora||!h)return ''
   const cantidad=Number(h); if(!Number.isFinite(cantidad)||cantidad<0)return ''
