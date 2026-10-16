@@ -721,7 +721,27 @@ const traduccionesAtributosEn: Record<string, string> = {
 
 export function traducirTextoInterfaz(texto: string): string {
   const normalizado = texto.replace(/\s+/g, ' ').trim()
-  return traduccionesInterfazEn[normalizado] ?? texto
+  if (!normalizado) return texto
+
+  const traduccion = traduccionesInterfazEn[normalizado]
+  if (traduccion) {
+    // Preserva espacios que separan fragmentos JSX de texto dinámico
+    // (por ejemplo, "¿Deseas " + estado + " a " + nombre).
+    const inicio = texto.match(/^\s*/)?.[0] ?? ''
+    const fin = texto.match(/\s*$/)?.[0] ?? ''
+    return `${inicio}${traduccion}${fin}`
+  }
+
+  // Algunos botones combinan una etiqueta estática con un contador React.
+  // Solo traducimos el prefijo de interfaz; el valor dinámico queda intacto.
+  if (normalizado.startsWith('Activos (')) {
+    return texto.replace('Activos (', 'Active (')
+  }
+  if (normalizado.startsWith('Inactivos (')) {
+    return texto.replace('Inactivos (', 'Inactive (')
+  }
+
+  return texto
 }
 
 export function traducirAtributoInterfaz(texto: string): string {
