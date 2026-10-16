@@ -15,6 +15,7 @@ import { cargarFeriadosManuales, guardarFeriadosManuales } from '@/utilidades/fe
 import { cargarFeriadosArgentina } from '@/utilidades/feriados-argentina'
 import type { Turno } from '@/tipos'
 import { supabase } from '@/servicios/supabase'
+import { useTraduccion } from '@/i18n'
 
 const formatearHorasMinutos = (horas: number) => {
   const minutosTotales = Math.round(horas * 60)
@@ -41,6 +42,7 @@ type OperacionGrilla = { id_vigilador: string; fecha: string; codigo: string; id
 
 export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: boolean; onCambiosPendientesChange?: (pendientes: boolean) => void }> = ({ objetivoInicial = '', soloLectura = false, onCambiosPendientesChange }) => {
   const { objetivos, vigiladores, asignaciones, turnos, tiposTurno, guardarGrillaMensual } = useOperativo()
+  const { idioma } = useTraduccion()
   const contenedorDesplazamientoRef = useRef<HTMLDivElement>(null)
   const arrastreRef = useRef({ activo: false, inicioX: 0, scrollInicial: 0, seMovio: false })
   const suprimirClickRef = useRef(false)
@@ -600,10 +602,10 @@ export const GrillaMensual: React.FC<{ objetivoInicial?: string; soloLectura?: b
                     >
                       <div className="text-[10px] leading-tight opacity-75 font-semibold">
                         <span className="sm:hidden">
-                          {['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'][dateObj.getDay()]}
+                          {(idioma === 'en' ? ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'] : ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'])[dateObj.getDay()] }
                         </span>
                         <span className="hidden sm:inline">
-                          {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][dateObj.getDay()]}
+                          {(idioma === 'en' ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] : ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'])[dateObj.getDay()] }
                         </span>
                       </div>
                       <div className="font-extrabold text-sm">{dia}</div>
