@@ -530,7 +530,6 @@ export const traduccionesInterfazEn: Record<string, string> = {
   'Plataforma tecnológica para la gestión profesional de empresas de seguridad y vigilancia.': 'Technology platform for professional management of security and surveillance companies.',
   'Gestión de Seguridad Profesional': 'Professional Security Management',
   'GSP Security Pro — Construido para una gestión de seguridad confiable, escalable y sin fisuras operativas.': 'GSP Security Pro — Built for reliable, scalable security management with seamless operations.',
-}
   'Nuevo Vigilador': 'New Security Guard',
   'Publicar Aviso': 'Publish Notice',
   'Activos': 'Active',
@@ -691,6 +690,7 @@ export const traduccionesInterfazEn: Record<string, string> = {
   'Activos (': 'Active (',
   'Inactivos (': 'Inactive (',
   '¿Deseas ': 'Do you want to ',
+}
 
 const traduccionesAtributosEn: Record<string, string> = {
   'Buscar por vigilador, informe o palabras clave...': 'Search by guard, report, or keywords...',
