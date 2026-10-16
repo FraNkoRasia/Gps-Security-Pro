@@ -85,7 +85,7 @@ export const HistorialLaboral: React.FC = () => {
         <TarjetaContenido className="p-0">
           <div className="border-b border-slate-200 p-4 dark:border-slate-800">
             <h4 className="font-bold capitalize text-slate-900 dark:text-white">{nombreMes}</h4>
-            <p className="text-xs text-slate-500">{turnosMes.length} registros de turno</p>
+            <p className="text-xs text-slate-500">{idioma === 'en' ? `${turnosMes.length} shift records` : `${turnosMes.length} registros de turno`}</p>
           </div>
           {turnosMes.length === 0 ? (
             <p className="p-6 text-center text-sm text-slate-500">No hay turnos registrados para este mes.</p>

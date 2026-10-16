@@ -7,10 +7,12 @@ import { Dialogo } from '@/componentes/ui/dialogo'
 import { Entrada } from '@/componentes/ui/entrada'
 import { Etiqueta } from '@/componentes/ui/etiqueta'
 import { useOperativo } from '@/contextos/contexto-operativo'
+import { useTraduccion } from '@/i18n'
 import type { Empresa } from '@/tipos'
 
 export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => void }> = ({ onSeleccionarEmpresa }) => {
   const { empresas, objetivos, vigiladores, crearEmpresaConAdministrador, editarEmpresa, cambiarEstadoEmpresa, eliminarEmpresa } = useOperativo()
+  const { idioma } = useTraduccion()
 
   const [modalAbierto, setModalAbierto] = useState(false)
   const [empresaEditando, setEmpresaEditando] = useState<Empresa | null>(null)
@@ -191,11 +193,11 @@ export const GestionEmpresas: React.FC<{ onSeleccionarEmpresa?: (id: string) => 
                 <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-200 dark:border-slate-800/80 text-xs">
                   <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
                     <span className="text-slate-500 dark:text-slate-400 block text-[11px]">Objetivos:</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{cantidadObjetivos} puestos</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{idioma === 'en' ? `${cantidadObjetivos} posts` : `${cantidadObjetivos} puestos`}</span>
                   </div>
                   <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
                     <span className="text-slate-500 dark:text-slate-400 block text-[11px]">Vigiladores:</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{cantidadVigiladores} asignados</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{idioma === 'en' ? `${cantidadVigiladores} assigned` : `${cantidadVigiladores} asignados`}</span>
                   </div>
                 </div>
 
