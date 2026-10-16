@@ -21,6 +21,29 @@ const turnoYaFinalizo = (turno: { fecha: string; hora_inicio: string; hora_fin: 
   return fin <= ahora
 }
 
+
+const calcularHorasPorFranja = (turno: { fecha: string; hora_inicio: string; hora_fin: string }) => {
+  const [anio, mes, dia] = turno.fecha.split('-').map(Number)
+  const [horaInicio, minutoInicio] = turno.hora_inicio.slice(0, 5).split(':').map(Number)
+  const [horaFin, minutoFin] = turno.hora_fin.slice(0, 5).split(':').map(Number)
+  const inicio = new Date(anio, mes - 1, dia, horaInicio, minutoInicio || 0, 0, 0)
+  let fin = new Date(anio, mes - 1, dia, horaFin, minutoFin || 0, 0, 0)
+  if (fin.getTime() <= inicio.getTime()) fin = new Date(fin.getTime() + 24 * 60 * 60 * 1000)
+
+  let minutosDiurnos = 0
+  let minutosNocturnos = 0
+  for (let cursor = inicio.getTime(); cursor < fin.getTime(); cursor += 60000) {
+    const hora = new Date(cursor).getHours()
+    if (hora >= 21 || hora < 6) minutosNocturnos++
+    else minutosDiurnos++
+  }
+  return {
+    diurnas: minutosDiurnos / 60,
+    nocturnas: minutosNocturnos / 60,
+    total: (minutosDiurnos + minutosNocturnos) / 60,
+  }
+}
+
 export const HistorialLaboral: React.FC = () => {
   const { turnos } = useOperativo()
   const { usuario } = useAutenticacion()
@@ -44,10 +67,10 @@ export const HistorialLaboral: React.FC = () => {
     return { valor, etiqueta: new Intl.DateTimeFormat(idioma === 'en' ? 'en-US' : 'es-AR', { month: 'long', year: 'numeric' }).format(new Date(Number(anio), i, 1)) }
   }).filter(m => m.valor <= mesActual)).sort((a, b) => b.valor.localeCompare(a.valor))
   const turnosMes = turnosVigilador.filter(t => t.fecha.startsWith(mesSeleccionado) && turnoYaFinalizo(t))
-  const horasNormales = turnosMes.reduce((s, t) => s + t.horas_totales, 0)
+  const horasNormales = turnosMes.reduce((s, t) => s + calcularHorasPorFranja(t).total, 0)
   const horasExtra = turnosMes.reduce((s, t) => s + t.horas_extra, 0)
-  const horasDiurnas = turnosMes.reduce((s, t) => s + (t.horas_diurnas || 0), 0)
-  const horasNocturnas = turnosMes.reduce((s, t) => s + (t.horas_nocturnas || 0), 0)
+  const horasDiurnas = turnosMes.reduce((s, t) => s + calcularHorasPorFranja(t).diurnas, 0)
+  const horasNocturnas = turnosMes.reduce((s, t) => s + calcularHorasPorFranja(t).nocturnas, 0)
   const horasFeriado = turnosMes.reduce((s, t) => s + (t.es_feriado ? t.horas_totales : 0), 0)
   const diasTrabajados = turnosMes.filter(t => t.horas_totales > 0).length
   const nombreMes = new Intl.DateTimeFormat(idioma === 'en' ? 'en-US' : 'es-AR', { month: 'long', year: 'numeric' }).format(
