@@ -212,7 +212,7 @@ export const MiMes: React.FC = () => {
               <Sun className="w-3.5 h-3.5 text-amber-500" /> Diurnas
             </span>
             <span className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1 block">
-              {horasDiurnas} hs
+              {formatearHorasMinutos(horasDiurnas)} hs
             </span>
           </TarjetaContenido>
         </Tarjeta>
@@ -223,7 +223,7 @@ export const MiMes: React.FC = () => {
               <Moon className="w-3.5 h-3.5 text-blue-500" /> Nocturnas
             </span>
             <span className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1 block">
-              {horasNocturnas} hs
+              {formatearHorasMinutos(horasNocturnas)} hs
             </span>
           </TarjetaContenido>
         </Tarjeta>
