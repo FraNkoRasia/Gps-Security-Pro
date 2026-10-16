@@ -18,6 +18,19 @@ export const obtenerIntervaloTurno = (turno: Pick<Turno, 'fecha' | 'hora_inicio'
   return { inicio, fin }
 }
 
+export const eliminarTurnosDuplicados = (turnos: Turno[]) => {
+  const ids = new Set<string>()
+  const clavesHorario = new Set<string>()
+  return turnos.filter(turno => {
+    if (ids.has(turno.id)) return false
+    ids.add(turno.id)
+    const clave = [turno.id_empresa, turno.id_vigilador, turno.id_objetivo, turno.fecha, turno.hora_inicio.slice(0, 5), turno.hora_fin.slice(0, 5)].join('|')
+    if (clavesHorario.has(clave)) return false
+    clavesHorario.add(clave)
+    return true
+  })
+}
+
 export const turnoFinalizado = (turno: Pick<Turno, 'fecha' | 'hora_inicio' | 'hora_fin'>, ahora = new Date()) =>
   obtenerIntervaloTurno(turno).fin.getTime() <= ahora.getTime()
 
