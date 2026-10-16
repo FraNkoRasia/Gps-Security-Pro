@@ -4,7 +4,7 @@ import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import { useTraduccion } from '@/i18n'
-import { obtenerResumenHorasMes } from '@/utilidades/calculo-horas-mes'
+import { obtenerResumenHorasMes, turnoSeSuperponeConMes } from '@/utilidades/calculo-horas-mes'
 
 const formatearHorasMinutos = (horas: number) => {
   const minutosTotales = Math.round(horas * 60)
@@ -37,7 +37,7 @@ export const MiMes: React.FC = () => {
 
   // Turnos del mes seleccionado para este vigilador
   const turnosMes = turnos.filter(
-    (t) => t.id_vigilador === idVig && t.fecha.startsWith(mesSeleccionado)
+    (t) => t.id_vigilador === idVig && turnoSeSuperponeConMes(t, mesSeleccionado)
   )
 
   // Excluye reemplazos y evita duplicar registros antes de aplicar el cálculo compartido.
