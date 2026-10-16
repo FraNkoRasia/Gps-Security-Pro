@@ -3,6 +3,7 @@ import { History } from 'lucide-react'
 import { Tarjeta, TarjetaContenido } from '@/componentes/ui/tarjeta'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
+import { useTraduccion } from '@/i18n'
 
 const formatearHoras = (horas: number) => {
   const minutos = Math.round(horas * 60)
@@ -23,6 +24,7 @@ const turnoYaFinalizo = (turno: { fecha: string; hora_inicio: string; hora_fin: 
 export const HistorialLaboral: React.FC = () => {
   const { turnos } = useOperativo()
   const { usuario } = useAutenticacion()
+  const { idioma } = useTraduccion()
   const idVigilador = usuario?.id || ''
   const ahora = new Date()
   const mesActual = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`
@@ -39,7 +41,7 @@ export const HistorialLaboral: React.FC = () => {
   }, [turnosVigilador, ahora.getFullYear()])
   const meses = anios.flatMap(anio => Array.from({ length: 12 }, (_, i) => {
     const valor = `${anio}-${String(i + 1).padStart(2, '0')}`
-    return { valor, etiqueta: new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(new Date(Number(anio), i, 1)) }
+    return { valor, etiqueta: new Intl.DateTimeFormat(idioma === 'en' ? 'en-US' : 'es-AR', { month: 'long', year: 'numeric' }).format(new Date(Number(anio), i, 1)) }
   }).filter(m => m.valor <= mesActual)).sort((a, b) => b.valor.localeCompare(a.valor))
   const turnosMes = turnosVigilador.filter(t => t.fecha.startsWith(mesSeleccionado) && turnoYaFinalizo(t))
   const horasNormales = turnosMes.reduce((s, t) => s + t.horas_totales, 0)
@@ -48,7 +50,7 @@ export const HistorialLaboral: React.FC = () => {
   const horasNocturnas = turnosMes.reduce((s, t) => s + (t.horas_nocturnas || 0), 0)
   const horasFeriado = turnosMes.reduce((s, t) => s + (t.es_feriado ? t.horas_totales : 0), 0)
   const diasTrabajados = turnosMes.filter(t => t.horas_totales > 0).length
-  const nombreMes = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(
+  const nombreMes = new Intl.DateTimeFormat(idioma === 'en' ? 'en-US' : 'es-AR', { month: 'long', year: 'numeric' }).format(
     new Date(Number(mesSeleccionado.slice(0, 4)), Number(mesSeleccionado.slice(5, 7)) - 1, 1)
   )
 
@@ -96,8 +98,8 @@ export const HistorialLaboral: React.FC = () => {
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                   {turnosMes.map(t => (
                     <tr key={t.id} className="text-slate-700 dark:text-slate-200">
-                      <td className="whitespace-nowrap p-3">{new Intl.DateTimeFormat('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${t.fecha}T12:00:00Z`))}</td>
-                      <td className="p-3 capitalize">{t.tipo}</td>
+                      <td className="whitespace-nowrap p-3">{new Intl.DateTimeFormat(idioma === 'en' ? 'en-US' : 'es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${t.fecha}T12:00:00Z`))}</td>
+                      <td className="p-3 capitalize">{idioma === 'en' ? (t.tipo === 'diurno' ? 'Day Shift' : t.tipo === 'nocturno' ? 'Night Shift' : t.tipo === 'franco' ? 'Day Off' : t.tipo) : t.tipo}</td>
                       <td className="whitespace-nowrap p-3">{t.hora_inicio.slice(0, 5)} – {t.hora_fin.slice(0, 5)}</td>
                       <td className="p-3 text-right tabular-nums">{formatearHoras(t.horas_totales)} h</td>
                       <td className="p-3 text-right tabular-nums text-emerald-600">{formatearHoras(t.horas_extra)} h</td>

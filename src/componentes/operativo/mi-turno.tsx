@@ -5,10 +5,12 @@ import { Insignia } from '@/componentes/ui/insignia'
 import { useOperativo } from '@/contextos/contexto-operativo'
 import { useAutenticacion } from '@/contextos/contexto-autenticacion'
 import { SolicitarHorasExtra } from '@/componentes/operativo/solicitar-horas-extra'
+import { useTraduccion } from '@/i18n'
 
 export const MiTurno: React.FC = () => {
   const { turnos, objetivos, asignaciones, supervisores, tiposTurno, solicitudesHorasExtra } = useOperativo()
   const { usuario } = useAutenticacion()
+  const { idioma } = useTraduccion()
 
   const idVig = usuario?.id || 'usr-vig-01'
   const [ahora, setAhora] = useState(() => new Date())
@@ -19,7 +21,7 @@ export const MiTurno: React.FC = () => {
   const hoy = ahora
   const formatearFecha = (fecha: string) => {
     const [anio, mes, dia] = fecha.split('-')
-    return `${dia}-${mes}-${anio}`
+    return idioma === 'en' ? `${dia}/${mes}/${anio}` : `${dia}-${mes}-${anio}`
   }
   const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
   const formatearExtra = (horas: number) => { const minutos = Math.round(horas * 60); return `${Math.floor(minutos / 60)} h${minutos % 60 ? ` ${minutos % 60} min` : ''}` }
@@ -110,10 +112,10 @@ export const MiTurno: React.FC = () => {
                   Horario del Turno:
                 </span>
                 <span className="font-extrabold text-slate-900 dark:text-white text-base break-words">
-                  {turnoVisible ? `${turnoVisible.hora_inicio} → ${turnoVisible.hora_fin}` : 'Sin turno hoy'}
+                  {turnoVisible ? `${turnoVisible.hora_inicio} → ${turnoVisible.hora_fin}` : (idioma === 'en' ? 'No shift today' : 'Sin turno hoy')}
                 </span>
                 <span className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold block mt-0.5">
-                  {turnoVisible ? (tiposTurno.find(t => t.id === turnoVisible.id_tipo_turno)?.nombre || (turnoVisible.tipo === 'nocturno' ? 'Turno nocturno' : turnoVisible.tipo === 'diurno' ? 'Turno diurno' : 'Franco')) : 'Sin guardia programada'}
+                  {turnoVisible ? (turnoVisible.tipo === 'nocturno' ? (idioma === 'en' ? (tiposTurno.find(t => t.id === turnoVisible.id_tipo_turno)?.nombre?.replace(/nocturno/gi, 'Night Shift') || 'Night Shift') : tiposTurno.find(t => t.id === turnoVisible.id_tipo_turno)?.nombre || 'Turno nocturno') : turnoVisible.tipo === 'diurno' ? (idioma === 'en' ? (tiposTurno.find(t => t.id === turnoVisible.id_tipo_turno)?.nombre?.replace(/diurno/gi, 'Day Shift') || 'Day Shift') : tiposTurno.find(t => t.id === turnoVisible.id_tipo_turno)?.nombre || 'Turno diurno') : (idioma === 'en' ? 'Day Off' : 'Franco')) : (idioma === 'en' ? 'No shift scheduled' : 'Sin guardia programada')}
                 </span>
               </div>
 
@@ -122,7 +124,7 @@ export const MiTurno: React.FC = () => {
                   Supervisor a Cargo:
                 </span>
                 <span className="font-bold text-slate-900 dark:text-white text-sm break-words">
-                  {supervisorNombre || 'Sin supervisor asignado'}
+                  {supervisorNombre || (idioma === 'en' ? 'No supervisor assigned' : 'Sin supervisor asignado')}
                 </span>
               </div>
             </div>
@@ -160,20 +162,21 @@ export const MiTurno: React.FC = () => {
             <div className="divide-y divide-slate-200 dark:divide-slate-800 text-xs">
               {proximosTurnos.map(({ fecha, turno }) => {
                 const esFranco = !turno || turno.tipo === 'franco' || turno.horas_totales === 0
+                const nombreConfigurado = turno ? tiposTurno.find(t => t.id === turno.id_tipo_turno)?.nombre : undefined
                 const nombreTurno = turno
-                  ? tiposTurno.find(t => t.id === turno.id_tipo_turno)?.nombre || (turno.tipo === 'nocturno' ? '12🌙 Nocturno' : turno.tipo === 'diurno' ? '12☀️ Diurno' : turno.tipo === 'franco' ? 'Franco' : turno.tipo)
-                  : 'Franco'
+                  ? turno.tipo === 'nocturno' ? (idioma === 'en' ? (nombreConfigurado?.replace(/nocturno/gi, 'Night Shift') || '12🌙 Night Shift') : nombreConfigurado || '12🌙 Nocturno') : turno.tipo === 'diurno' ? (idioma === 'en' ? (nombreConfigurado?.replace(/diurno/gi, 'Day Shift') || '12☀️ Day Shift') : nombreConfigurado || '12☀️ Diurno') : turno.tipo === 'franco' ? (idioma === 'en' ? 'Day Off' : nombreConfigurado || 'Franco') : nombreConfigurado || turno.tipo
+                  : (idioma === 'en' ? 'Day Off' : 'Franco')
                 return (
                   <div key={fecha} className="py-3 flex items-center justify-between gap-3">
                     <div>
-                      <div className="font-bold text-slate-900 dark:text-white">{new Intl.DateTimeFormat('es-AR', { weekday: 'long' }).format(new Date(Number(fecha.slice(0, 4)), Number(fecha.slice(5, 7)) - 1, Number(fecha.slice(8, 10)))).replace(/^./, (letra) => letra.toLocaleUpperCase('es-AR'))} {fecha.slice(8, 10)}/{fecha.slice(5, 7)}/{fecha.slice(0, 4)}</div>
+                      <div className="font-bold text-slate-900 dark:text-white">{new Intl.DateTimeFormat(idioma === 'en' ? 'en-GB' : 'es-AR', { weekday: 'long' }).format(new Date(Number(fecha.slice(0, 4)), Number(fecha.slice(5, 7)) - 1, Number(fecha.slice(8, 10)))).replace(/^./, (letra) => letra.toLocaleUpperCase('es-AR'))} {fecha.slice(8, 10)}/{fecha.slice(5, 7)}/{fecha.slice(0, 4)}</div>
                       <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {esFranco ? 'Día de franco' : `${turno.hora_inicio} a ${turno.hora_fin} (${turno.horas_totales} hs)`}
+                        {esFranco ? (idioma === 'en' ? 'Day Off' : 'Día de franco') : `${turno.hora_inicio} a ${turno.hora_fin} (${turno.horas_totales} hs)`}
                       </div>
                     </div>
                     <div>
                       <Insignia variante={esFranco ? 'gris' : turno.tipo === 'nocturno' ? 'azul' : 'dorado'}>
-                        {esFranco ? 'Franco' : nombreTurno}
+                        {esFranco ? (idioma === 'en' ? 'Day Off' : 'Franco') : nombreTurno}
                       </Insignia>
                     </div>
                   </div>
