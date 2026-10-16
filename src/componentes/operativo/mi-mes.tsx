@@ -50,7 +50,6 @@ export const MiMes: React.FC = () => {
   // El objetivo conserva las horas programadas; las horas realizadas se calculan solo al finalizar.
   const horasObjetivoMes = turnosContables.reduce((acc, t) => {
     const horasProgramadas = obtenerHorasProgramadasEnMes(t, mesSeleccionado)
-    const { fin } = obtenerIntervaloTurno(t)
     const extrasDelMes = t.fecha.startsWith(mesSeleccionado) ? t.horas_extra : 0
     return acc + horasProgramadas + extrasDelMes
   }, 0)
