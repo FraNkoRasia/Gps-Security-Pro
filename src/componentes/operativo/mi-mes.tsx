@@ -12,6 +12,40 @@ const formatearHorasMinutos = (horas: number) => {
   return `${horasEnteras}.${String(minutosRestantes).padStart(2, '0')}`
 }
 
+
+const calcularHorasPorFranja = (
+  turno: { fecha: string; hora_inicio: string; hora_fin: string },
+  limite?: Date
+) => {
+  const [anio, mes, dia] = turno.fecha.split('-').map(Number)
+  const [horaInicio, minutoInicio] = turno.hora_inicio.slice(0, 5).split(':').map(Number)
+  const [horaFin, minutoFin] = turno.hora_fin.slice(0, 5).split(':').map(Number)
+  const inicio = new Date(anio, mes - 1, dia, horaInicio, minutoInicio || 0, 0, 0)
+  let fin = new Date(anio, mes - 1, dia, horaFin, minutoFin || 0, 0, 0)
+  if (fin.getTime() <= inicio.getTime()) fin = new Date(fin.getTime() + 24 * 60 * 60 * 1000)
+
+  let finContable = fin
+  if (limite && limite.getTime() < finContable.getTime()) {
+    const minutosTranscurridos = Math.max(0, Math.floor((limite.getTime() - inicio.getTime()) / 60000))
+    finContable = new Date(inicio.getTime() + minutosTranscurridos * 60000)
+  }
+  if (finContable.getTime() <= inicio.getTime()) return { diurnas: 0, nocturnas: 0, total: 0 }
+
+  let minutosDiurnos = 0
+  let minutosNocturnos = 0
+  for (let cursor = inicio.getTime(); cursor < finContable.getTime(); cursor += 60000) {
+    const hora = new Date(cursor).getHours()
+    if (hora >= 21 || hora < 6) minutosNocturnos++
+    else minutosDiurnos++
+  }
+
+  return {
+    diurnas: minutosDiurnos / 60,
+    nocturnas: minutosNocturnos / 60,
+    total: (minutosDiurnos + minutosNocturnos) / 60,
+  }
+}
+
 export const MiMes: React.FC = () => {
   const { turnos } = useOperativo()
   const { usuario } = useAutenticacion()
@@ -45,30 +79,30 @@ export const MiMes: React.FC = () => {
   // Objetivo mensual: suma de los turnos válidos de la grilla, incluidas las extras aprobadas.
   const horasObjetivoMes = turnosContables.reduce((acc, t) => acc + t.horas_totales + t.horas_extra, 0)
 
-  // Horas trabajadas hasta ahora: los turnos futuros no cuentan; el turno en curso
-  // suma solo el tiempo transcurrido y las extras se agregan al finalizar la guardia.
+  // Horas trabajadas hasta la fecha: se cuenta solo el tiempo transcurrido de cada turno.
+  // Las horas extra autorizadas se agregan cuando finaliza el turno, como antes.
   const horasTrabajadasAlMomento = turnosContables.reduce((acc, t) => {
     if (t.tipo === 'franco' || t.horas_totales <= 0) return acc
-    if (mesSeleccionado < mesActual) return acc + t.horas_totales + t.horas_extra
     if (mesSeleccionado > mesActual) return acc
-
+    const resultado = calcularHorasPorFranja(t, mesSeleccionado === mesActual ? ahora : undefined)
     const [anio, mes, dia] = t.fecha.split('-').map(Number)
-    const [horaInicio, minutoInicio] = t.hora_inicio.split(':').map(Number)
-    const [horaFin, minutoFin] = t.hora_fin.split(':').map(Number)
+    const [horaInicio, minutoInicio] = t.hora_inicio.slice(0, 5).split(':').map(Number)
+    const [horaFin, minutoFin] = t.hora_fin.slice(0, 5).split(':').map(Number)
     const inicio = new Date(anio, mes - 1, dia, horaInicio, minutoInicio || 0, 0, 0)
     let fin = new Date(anio, mes - 1, dia, horaFin, minutoFin || 0, 0, 0)
     if (fin.getTime() <= inicio.getTime()) fin = new Date(fin.getTime() + 24 * 60 * 60 * 1000)
-
-    if (ahora.getTime() <= inicio.getTime()) return acc
-    if (ahora.getTime() >= fin.getTime()) return acc + t.horas_totales + t.horas_extra
-
-    // La guardia en curso no se suma parcialmente: se contabiliza completa
-    // recién cuando alcanza su hora de finalización.
-    return acc
+    const extrasFinalizadas = ahora.getTime() >= fin.getTime() ? t.horas_extra : 0
+    return acc + resultado.total + extrasFinalizadas
   }, 0)
 
-  const horasDiurnas = turnosContables.reduce((acc, t) => acc + t.horas_diurnas, 0)
-  const horasNocturnas = turnosContables.reduce((acc, t) => acc + t.horas_nocturnas, 0)
+  const horasDiurnas = turnosContables.reduce((acc, t) => {
+    if (t.tipo === 'franco' || t.horas_totales <= 0 || mesSeleccionado > mesActual) return acc
+    return acc + calcularHorasPorFranja(t, mesSeleccionado === mesActual ? ahora : undefined).diurnas
+  }, 0)
+  const horasNocturnas = turnosContables.reduce((acc, t) => {
+    if (t.tipo === 'franco' || t.horas_totales <= 0 || mesSeleccionado > mesActual) return acc
+    return acc + calcularHorasPorFranja(t, mesSeleccionado === mesActual ? ahora : undefined).nocturnas
+  }, 0)
   const horasDomingos = turnosContables
     .filter((t) => t.es_domingo)
     .reduce((acc, t) => acc + t.horas_totales, 0)
@@ -178,7 +212,7 @@ export const MiMes: React.FC = () => {
               <Sun className="w-3.5 h-3.5 text-amber-500" /> Diurnas
             </span>
             <span className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1 block">
-              {horasDiurnas} hs
+              {formatearHorasMinutos(horasDiurnas)} hs
             </span>
           </TarjetaContenido>
         </Tarjeta>
@@ -189,7 +223,7 @@ export const MiMes: React.FC = () => {
               <Moon className="w-3.5 h-3.5 text-blue-500" /> Nocturnas
             </span>
             <span className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1 block">
-              {horasNocturnas} hs
+              {formatearHorasMinutos(horasNocturnas)} hs
             </span>
           </TarjetaContenido>
         </Tarjeta>
