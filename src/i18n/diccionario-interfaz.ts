@@ -342,11 +342,11 @@ const traduccionesAtributosEn: Record<string, string> = {
 }
 
 export function traducirTextoInterfaz(texto: string): string {
-  const normalizado = texto.replace(/\\s+/g, ' ').trim()
+  const normalizado = texto.replace(/\s+/g, ' ').trim()
   return traduccionesInterfazEn[normalizado] ?? texto
 }
 
 export function traducirAtributoInterfaz(texto: string): string {
-  const normalizado = texto.replace(/\\s+/g, ' ').trim()
+  const normalizado = texto.replace(/\s+/g, ' ').trim()
   return traduccionesAtributosEn[normalizado] ?? traduccionesInterfazEn[normalizado] ?? texto
 }
