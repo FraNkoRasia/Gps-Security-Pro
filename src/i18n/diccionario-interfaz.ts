@@ -470,5 +470,23 @@ export function traducirTextoInterfaz(texto: string): string {
 
 export function traducirAtributoInterfaz(texto: string): string {
   const normalizado = texto.replace(/\s+/g, ' ').trim()
-  return traduccionesAtributosEn[normalizado] ?? traduccionesInterfazEn[normalizado] ?? texto
+  const exacta = traduccionesAtributosEn[normalizado] ?? traduccionesInterfazEn[normalizado]
+  if (exacta) return exacta
+
+  // Algunos atributos incorporan nombres o fechas dinámicas; traducimos solo
+  // el texto fijo y conservamos intactos esos valores.
+  const patrones: Array<[RegExp, (coincidencia: RegExpMatchArray) => string]> = [
+    [/^Ver ficha de (.+)$/, (m) => `View personnel file for ${m[1]}`],
+    [/^Ver ficha del vigilador$/, () => 'View security guard file'],
+    [/^Restablecer contraseña de (.+)$/, (m) => `Reset password for ${m[1]}`],
+    [/^Quitar feriado el (.+)$/, (m) => `Remove holiday on ${m[1]}`],
+    [/^Marcar feriado el (.+)$/, (m) => `Mark holiday on ${m[1]}`],
+    [/^(.+) de (.+), feriado: (.+)$/, (m) => `${m[1]} ${m[2]}, holiday: ${m[3]}`],
+    [/^(.+) de (.+)$/, (m) => `${m[1]} of ${m[2]}`],
+  ]
+  for (const [patron, traducir] of patrones) {
+    const coincidencia = normalizado.match(patron)
+    if (coincidencia) return traducir(coincidencia)
+  }
+  return texto
 }
