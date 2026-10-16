@@ -907,6 +907,7 @@ export const traduccionesInterfazEn: Record<string, string> = {
   '← Volver a Empresas': '← Back to Companies',
   '← Volver a Objetivos': '← Back to Sites',
   '← Volver al objetivo': '← Back to Site',
+  'La contraseña inicial será el DNI registrado en la ficha. Al ingresar por primera vez, el vigilador deberá crear una contraseña personal.': 'The initial password will be the national ID number registered in the guard's profile. On first login, the guard must create a personal password.',
 }
 
 const traduccionesAtributosEn: Record<string, string> = {
