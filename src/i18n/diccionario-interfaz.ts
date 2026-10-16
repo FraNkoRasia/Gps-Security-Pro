@@ -792,6 +792,43 @@ export const traduccionesInterfazEn: Record<string, string> = {
   'No se pudo cargar la ficha técnica del perfil:': 'Could not load the profile personnel file:',
   'No se pudo cargar la ficha técnica del perfil': 'Could not load the profile personnel file',
   'Sin turno registrado (Franco o libre)': 'No shift recorded (day off or free)',
+  'Objetivos y Puestos de Vigilancia': 'Security Sites and Posts',
+  'Gestión de servicios contratados, ubicaciones físicas y asignación de puestos.': 'Management of contracted services, physical locations, and post assignments.',
+  'Nuevo Objetivo': 'New Site',
+  'Plantel de Vigiladores': 'Security Guard Roster',
+  'Control de personal de guardia, asignaciones vigentes e historial de traslados operativos.': 'Manage security personnel, current assignments, and operational transfer history.',
+  'Libro Digital de Novedades': 'Digital Security Logbook',
+  'Registro operativo oficial e inmutable de guardia por objetivo (Sección 32).': 'Official, immutable shift log for each site (Section 32).',
+  'Cambios de Turno y Reemplazos Operativos': 'Shift Changes and Operational Replacements',
+  'Flujo oficial: Solicitud entre vigiladores → Aprobación administrativa → Impacto en grilla (Secciones 29 y 30).': 'Official workflow: Request between security guards → Administrative approval → Update to the schedule (Sections 29 and 30).',
+  'Avisos y Comunicados Operativos': 'Operational Notices and Announcements',
+  'Canal de comunicación oficial entre supervisores, administración y personal de guardia.': 'Official communication channel between supervisors, administration, and security personnel.',
+  'Publicado por:': 'Published by:',
+  'Fecha del turno:': 'Shift date:',
+  'Motivo:': 'Reason:',
+  'Jueves,': 'Thursday,',
+  'Miércoles,': 'Wednesday,',
+  'Martes,': 'Tuesday,',
+  'Lunes,': 'Monday,',
+  'Viernes,': 'Friday,',
+  'Sábado,': 'Saturday,',
+  'Domingo,': 'Sunday,',
+  '3 novedades': '3 entries',
+  '2 novedades': '2 entries',
+  '1 novedad': '1 entry',
+  'Buscar Reemplazos': 'Find Replacements',
+  'Ver detalle': 'View Details',
+  'Solicitante:': 'Requester:',
+  'Destinatario:': 'Recipient:',
+  'Asentar Novedad': 'Add Log Entry',
+  'Todos los objetivos activos': 'All active sites',
+  'Fecha de publicación': 'Publication Date',
+  'Buscar por nombre o apellido...': 'Search by first or last name...',
+  'Buscar por nombre, DNI o legajo...': 'Search by name, ID, or employee number...',
+  'Objetivos y puestos': 'Sites and Posts',
+  'Publicado por: ': 'Published by: ',
+  'Fecha del turno: ': 'Shift date: ',
+  'Motivo: ': 'Reason: ',
 }
 
 const traduccionesAtributosEn: Record<string, string> = {
@@ -848,6 +885,33 @@ export function traducirTextoInterfaz(texto: string): string {
   const normalizado = texto.replace(/\s+/g, ' ').trim()
   if (!normalizado) return texto
 
+  // Fechas de grupos del libro: el día y la fecha se generan dinámicamente.
+  const fechaConDia = normalizado.match(/^(lunes|martes|miércoles|miercoles|jueves|viernes|sábado|sabado|domingo),?\s+(\d{1,2})\/(\d{1,2})\/(\d{4})$/i)
+  if (fechaConDia) {
+    const dias: Record<string, string> = {
+      lunes: 'Monday', martes: 'Tuesday', miércoles: 'Wednesday',
+      miercoles: 'Wednesday', jueves: 'Thursday', viernes: 'Friday',
+      sábado: 'Saturday', sabado: 'Saturday', domingo: 'Sunday',
+    }
+    const meses = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    const fechaEn = meses[Number(fechaConDia[3]) - 1]
+      ? meses[Number(fechaConDia[3]) - 1] + ' ' + Number(fechaConDia[2]) + ', ' + fechaConDia[4]
+      : fechaConDia[2] + '/' + fechaConDia[3] + '/' + fechaConDia[4]
+    const inicio = texto.match(/^\s*/)?.[0] ?? ''
+    const fin = texto.match(/\s*$/)?.[0] ?? ''
+    return inicio + dias[fechaConDia[1].toLowerCase()] + ', ' + fechaEn + fin
+  }
+
+  // Los contadores de novedades cambian según los registros de cada día.
+  const contadorNovedades = normalizado.match(/^(\d+)\s+novedades?$/i)
+  if (contadorNovedades) {
+    const cantidad = Number(contadorNovedades[1])
+    const traducido = cantidad === 1 ? '1 entry' : cantidad + ' entries'
+    const inicio = texto.match(/^\s*/)?.[0] ?? ''
+    const fin = texto.match(/\s*$/)?.[0] ?? ''
+    return inicio + traducido + fin
+  }
+
   const fechaTraducida = traducirFechaInterfaz(normalizado)
   if (fechaTraducida !== normalizado) {
     const inicio = texto.match(/^\s*/)?.[0] ?? ''
@@ -869,6 +933,12 @@ export function traducirTextoInterfaz(texto: string): string {
   const prefijosDinamicos: Array<[string, string]> = [
     ['Activos (', 'Active ('],
     ['Inactivos (', 'Inactive ('],
+    ['Publicado por:', 'Published by:'],
+    ['Fecha del turno:', 'Shift date:'],
+    ['Motivo:', 'Reason:'],
+    ['Fecha del Turno:', 'Shift Date:'],
+    ['Publicados desde', 'Published from'],
+    ['Publicados hasta', 'Published until'],
     ['Ficha del vigilador:', 'Security Guard File:'],
     ['Historial operativo:', 'Operational History:'],
     ['Historial de Asignaciones:', 'Assignment History:'],
